@@ -9,6 +9,8 @@ import {
   useNotify,
   useRefresh,
   useCreate,
+  Link,
+  RecordContextProvider,
 } from 'react-admin';
 import {
   Table,
@@ -109,39 +111,45 @@ const ListActions = () => {
 
 
 const CustomerListView = () => {
-  const { data, isLoading } = useListContext();
-  if (isLoading || !data) return null;
+    const { data, isLoading } = useListContext();
+    if (isLoading) return <div>Loading...</div>;
+    if (!data) return null;
 
-  return (
-    // --- THIS IS THE FIX ---
-    // Changed 'bg-white' to 'bg-card' and added 'text-card-foreground'
-    <div className="bg-card text-card-foreground rounded-lg border shadow-sm">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Phone Number</TableHead>
-            <TableHead>Created At</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map(customer => (
-            <TableRow key={customer.id}>
-              <TableCell>{customer.name}</TableCell>
-              <TableCell>{customer.phone}</TableCell>
-              <TableCell>
-                <DateField record={customer} source="createdAt" showTime />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
+    return (
+        <div className="bg-card text-card-foreground rounded-lg border shadow-sm">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Phone Number</TableHead>
+                        <TableHead>Created At</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {data.map(customer => (
+                        <RecordContextProvider value={customer} key={customer.id}>
+                            <TableRow>
+                                <TableCell>
+                                    <Link to={`
+                                        /customers/${customer.id}/show`} className="text-blue-600 hover:underline">
+                                        {customer.name}
+                                    </Link>
+                                </TableCell>
+                                <TableCell>{customer.phone}</TableCell>
+                                <TableCell>
+                                    <DateField source="createdAt" showTime />
+                                </TableCell>
+                            </TableRow>
+                        </RecordContextProvider>
+                    ))}
+                </TableBody>
+            </Table>
+        </div>
+    );
 };
 
 export const CustomerList = () => (
-  <List actions={<ListActions />} filters={customerFilters} title="Customers">
-    <CustomerListView />
-  </List>
+    <List actions={<ListActions />} filters={customerFilters} title="Customers">
+        <CustomerListView />
+    </List>
 );

@@ -23,7 +23,7 @@ export const UserProfile = () => (
         pagination={false} // No pagination needed for a single item
     >
         <Datagrid bulkActionButtons={false}>
-            <TextField source="email" label="Logged-in Email" />
+            <TextField source="phone_number" label="Phone Number" /> {/* 👇 ADD THIS LINE */}
             <FunctionField label="Access Status" render={(record: any) => <StatusField record={record} />} />
         </Datagrid>
     </List>

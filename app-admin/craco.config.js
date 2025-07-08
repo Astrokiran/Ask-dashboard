@@ -1,18 +1,20 @@
-const CracoAlias = require('craco-alias');
+// craco.config.js
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 module.exports = {
-  plugins: [
-    {
-      plugin: CracoAlias,
-      options: {
-        source: 'tsconfig',
-        // Add the line below to specify the path to your tsconfig.json
-        tsConfigPath: 'tsconfig.json',
-        baseUrl: './',
-        aliases: {
-          '@': './src',
-        },
-      },
+  webpack: {
+    configure: (webpackConfig, { env, paths }) => {
+      // Find the ForkTsCheckerWebpackPlugin instance
+      const forkTsCheckerWebpackPlugin = webpackConfig.plugins.find(
+        p => p.constructor.name === 'ForkTsCheckerWebpackPlugin'
+      );
+
+      // If the plugin is found, update its memory limit
+      if (forkTsCheckerWebpackPlugin) {
+        forkTsCheckerWebpackPlugin.options.typescript.memoryLimit = 4096; // Increase memory to 4GB
+      }
+
+      return webpackConfig;
     },
-  ],
+  },
 };

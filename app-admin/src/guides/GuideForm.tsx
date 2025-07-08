@@ -1,61 +1,55 @@
-// src/guides/GuideForm.tsx
-import { useEffect, useState } from 'react';
-import { SimpleForm, Toolbar, SaveButton } from 'react-admin';
+import { useState } from 'react';
+import { SimpleForm, Toolbar, SaveButton, useNotify } from 'react-admin';
+import { useFormContext } from 'react-hook-form'; // Correct import
 import { ArrowRight } from 'lucide-react';
-import { httpClient } from '../dataProvider';
-import { GuideProfileForm } from './GuideProfileForm'; // 👈 Import
-import { GuideAddressForm } from './GuideAddressForm'; // 👈 Import
 
-const API_URL = 'https://appdev.astrokiran.com';
+import { GuideProfileForm } from './GuideProfileForm';
+import { GuideAddressForm } from './GuideAddressForm';
 
-const CustomToolbar = () => (
-    <Toolbar>
-        <SaveButton
-            label="Register & Continue"
-            icon={<ArrowRight className="ml-2 h-4 w-12" />}
-            alwaysEnable
-        />
-    </Toolbar>
-);
+const FormFields = ({ setLoading, setOtpVerified }: any) => {
+    const notify = useNotify();
+    const { getValues } = useFormContext(); // This is now safe
+
+    const [otpSent, setOtpSent] = useState(false);
+    const [otpRequestId, setOtpRequestId] = useState('');
+
+    
+    return (
+        <div className="flex flex-col gap-8 w-full">
+            <GuideProfileForm
+                skillChoices={[
+                    { id: 11, name: 'Vedic Astrology' },
+                    { id: 12, name: 'Tarot Reading' },
+                ]}
+                languageChoices={[
+                    { id: 11, name: 'English' },
+                    { id: 12, name: 'Hindi' },
+                ]}
+                otpSent={otpSent}
+            />
+            <GuideAddressForm />
+        </div>
+    );
+};
+
 
 export const GuideForm = () => {
-    const [skillChoices, setSkillChoices] = useState<{id: number, name: string}[]>([]);
-    const [languageChoices, setLanguageChoices] = useState<{id: number, name: string}[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchChoices = async () => {
-            try {
-                const [skillsResponse, languagesResponse] = await Promise.all([
-                    httpClient(`${API_URL}/auth/v1/guide/skills`),
-                    httpClient(`${API_URL}/auth/v1/guide/languages`)
-                ]);
-
-                const skills = (skillsResponse.json.data.skills || []).map((item: any) => ({ id: item.id, name: item.title }));
-                const languages = (languagesResponse.json.data.languages || []).map((item: any) => ({ id: item.id, name: item.title }));
-
-                setSkillChoices(skills);
-                setLanguageChoices(languages);
-            } catch (error) {
-                console.error("Failed to fetch choices:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchChoices();
-    }, []);
-
-    if (isLoading) {
-        return <div>Loading form options...</div>;
-    }
+    const [loading, setLoading] = useState(false);
+    const [otpVerified, setOtpVerified] = useState(false);
 
     return (
-        <SimpleForm toolbar={<CustomToolbar />}>
-            <div className="flex flex-col gap-8 w-full">
-                {/* 👇 Render the smaller, focused components */}
-                <GuideProfileForm skillChoices={skillChoices} languageChoices={languageChoices} />
-                <GuideAddressForm />
-            </div>
+        <SimpleForm
+            toolbar={
+                <Toolbar>
+                    <SaveButton
+                        label="Register & Continue"
+                        icon={<ArrowRight className="ml-2 h-4 w-12" />}
+                        disabled={!otpVerified || loading}
+                    />
+                </Toolbar>
+            }
+        >
+            <FormFields setLoading={setLoading} setOtpVerified={setOtpVerified} />
         </SimpleForm>
     );
 };

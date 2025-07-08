@@ -1,31 +1,26 @@
-// src/App.tsx
 import React from 'react';
-import { Admin, bwDarkTheme, bwLightTheme, Resource } from 'react-admin';
+import { Admin, Resource, bwDarkTheme, bwLightTheme } from 'react-admin';
 import { authProvider } from './auth/authProvider';
 import { CustomLoginPage } from './auth/LoginPage';
 import { MyLayout } from './layout/MyLayout';
 import Dashboard from './dashboard/Dashboard';
 import { dataProvider } from './dataProvider';
 import { UserProfile } from './users/UserProfile';
-import consultations from './Consultations'; // Assuming this exports create, edit, etc.
-
-
+import { KycPendingList } from './guides/KycPendingList';
 
 // Import the resource objects
 import guides from './guides';
 import customers from './customers';
 import orders from './orders';
+import consultations from './Consultations';
 
-
-
-import { 
-    Users, 
-    LifeBuoy, 
-    ClipboardList, 
+import {
+    Users,
+    LifeBuoy,
+    ClipboardList,
     UserCircle,
-    ShoppingCart, // New Icon
+    ShoppingCart,
 } from 'lucide-react';
-import { ConsultationList } from './Consultations/ConsultationList';
 
 const App: React.FC = () => (
     <Admin
@@ -37,33 +32,36 @@ const App: React.FC = () => (
         dashboard={Dashboard}
         layout={MyLayout}
     >
-        <Resource 
-            name="users" 
-            list={UserProfile} 
+        <Resource
+            name="users"
+            list={UserProfile}
             icon={UserCircle}
             options={{ label: 'My Profile' }}
         />
-        <Resource 
-            name="guides" 
+        {/* The "guides" resource now serves as the main entry */}
+        <Resource
+            name="guides"
             {...guides}
             icon={LifeBuoy}
         />
-        {/* --- ADDED RESOURCES --- */}
-        <Resource 
-            name="customers" 
+        <Resource
+            name="customers"
             {...customers}
             icon={Users}
         />
-        <Resource 
-            name="orders" 
+        <Resource
+            name="orders"
             {...orders}
             icon={ShoppingCart}
         />
-        <Resource 
-            name="consultations" 
+        <Resource
+            name="consultations"
             {...consultations}
-            list={ConsultationList} // Correctly assign the component here
-            icon={ClipboardList} 
+            icon={ClipboardList}
+        />
+        <Resource
+            name="pending-verifications"
+            list={KycPendingList}
         />
     </Admin>
 );

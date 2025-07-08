@@ -1,5 +1,9 @@
 import { ConsultationList } from "./ConsultationList";
+import { ConsultationCreate } from "./ConsultationCreate";
 
-export default {
+const consultations = {
     list: ConsultationList,
+    create: ConsultationCreate,
 };
+
+export default consultations;

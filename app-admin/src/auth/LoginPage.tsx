@@ -116,7 +116,7 @@ export const CustomLoginPage = () => {
                                 : otpSent ? 'Login' : 'Send OTP'}
                         </Button>
                     </form>
-                </CardContent>
+                </CardContent>  
             </Card>
         </div>
     );

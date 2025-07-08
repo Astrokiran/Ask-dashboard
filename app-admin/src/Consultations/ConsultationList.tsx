@@ -1,3 +1,4 @@
+import { FC, MouseEvent } from "react";
 import {
   List,
   useListContext,
@@ -5,6 +6,10 @@ import {
   TopToolbar,
   ExportButton,
   DateField,
+  BulkDeleteButton,
+  Filter,
+  TextInput,
+  SelectInput,
 } from "react-admin";
 import {
   Table,
@@ -13,49 +18,117 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../components/ui/table";
-import { Checkbox } from "../components/ui/checkbox";
-import { Badge } from "../components/ui/badge";
-import { FC } from "react";
+} from "../components/ui/table"; // Assuming path
+import { Checkbox } from "../components/ui/checkbox"; // Assuming path
+import { Badge } from "../components/ui/badge"; // Assuming path
 
-// Helper component to render status with appropriate colors
-const StatusBadge: FC<{ status: string }> = ({ status }) => {
-  let variant: "default" | "secondary" | "destructive" | "outline" = "default";
-  switch (status) {
-    case "Completed":
-      variant = "default";
-      break;
-    case "In Progress":
-      variant = "secondary";
-      break;
-    case "Customer Canceled":
-    case "Short Duration":
-      variant = "destructive";
-      break;
-    default:
-      variant = "outline";
-  }
+interface Consultation {
+  id: string | number;
+  guide: string;
+  customer: {
+    name: string;
+    phone: string;
+  };
+  status: 'Completed' | 'In Progress' | 'Customer Canceled' | 'Short Duration';
+  duration: number;
+  conversationDuration: number;
+  createdAt: string;
+}
 
-  const style = {
-    Completed: "bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30",
-    "In Progress": "bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30",
-    "Customer Canceled": "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30",
-    "Short Duration": "bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30",
+const consultationStatusChoices = [
+    { id: 'Completed', name: 'Completed' },
+    { id: 'In Progress', name: 'In Progress' },
+    { id: 'Customer Canceled', name: 'Customer Canceled' },
+    { id: 'Short Duration', name: 'Short Duration' },
+];
+
+const ConsultationFilter: FC = (props) => (
+    <Filter {...props}>
+        <TextInput label="Search" source="q" alwaysOn />
+        <SelectInput
+            source="status"
+            label="Status"
+            choices={consultationStatusChoices}
+        />
+    </Filter>
+);
+
+
+// --- 3. StatusBadge Component ---
+const statusStyles: Record<Consultation['status'], string> = {
+  "Completed": "bg-green-500/20 text-green-700 border-green-500/30 hover:bg-green-500/30",
+  "In Progress": "bg-blue-500/20 text-blue-700 border-blue-500/30 hover:bg-blue-500/30",
+  "Customer Canceled": "bg-yellow-500/20 text-yellow-700 border-yellow-500/30 hover:bg-yellow-500/30",
+  "Short Duration": "bg-red-500/20 text-red-700 border-red-500/30 hover:bg-red-500/30",
+};
+
+const StatusBadge: FC<{ status: Consultation['status'] }> = ({ status }) => (
+  <Badge className={statusStyles[status] || ''}>
+    {status}
+  </Badge>
+);
+
+// --- 4. ConsultationListItem Component (A single row) ---
+interface ConsultationListItemProps {
+  consultation: Consultation;
+  isSelected: boolean;
+  onToggle: (id: Consultation['id']) => void;
+}
+
+const ConsultationListItem: FC<ConsultationListItemProps> = ({ consultation, isSelected, onToggle }) => {
+  const handleCheckboxClick = (e: MouseEvent) => {
+    e.stopPropagation();
+    onToggle(consultation.id);
   };
 
   return (
-    <Badge variant={variant} className={style[status as keyof typeof style] || ''}>
-      {status}
-    </Badge>
+    <TableRow
+      key={consultation.id}
+      className="cursor-pointer"
+      onClick={() => onToggle(consultation.id)}
+    >
+      <TableCell onClick={handleCheckboxClick}>
+        <Checkbox checked={isSelected} />
+      </TableCell>
+      <TableCell className="font-medium">{consultation.id}</TableCell>
+      <TableCell>{consultation.guide}</TableCell>
+      <TableCell>
+        <div>{consultation.customer.name}</div>
+        <div className="text-sm text-muted-foreground">
+          {consultation.customer.phone}
+        </div>
+      </TableCell>
+      <TableCell>
+        <StatusBadge status={consultation.status} />
+      </TableCell>
+      <TableCell>{consultation.duration} mins</TableCell>
+      <TableCell>{consultation.conversationDuration}s</TableCell>
+      <TableCell>
+        <DateField record={consultation} source="createdAt" showTime />
+      </TableCell>
+    </TableRow>
   );
 };
 
-
-// Custom Datagrid View using shadcn/ui Table
+// --- 5. ConsultationDataGrid Component (With FIX) ---
 const ConsultationDataGrid = () => {
-  const { data, selectedIds, onToggleItem, isLoading } = useListContext();
+  // ✅ FIX: Use `onSelect` which is the correct function from the context
+  const { data, selectedIds, onToggleItem, onSelect, isLoading } = useListContext<Consultation>();
 
   if (isLoading) return <div>Loading...</div>;
+  if (!data || data.length === 0) return <div>No consultations found.</div>;
+
+  // ✅ FIX: This handler now calls `onSelect` to manage bulk selection
+  const handleSelectAll = (checked: boolean | 'indeterminate') => {
+    if (checked) {
+      onSelect(data.map(item => item.id));
+    } else {
+      onSelect([]);
+    }
+  };
+
+  const isAllSelected = selectedIds.length === data.length && data.length > 0;
+  const isSomeSelected = selectedIds.length > 0 && selectedIds.length < data.length;
 
   return (
     <Table>
@@ -63,15 +136,9 @@ const ConsultationDataGrid = () => {
         <TableRow>
           <TableHead style={{ width: '50px' }}>
             <Checkbox
-              onCheckedChange={(checked) => {
-                if (checked) {
-                  onToggleItem(data.map((item) => item.id));
-                } else {
-                  onToggleItem([]);
-                }
-              }}
-              checked={selectedIds.length > 0 && selectedIds.length === data.length}
-              indeterminate={selectedIds.length > 0 && selectedIds.length < data.length}
+              onCheckedChange={handleSelectAll}
+              checked={isAllSelected}
+              indeterminate={isSomeSelected}
             />
           </TableHead>
           <TableHead>Consultation ID</TableHead>
@@ -85,57 +152,37 @@ const ConsultationDataGrid = () => {
       </TableHeader>
       <TableBody>
         {data.map((consultation) => (
-          <TableRow 
-            key={consultation.id} 
-            className="cursor-pointer"
-            onClick={() => onToggleItem(consultation.id)}
-          >
-            <TableCell>
-              <Checkbox
-                checked={selectedIds.includes(consultation.id)}
-                onCheckedChange={() => onToggleItem(consultation.id)}
-              />
-            </TableCell>
-            <TableCell className="font-medium">
-              {consultation.id}
-            </TableCell>
-            <TableCell>{consultation.guide}</TableCell>
-            <TableCell>
-              <div>{consultation.customer.name}</div>
-              <div className="text-muted-foreground text-sm">
-                {consultation.customer.phone}
-              </div>
-            </TableCell>
-            <TableCell>
-              <StatusBadge status={consultation.status} />
-            </TableCell>
-            <TableCell>{consultation.duration} mins</TableCell>
-            <TableCell>{consultation.conversationDuration}s</TableCell>
-            <TableCell>
-              <DateField record={consultation} source="createdAt" showTime />
-            </TableCell>
-          </TableRow>
+          <ConsultationListItem
+            key={consultation.id}
+            consultation={consultation}
+            isSelected={selectedIds.includes(consultation.id)}
+            onToggle={onToggleItem}
+          />
         ))}
       </TableBody>
     </Table>
   );
 };
 
-// Actions for the List view with the FilterButton REMOVED
+
+// --- 6. Main ConsultationList Page Component ---
 const ConsultationListActions = () => (
-    <TopToolbar>
-        {/* <FilterButton />  // REMOVED to prevent the error */}
-        <CreateButton label="Create Consultation" />
-        <ExportButton />
-    </TopToolbar>
+  <TopToolbar>
+    <CreateButton label="Create Consultation" />
+    <ExportButton />
+  </TopToolbar>
 );
 
-// The main List component export with the filters prop REMOVED
+const ConsultationBulkActionButtons = () => (
+    <BulkDeleteButton />
+);
+
 export const ConsultationList = () => (
   <List
     actions={<ConsultationListActions />}
-    // filters prop REMOVED
-    empty={false} 
+    bulkActionButtons={<ConsultationBulkActionButtons />}
+    filters={<ConsultationFilter />}
+    empty={false}
     sort={{ field: 'createdAt', order: 'DESC' }}
   >
     <ConsultationDataGrid />

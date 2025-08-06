@@ -5,13 +5,16 @@ import { CustomLoginPage } from './auth/LoginPage';
 import { MyLayout } from './layout/MyLayout';
 import Dashboard from './dashboard/Dashboard';
 import { dataProvider } from './dataProvider';
-import { UserProfile } from './users/UserProfile';
+import { AdminUserList, AdminUserCreate, AdminUserEdit } from './users/AdminUsers';
+
+// You might want to use a more appropriate icon
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { KycPendingList } from './guides/KycPendingList';
+
 
 // Import the resource objects
 import guides from './guides';
 import customers from './customers';
-import orders from './orders';
 import consultations from './Consultations';
 
 import {
@@ -21,6 +24,7 @@ import {
     UserCircle,
     ShoppingCart,
 } from 'lucide-react';
+import { OrderList } from './orders/Orders';
 
 const App: React.FC = () => (
     <Admin
@@ -33,10 +37,11 @@ const App: React.FC = () => (
         layout={MyLayout}
     >
         <Resource
-            name="users"
-            list={UserProfile}
-            icon={UserCircle}
-            options={{ label: 'My Profile' }}
+            name="admin-users"
+             list={AdminUserList}
+            create={AdminUserCreate}
+            edit={AdminUserEdit}
+            icon={AdminPanelSettingsIcon}
         />
         {/* The "guides" resource now serves as the main entry */}
         <Resource
@@ -49,10 +54,11 @@ const App: React.FC = () => (
             {...customers}
             icon={Users}
         />
-        <Resource
-            name="orders"
-            {...orders}
-            icon={ShoppingCart}
+        <Resource 
+            name="orders" 
+            list={OrderList} 
+            // create={OrderCreate} 
+            icon={ShoppingCart} 
         />
         <Resource
             name="consultations"

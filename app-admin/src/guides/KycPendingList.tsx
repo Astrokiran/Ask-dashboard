@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, Fragment } from 'react';
+import React, { useState, useMemo, Fragment } from 'react';
 import {
     Datagrid,
     TextField,
@@ -8,64 +8,59 @@ import {
     FunctionField,
     useNotify,
     useRefresh,
+    List,
     Identifier,
+    useListContext,
 } from 'react-admin';
-import { Button, Box, Tabs, Tab, Typography, CircularProgress, Alert } from '@mui/material';
+import { 
+    Send, 
+    DoneAll, 
+    CheckCircle 
+} from '@mui/icons-material';
+import { Button, Box, Tabs, Tab, Typography, Alert } from '@mui/material';
+import { UploadFile as UploadKycIcon } from '@mui/icons-material';
 import { ArrowBack, VerifiedUser, Preview } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { httpClient } from '../dataProvider';
-import KycDocumentSection from './KycPreview'; // Ensure this path is correct
+import KycDocumentSection from './KycPreview';
+import { KycUploadForm } from './KycUploadForm';
 
-const API_URL = 'https://appdev.astrokiran.com/auth/api/v1/admin/guides';
+const API_URL = 'http://localhost:8082/api/v1/guides';
 
 const formatStatus = (status: string) => {
-    return status
-        .toLowerCase()
-        .replace(/_/g, ' ')
-        .replace(/\b\w/g, char => char.toUpperCase());
+    return status.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
 };
 
-const KycActionButtons = ({ record, status }: { record: any; status: string }) => {
+interface KycActionButtonsProps {
+    record: any;
+    status: string;
+    onUploadClick: (authUserId: number) => void;
+}
+
+export const KycActionButtons = ({ record, status, onUploadClick }: KycActionButtonsProps) => {
     const notify = useNotify();
     const refresh = useRefresh();
     const [isLoading, setIsLoading] = useState(false);
 
-   const handlePostAction = async (action: 'send-agreement' | 'mark-agreement-signed' | 'complete-onboarding') => {
+    // Generic handler for most actions (Verify, Send Agreement, etc.)
+    const handleAction = async (action: 'send-agreement' | 'mark-agreement-signed' | 'complete-onboarding' | 'kyc/verify') => {
         setIsLoading(true);
         try {
-            const options: RequestInit = { method: 'POST' };
+            const url = `${API_URL}/${record.id}/${action}`;
+            let options: any = { method: action === 'kyc/verify' ? 'PATCH' : 'POST' };
 
             if (action === 'complete-onboarding') {
-                const payload = {
-                    base_rate_per_minutes: 50
-                };
-                options.body = JSON.stringify(payload);
-                options.headers = new Headers({ 'Content-Type': 'application/json' });
+                options.body = JSON.stringify({ base_rate_per_minutes: 50 });
+            } else if (action === 'kyc/verify') {
+                options.body = JSON.stringify({ status: "verified", notes: "Verified via admin panel" });
             }
-
-            await httpClient(`${API_URL}/${record.id}/${action}`, options);
-
-            const successMessage = action.replace(/-/g, ' ');
+            
+            await httpClient(url, options);
+            const successMessage = action.replace(/-/g, ' ').replace('kyc/', '');
             notify(`Action '${successMessage}' completed successfully.`, { type: 'success' });
             refresh();
         } catch (error: any) {
-            notify(`Error: ${error.message}`, { type: 'error' });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleKycVerify = async () => {
-        setIsLoading(true);
-        try {
-            await httpClient(`${API_URL}/${record.id}/kyc/verify`, {
-                method: 'PATCH',
-                body: JSON.stringify({ is_verified: true }),
-            });
-            notify(`KYC for ${record.full_name} has been verified.`, { type: 'success' });
-            refresh();
-        } catch (error: any) {
-            notify(`Error verifying KYC: ${error.message}`, { type: 'error' });
+            notify(`Error performing action: ${error.message}`, { type: 'error' });
         } finally {
             setIsLoading(false);
         }
@@ -73,45 +68,71 @@ const KycActionButtons = ({ record, status }: { record: any; status: string }) =
 
     return (
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {status === 'KYC_UPLOADED' && (
+            {/* Button to open the KYC Upload Form */}
+            {status === 'KYC_PENDING' && (
                 <Button
                     variant="contained"
                     size="small"
-                    color="success"
-                    onClick={handleKycVerify}
-                    disabled={isLoading}
+                    color="primary"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onUploadClick(record.x_auth_id);
+                    }}
+                    startIcon={<UploadKycIcon />}
+                >
+                    Upload KYC
+                </Button>
+            )}
+
+            {/* Button to Verify already uploaded KYC */}
+            {status === 'KYC_UPLOADED' && (
+                <Button 
+                    variant="contained" 
+                    size="small" 
+                    color="success" 
+                    onClick={() => handleAction('kyc/verify')} 
+                    disabled={isLoading} 
                     startIcon={<VerifiedUser />}
                 >
                     Verify KYC
                 </Button>
             )}
+
+            {/* Button to Send Agreement */}
             {status === 'KYC_VERIFIED' && (
-                <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={() => handlePostAction('send-agreement')}
-                    disabled={isLoading}
+                <Button 
+                    variant="outlined" 
+                    size="small" 
+                    onClick={() => handleAction('send-agreement')} 
+                    disabled={isLoading} 
+                    startIcon={<Send />}
                 >
                     Send Agreement
                 </Button>
             )}
+
+            {/* Button to Mark Agreement as Signed */}
             {status === 'AGREEMENT_SENT' && (
-                 <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={() => handlePostAction('mark-agreement-signed')}
-                    disabled={isLoading}
+                <Button 
+                    variant="outlined" 
+                    size="small" 
+                    onClick={() => handleAction('mark-agreement-signed')} 
+                    disabled={isLoading} 
+                    startIcon={<DoneAll />}
                 >
                     Mark as Signed
                 </Button>
             )}
+
+            {/* Button to Complete Onboarding */}
             {status === 'AGREEMENT_SIGNED' && (
-                <Button
-                    variant="contained"
-                    size="small"
-                    color="primary"
-                    onClick={() => handlePostAction('complete-onboarding')}
-                    disabled={isLoading}
+                <Button 
+                    variant="contained" 
+                    size="small" 
+                    color="primary" 
+                    onClick={() => handleAction('complete-onboarding')} 
+                    disabled={isLoading} 
+                    startIcon={<CheckCircle />}
                 >
                     Onboard Guide
                 </Button>
@@ -119,9 +140,6 @@ const KycActionButtons = ({ record, status }: { record: any; status: string }) =
         </Box>
     );
 };
-
-
-// --- KycPendingListActions Component (No Changes) ---
 const KycPendingListActions = () => {
     const navigate = useNavigate();
     return (
@@ -134,100 +152,92 @@ const KycPendingListActions = () => {
     );
 };
 
-// --- KycPendingList Component (MODIFIED with Tabs) ---
-export const KycPendingList = () => {
-    const [data, setData] = useState<Record<string, any[]> | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
+const KycPendingView = () => {
+    const { data, isLoading, error } = useListContext();
+    const [currentTab, setCurrentTab] = useState(0);
     const [selectedGuideId, setSelectedGuideId] = useState<Identifier | null>(null);
-    const [currentTab, setCurrentTab] = useState(0); // State for active tab index
-    const notify = useNotify();
+    const [uploadFormGuideId, setUploadFormGuideId] = useState<Identifier | null>(null);
 
-    useEffect(() => {
-        httpClient(`${API_URL}/pending-verifications`)
-            .then(({ json }) => {
-                if (json.data && typeof json.data === 'object') {
-                    setData(json.data);
-                } else {
-                    throw new Error("Invalid data format received from API.");
-                }
-            })
-            .catch((e: any) => {
-                setError(e);
-                notify(`Error fetching guides: ${e.message}`, { type: 'error' });
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-    }, [httpClient, notify]);
+    const groupedData = useMemo(() => {
+        if (!data) return {};
+        return data.reduce((acc, guide) => {
+            const status = guide.status || 'UNKNOWN';
+            if (!acc[status]) {
+                acc[status] = [];
+            }
+            acc[status].push(guide);
+            return acc;
+        }, {} as Record<string, any[]>);
+    }, [data]);
+
+    const statusKeys = useMemo(() => Object.keys(groupedData), [groupedData]);
+    const activeStatus = statusKeys[currentTab];
+    const activeData = groupedData[activeStatus] || [];
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
         setCurrentTab(newValue);
-    };
-
-    const handlePreviewClick = (guideId: Identifier) => {
-        setSelectedGuideId(prevId => (prevId === guideId ? null : guideId));
+        setSelectedGuideId(null);
+        setUploadFormGuideId(null);
     };
     
-    // Memoize status keys to prevent recalculation on re-renders
-    const statusKeys = useMemo(() => (data ? Object.keys(data) : []), [data]);
-    const activeStatus = statusKeys[currentTab];
+    const handlePreviewClick = (guideId: Identifier) => {
+        setSelectedGuideId(prevId => (prevId === guideId ? null : guideId));
+        setUploadFormGuideId(null); 
+    };
 
-    if (loading) {
-        return <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>;
-    }
+    const handleUploadClick = (authUserId: number) => {
+        setUploadFormGuideId(prevId => (prevId === authUserId ? null : authUserId));
+        setSelectedGuideId(null);
+    };
 
+    if (isLoading) return null;
     if (error) {
-        return <Alert severity="error">Could not load guide data. Please try again later.</Alert>;
+        return <Alert severity="error">Could not load guide data.</Alert>;
     }
 
     return (
         <Fragment>
-            <KycPendingListActions />
             <Box sx={{ width: '100%', mt: 2 }}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                     <Tabs value={currentTab} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
                         {statusKeys.map((status) => (
-                            <Tab
-                                key={status}
-                                label={`${formatStatus(status)} (${data?.[status]?.length || 0})`}
-                            />
+                            <Tab key={status} label={`${formatStatus(status)} (${groupedData[status]?.length || 0})`} />
                         ))}
                     </Tabs>
                 </Box>
                 
-                {activeStatus && data?.[activeStatus] && (
-                     <Box mt={3}>
-                        <Datagrid
-                            data={data[activeStatus]}
-                            bulkActionButtons={false}
-                        >
+                {activeStatus && (
+                    <Box mt={3}>
+                        <Datagrid data={activeData} bulkActionButtons={<></>}>
                             <TextField source="id" label="Guide ID" />
+
+                            <TextField source="x_auth_id" label="Auth ID" />
                             <TextField source="full_name" />
                             <TextField source="phone_number" />
                             <DateField source="created_at" label="Registered On" showTime />
-                            <FunctionField
+                            {/* <FunctionField
                                 label="KYC Preview"
                                 render={(record: any) => (
-                                    <Button
-                                        variant="outlined"
-                                        color="secondary"
-                                        size="small"
-                                        startIcon={<Preview />}
-                                        onClick={() => handlePreviewClick(record.id)}
-                                    >
+                                    <Button variant="outlined" color="secondary" size="small" startIcon={<Preview />} onClick={(e) => { e.stopPropagation(); handlePreviewClick(record.id); }}>
                                         {selectedGuideId === record.id ? 'Hide Docs' : 'Show Docs'}
                                     </Button>
                                 )}
-                            />
+                            /> */}
                             <FunctionField
                                 label="Actions"
-                                render={(record: any) => <KycActionButtons record={record} status={activeStatus} />}
+                                render={(record: any) => <KycActionButtons record={record} status={activeStatus} onUploadClick={handleUploadClick} />}
                             />
                         </Datagrid>
                     </Box>
                 )}
             </Box>
+
+            {uploadFormGuideId && (
+                <KycUploadForm
+                    authUserId={uploadFormGuideId as number}
+                    onSuccess={() => setUploadFormGuideId(null)}
+                />
+            )}
 
             {selectedGuideId && (
                 <Box mt={4} border={1} borderColor="divider" p={2} borderRadius={1}>
@@ -240,3 +250,15 @@ export const KycPendingList = () => {
         </Fragment>
     );
 };
+
+export const KycPendingList = () => (
+    <List
+        resource="pending-verifications"
+        actions={<KycPendingListActions />}
+        pagination={false}
+        sort={{ field: 'created_at', order: 'DESC' }}
+        perPage={1000}
+    >
+        <KycPendingView />
+    </List>
+);

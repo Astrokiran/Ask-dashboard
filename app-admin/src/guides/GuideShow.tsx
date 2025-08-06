@@ -3,9 +3,12 @@ import {
     Show,
     useRecordContext,
     useNotify,
+    useUpdate,
+    useRefresh,
     TopToolbar,
     Title,
     Identifier,
+    EditButton,
 } from 'react-admin';
 import {
     Card,
@@ -17,12 +20,13 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
-import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { httpClient } from '../dataProvider';
-import { CircularProgress, Box } from '@mui/material';
+import { CircularProgress, Box, Switch, FormControlLabel } from '@mui/material';
 
-const API_URL = 'https://appdev.astrokiran.com/auth/api/v1/admin/guides';
+
+const API_URL = 'http://localhost:8082/api/v1';
 
 // --- Reusable UI Components ---
 
@@ -47,28 +51,22 @@ const DetailItem = ({ label, children }: { label: string, children: React.ReactN
 // --- KYC Document Section (Displays Images Only) ---
 
 const KycDocumentSection = ({ guideId }: { guideId: Identifier }) => {
-    const notify = useNotify();
     const [documents, setDocuments] = useState<any>({});
     const [loading, setLoading] = useState(true);
-
+    const notify = useNotify();
+    
     useEffect(() => {
         if (!guideId) return;
         const fetchDocs = async () => {
             setLoading(true);
             try {
-                const { json } = await httpClient(`${API_URL}/${guideId}/kyc-documents`);
-                const processedDocs: any = {};
-                (json.data.documents || []).forEach((doc: any) => {
-                    if (!processedDocs[doc.document_type]) processedDocs[doc.document_type] = {};
-                    if (!processedDocs[doc.document_type].front) {
-                        processedDocs[doc.document_type].front = { src: doc.s3_bucket_url };
-                    } else {
-                        processedDocs[doc.document_type].back = { src: doc.s3_bucket_url };
-                    }
-                });
-                setDocuments(processedDocs);
+                // --- UPDATED: Correct API endpoint for KYC docs ---
+                const { json } = await httpClient(`${API_URL}/guides/${guideId}/kyc-documents`);
+                // This section can be built out when the KYC API is ready
+                setDocuments(json.data || {});
             } catch (error: any) {
-                notify(`Error fetching KYC: ${error.message}`, { type: 'error' });
+                // It's okay if this fails for now, we just show an empty section
+                console.error(`Could not fetch KYC docs: ${error.message}`);
             } finally {
                 setLoading(false);
             }
@@ -95,95 +93,125 @@ const KycDocumentSection = ({ guideId }: { guideId: Identifier }) => {
     );
 };
 
-// --- Main Show View (Contains the Logic and Buttons) ---
-
-const GuideShowView = () => {
+// --- NEW: Status & Controls Section with Toggles ---
+const StatusControlSection = () => {
     const record = useRecordContext();
     const notify = useNotify();
-    const [verifying, setVerifying] = useState(false);
+    const refresh = useRefresh();
+    const [update, { isLoading }] = useUpdate();
 
-    const handleVerify = async (documentType: 'aadhaar' | 'pan', isVerified: boolean) => {
-        if (!record) return;
-        setVerifying(true);
-        try {
-            await httpClient(`${API_URL}/${record.id}/kyc/verify?document_type=${documentType}`, {
-                method: 'PATCH',
-                body: JSON.stringify({ is_verified: isVerified }),
-            });
-            notify(`Document ${documentType} has been ${isVerified ? 'verified' : 'rejected'}.`, { type: 'success' });
-            // Consider refreshing the view here if status changes are important to see immediately
-        } catch (error: any) {
-            notify(`Error: ${error.message}`, { type: 'error' });
-        } finally {
-            setVerifying(false);
-        }
+    // --- FIX IS HERE ---
+    // Add a check to ensure the record is defined before proceeding.
+    if (!record) {
+        return null;
+    }
+
+    const handleToggle = (field: string, value: boolean) => {
+        update('guides', { 
+            id: record.id, 
+            data: { [field]: value },
+            previousData: record 
+        }, {
+            onSuccess: () => {
+                notify(`Guide ${field} status updated.`, { type: 'success' });
+                refresh();
+            },
+            onError: (error: any) => {
+                notify(`Error: ${error.message}`, { type: 'error' });
+            },
+        });
     };
+
+    return (
+        <Card>
+            <CardHeader><CardTitle>Status & Controls</CardTitle></CardHeader>
+            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <FormControlLabel
+                    control={<Switch checked={record.is_online || false} onChange={(e) => handleToggle('is_online', e.target.checked)} />}
+                    label="Online"
+                    disabled={isLoading}
+                />
+                <FormControlLabel
+                    control={<Switch checked={record.chat_enabled || false} onChange={(e) => handleToggle('chat_enabled', e.target.checked)} />}
+                    label="Chat Enabled"
+                    disabled={isLoading}
+                />
+                <FormControlLabel
+                    control={<Switch checked={record.voice_enabled || false} onChange={(e) => handleToggle('voice_enabled', e.target.checked)} />}
+                    label="Call Enabled"
+                    disabled={isLoading}
+                />
+                <FormControlLabel
+                    control={<Switch checked={record.video_enabled || false} onChange={(e) => handleToggle('video_enabled', e.target.checked)} />}
+                    label="Video Call Enabled"
+                    disabled={isLoading}
+                />
+            </CardContent>
+        </Card>
+    );
+}
+// --- Main Show View (Updated to display all new data) ---
+const GuideShowView = () => {
+    const record = useRecordContext();
 
     if (!record) {
         return <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>;
     }
     
-    const guideName = record.full_name || record.name;
-
     return (
         <>
-            <Title title={`Profile: ${guideName}`} />
+            <Title title={`Profile: ${record.full_name}`} />
             <Card className="mb-6">
                 <CardHeader>
                     <div className="flex justify-between items-start w-full">
-                        {/* Left Side: Avatar and Info */}
                         <div className="flex items-center gap-4">
                             <Avatar className="h-20 w-20">
-                                <AvatarImage src={record.profile_picture_url} alt={guideName} />
-                                <AvatarFallback>{guideName?.charAt(0)}</AvatarFallback>
+                                <AvatarImage src={record.profile_picture_url} alt={record.full_name} />
+                                <AvatarFallback>{record.full_name?.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div>
-                                <CardTitle className="text-2xl">{guideName}</CardTitle>
-                                <CardDescription className="text-base">{record.specialization}</CardDescription>
+                                <CardTitle className="text-2xl">{record.full_name}</CardTitle>
                                 <div className="flex gap-1 flex-wrap mt-2">
-                                    {(record.skills || []).map((skill: any) => <Badge key={skill.id || skill} variant="secondary">{skill.name || skill}</Badge>)}
+                                    {(record.skills || []).map((skill: string) => <Badge key={skill} variant="secondary">{skill}</Badge>)}
                                 </div>
                             </div>
                         </div>
-
-                        {/* Right Side: The Action Buttons */}
-                        {/* <div className="flex items-center gap-2 flex-shrink-0">
-                            <Button onClick={() => handleVerify('pan', true)} disabled={verifying} size="sm" className="bg-orange-500 hover:bg-orange-600"><CheckCircle className="mr-2 h-4 w-4" />Verify PAN</Button>
-                            <Button onClick={() => handleVerify('aadhaar', true)} disabled={verifying} size="sm" className="bg-green-600 hover:bg-green-700"><CheckCircle className="mr-2 h-4 w-4" />Verify Aadhaar</Button>
-                            <Button onClick={() => { handleVerify('aadhaar', false); handleVerify('pan', false); }} disabled={verifying} size="sm" variant="destructive"><XCircle className="mr-2 h-4 w-4" />Reject All</Button>
-                        </div> */}
                     </div>
                 </CardHeader>
             </Card>
 
+            <div className="grid grid-cols-1 gap-6 mb-6">
+              <StatusControlSection />
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 <div className="lg:col-span-2">
                   <Card>
-                    <CardHeader><CardTitle>Guide Information</CardTitle></CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <DetailItem label="Phone">{record.phone_number}</DetailItem>
-                      <DetailItem label="Email Address">{record.email}</DetailItem>
-                      <DetailItem label="Years of Experience">{record.years_of_experience} years</DetailItem>
-                      <DetailItem label="Languages Spoken">{(record.languages || []).join(', ')}</DetailItem>
-                      <DetailItem label='Rating'>
-                        <span className="text-orange-500 font-semibold">{record.rating || 'N/A'}</span>
-                      </DetailItem>
-                      <DetailItem label="Total Consultations">{record.number_of_consultation}</DetailItem>
-                      <DetailItem label="Onboarded On">
-                        <span>{new Date(record.created_at).toLocaleDateString()}</span>
-                      </DetailItem>
-                    </CardContent>
+                      <CardHeader><CardTitle>Guide Information</CardTitle></CardHeader>
+                      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <DetailItem label="Phone">{record.phone_number}</DetailItem>
+                          <DetailItem label="Email Address">{record.email}</DetailItem>
+                          <DetailItem label="Years of Experience">{record.years_of_experience} years</DetailItem>
+                          <DetailItem label="Languages Spoken">{(record.languages || []).join(', ')}</DetailItem>
+                          <DetailItem label='Rating'>
+                              <span className="text-orange-500 font-semibold">{record.rating || 'N/A'}</span>
+                          </DetailItem>
+                          <DetailItem label="Total Consultations">{record.number_of_consultation}</DetailItem>
+                          <DetailItem label="Onboarded On">
+                              <span>{new Date(record.created_at).toLocaleDateString()}</span>
+                          </DetailItem>
+                      </CardContent>
                   </Card>
                 </div>
                 <div>
                   <Card>
-                    <CardHeader><CardTitle>Bank Account Details</CardTitle></CardHeader>
-                    <CardContent className="space-y-4">
-                      <DetailItem label="Account Holder">{record.bank_details?.holder_name}</DetailItem>
-                      <DetailItem label="Account Number">{record.bank_details?.account_number}</DetailItem>
-                      <DetailItem label="IFSC Code">{record.bank_details?.ifsc_code}</DetailItem>
-                      <DetailItem label="Bank Name">{record.bank_details?.bank_name}</DetailItem>
-                    </CardContent>
+                      <CardHeader><CardTitle>Bank Account Details</CardTitle></CardHeader>
+                      <CardContent className="space-y-4">
+                          <DetailItem label="Account Holder">{record.bank_details?.holder_name}</DetailItem>
+                          <DetailItem label="Account Number">{record.bank_details?.account_number}</DetailItem>
+                          <DetailItem label="IFSC Code">{record.bank_details?.ifsc_code}</DetailItem>
+                          <DetailItem label="Bank Name">{record.bank_details?.bank_name}</DetailItem>
+                      </CardContent>
                   </Card>
                 </div>
             </div>
@@ -202,6 +230,7 @@ export const GuideShow = () => {
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Guides
             </Button>
+        <EditButton />
         </TopToolbar>
     );
 

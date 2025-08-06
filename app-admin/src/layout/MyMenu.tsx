@@ -50,7 +50,7 @@ export const MyMenu = () => {
     return (
         <Menu>
             <Menu.DashboardItem />
-            <Menu.Item to="/users" primaryText="My Profile" leftIcon={<UserCircle />} />
+            <Menu.Item to="/admin-users" primaryText="Admin Users" leftIcon={<UserCircle />} />
             <Menu.Item to="/customers" primaryText="Customers" leftIcon={<Users />} />
             <Menu.Item to="/orders" primaryText="Orders" leftIcon={<ShoppingCart />} />
             <Menu.Item to="/consultations" primaryText="Consultations" leftIcon={<ClipboardList />} />

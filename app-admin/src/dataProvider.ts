@@ -1,7 +1,8 @@
 import { DataProvider, fetchUtils } from 'react-admin';
 import { guides } from './guideMockData';
+import queryString from 'query-string';
 
-const API_URL = 'https://appdev.astrokiran.com';
+const API_URL = 'http://localhost:8082';
 
 const refreshToken = async () => {
     const refreshToken = localStorage.getItem('refresh_token');
@@ -9,7 +10,7 @@ const refreshToken = async () => {
         throw new Error('No refresh token found');
     }
 
-    const request = new Request(`${API_URL}/auth/api/v1/auth/refresh`, {
+    const request = new Request(`${API_URL}/api/v1/auth/refresh`, {
         method: 'POST',
         body: JSON.stringify({ refresh_token: refreshToken }),
         headers: new Headers({ 'Content-Type': 'application/json' }),
@@ -35,6 +36,13 @@ export const httpClient = async (url: string, options: fetchUtils.Options = {}) 
     }
     const token = localStorage.getItem('access_token');
     (options.headers as Headers).set('Authorization', `Bearer ${token}`);
+
+    const apiKey = 'pixel-auth'; 
+    (options.headers as Headers).set('X-Internal-API-Key', apiKey);
+
+    if (options.body) {
+        (options.headers as Headers).set('Content-Type', 'application/json');
+    }
 
     try {
         return await fetchUtils.fetchJson(url, options);
@@ -90,78 +98,35 @@ interface Consultation {
     createdAt: Date;
 }
 
+const orderAction = (action: string, customerId: number, orderId: number, data?: any) => {
+    const url = `${API_URL}/api/v1/customers/${customerId}/orders/${orderId}/${action}`;
+    return httpClient(url, {
+        method: 'POST',
+        body: data ? JSON.stringify(data) : undefined,
+    });
+};
 
-
-let customers: Customer[] = [
-    { id: 1, name: 'John Doe', phone: '123-456-7890', altPhone: '098-765-4321', createdAt: new Date() },
-    { id: 2, name: 'Jane Smith', phone: '555-555-5555', altPhone: '', createdAt: new Date() },
-];
-
-let orders: Order[] = [
-    { id: 101, customerId: 1, customer: { name: 'John Doe', phone: '123-456-7890' }, status: 'Completed', consultationType: 'Astrology', paymentUrl: 'https://example.com/pay/101', activeConsultations: 0 },
-    { id: 102, customerId: 2, customer: { name: 'Jane Smith', phone: '555-555-5555' }, status: 'Pending', consultationType: 'Palmistry', paymentUrl: 'https://example.com/pay/102', activeConsultations: 1 },
-];
-
-
-
-
-let consultations: Consultation[] = [
-    {
-        id: "CONS-18C44E87",
-        guide: "Kalpana Tripathi",
-        customer: { name: "Pintu Kumar Sah", phone: "8651769650" },
-        status: "In Progress",
-        duration: 5,
-        conversationDuration: 0,
-        createdAt: new Date("2025-07-03T01:00:00Z"),
-    },
-    {
-        id: "CONS-22EFDF09",
-        guide: "Kalpana Tripathi",
-        customer: { name: "ravi sharma", phone: "9300555964" },
-        status: "Customer Canceled",
-        duration: 5,
-        conversationDuration: 0,
-        createdAt: new Date("2025-07-03T01:00:00Z"),
-    },
-    {
-        id: "CONS-F570CBBB",
-        guide: "Anjali",
-        customer: { name: "Atul", phone: "7355557583" },
-        status: "Completed",
-        duration: 5,
-        conversationDuration: 305,
-        createdAt: new Date("2025-07-03T01:00:00Z"),
-    },
-    {
-        id: "CONS-E99C6557",
-        guide: "Kalpana Tripathi",
-        customer: { name: "ravijaiswal1249", phone: "6307641249" },
-        status: "Customer Canceled",
-        duration: 5,
-        conversationDuration: 0,
-        createdAt: new Date("2025-07-03T01:00:00Z"),
-    },
-    {
-        id: "CONS-AA75AF6E",
-        guide: "Anjali",
-        customer: { name: "Rajendra Singh Rana", phone: "7302944788" },
-        status: "Completed",
-        duration: 5,
-        conversationDuration: 300,
-        createdAt: new Date("2025-07-03T01:00:00Z"),
-    },
-];
+interface Guide {
+    id: number;
+    // Add any other fields you consistently use
+    status: string;
+    [key: string]: any; // Allows for other properties
+}
 
 
 const transformCustomer = (customer: any) => {
-    if (!customer) return null; // Return null if customer is not found
+    if (!customer) return null;
+
+    // Find the primary profile to get the customer's main name
+    const primaryProfile = customer.profile?.profiles?.find((p: any) => p.is_primary);
+    
     return {
-        id: customer.id,
-        name: customer.profile?.full_name || customer.profile?.name || `Customer #${customer.id}`,
-        phone: `${customer.country_code} ${customer.phone_number}`,
-        createdAt: customer.created_at,
-        ...customer, // Include original data
+      ...customer, // Keep all original data for the show view
+      id: customer.id, // Ensure react-admin has the id
+      // Set a top-level 'name' for easy display in lists
+      name: primaryProfile?.full_name || `Customer #${customer.id}`,
+      // Create a formatted phone number
+      phone: `${customer.country_code} ${customer.phone_number}`,
     };
 };
 
@@ -173,12 +138,33 @@ export const dataProvider: DataProvider = {
             const data = user ? [user] : [];
             return { data, total: data.length };
         }
+        if (resource === 'admin-users') {
+            const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
+            const { field, order } = params.sort || { field: 'id', order: 'ASC' };
+            
+            // Handle filters from the AdminUserList component
+            const query = {
+                ...fetchUtils.flattenObject(params.filter),
+                _sort: field,
+                _order: order,
+                page: page,
+                per_page: perPage,
+            };
+            
+            const url = `${API_URL}/api/v1/admin-users/?${queryString.stringify(query)}`;
+            const { json } = await httpClient(url);
+
+            return {
+                data: json.admin_users || [],
+                total: json.total || 0,
+            };
+        }
         if (resource === 'guides') {
             const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
             const { field, order } = params.sort || { field: 'id', order: 'ASC' };
             const filter = params.filter;
 
-            const url = `https://appdev.astrokiran.com/auth/api/v1/guide/all`;
+            const url = `http://localhost:8082/api/v1/guides/`;
             const { json } = await httpClient(url);
             
              let guides = (json.data.guides || []).map((guide: any) => ({
@@ -186,7 +172,7 @@ export const dataProvider: DataProvider = {
         status: guide.online ? 'online' : 'offline',
                 }));
 
-            if (filter) {
+            if (filter) {   
             guides = guides.filter((guide: any) => {
                 const searchMatch = filter.q
                     ? guide.full_name && guide.full_name.toLowerCase().includes(filter.q.toLowerCase())
@@ -212,102 +198,178 @@ export const dataProvider: DataProvider = {
             }
 
         if (resource === 'pending-verifications') {
-            const url = `https://appdev.astrokiran.com/auth/api/v1/admin/guides/pending-verifications`;
-            const { json } = await httpClient(url);
-            
-            const uploaded = (json.data.kyc_uploaded || []).map((guide: any) => ({
-                ...guide,
-                kyc_status: 'Uploaded', 
-            }));
-
-            const pending = (json.data.kyc_pending || []).map((guide: any) => ({
-                ...guide,
-                kyc_status: 'Pending',
-            }));
-
-            const data = [...uploaded, ...pending];
-
-            return {
-                data: data,
-                total: data.length,
-            };
-        }
-        if (resource === 'customers') {
-            const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
-            const { q: searchTerm } = params.filter;
-
-            const url = `https://appdev.astrokiran.com/auth/api/v1/customers/?page=${page}&limit=${perPage}`;
-            const { json } = await httpClient(url);
-            
-            let processedCustomers = json.customers.map((customer: any) => ({
-                id: customer.id,
-                name: customer.profile?.full_name || customer.profile?.name || `Customer #${customer.id}`,
+                const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
+                // This URL should already be correct from the previous fix
+                const url = `${API_URL}/api/v1/guides/pending-verifications?page=${page}&per_page=${perPage}`;
                 
-                phone: `${customer.country_code} ${customer.phone_number}`,
-                createdAt: customer.created_at,
-                ...customer 
-            }));
+                const { json } = await httpClient(url);
 
-            if (searchTerm) {
-                processedCustomers = processedCustomers.filter((customer: any) =>
-                    (customer.name && customer.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                    (customer.phone && customer.phone.toLowerCase().includes(searchTerm.toLowerCase()))
-                );
+                // --- START: CORRECTED LOGIC ---
+
+                // The API response nests the grouped data inside a 'data' property.
+                const groupedData = json.data || {};
+                let flattenedData: any[] = [];
+
+                // Dynamically loop through all statuses returned by the API (e.g., ACTIVE, KYC_PENDING)
+                for (const status in groupedData) {
+                    // Check to ensure we are not iterating over prototype properties
+                    if (Object.prototype.hasOwnProperty.call(groupedData, status)) {
+                        const guidesForStatus = groupedData[status] || [];
+                        
+                        // Add a 'status' field to each guide. This is crucial for grouping in the UI.
+                        const taggedGuides = guidesForStatus.map((guide: any) => ({
+                            ...guide,
+                            status: status 
+                        }));
+
+                        // Add the guides for this status to our final flat array
+                        flattenedData = flattenedData.concat(taggedGuides);
+                    }
+                }
+                
+                // Return the final flat array and its total count, as react-admin expects.
+                return {
+                    data: flattenedData,
+                    total: flattenedData.length,
+                };
+                // --- END: CORRECTED LOGIC ---
+            }
+        
+            if (resource === 'customers') {
+                const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
+                const { q: searchTerm } = params.filter;
+                
+                // CHANGED: Point to the correct admin-service list endpoint
+                const url = `${API_URL}/api/v1/customers/?page=${page}&per_page=${perPage}${searchTerm ? `&search=${searchTerm}` : ''}`;
+                const { json } = await httpClient(url);
+
+                const processedCustomers = json.customers.map(transformCustomer);
+                let total = json.total;
+                const receivedCount = json.customers?.length || 0;
+
+                // If the API incorrectly reports 0 but we received customers,
+                // override the total to at least show the current page.
+                if (total === 0 && receivedCount > 0) {
+                    total = receivedCount;
+                }
+                    
+                return {
+                    data: processedCustomers,
+                    // NOTE: Your API should return the TOTAL number of customers in the database here.
+                    // The sample response had 'total: 0', which is likely a bug.
+                    // React Admin needs the true total for pagination to work correctly.
+                    total: total,
+                };
+
+                
+        }
+
+     
+        if (resource === 'orders') {
+            // const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
+            const customerId = params.filter.customerId;
+
+            // Only fetch if a customerId is provided in the filter
+            if (!customerId) {
+                return { data: [], total: 0 };
             }
 
+            const url = `${API_URL}/api/v1/customers/${customerId}/orders/`;
+            const { json } = await httpClient(url);
+            
+            // The API response for orders is nested under 'items'
+            const orders = json.items || [];
+            
             return {
-                data: processedCustomers,
-                total: json.pagination.total_count, 
+                data: orders.map((order: any) => ({ ...order, id: order.order_id })),
+                total: json.pagination?.total_items || 0,
             };
         }
-        
-        if (resource === 'orders') {
-            return { data: orders, total: orders.length };
-        }
-        if (resource === 'consultations') {
-            return { data: consultations, total:consultations.length}
-        }
-        throw new Error(`Unsupported resource: ${resource}`);
+            throw new Error(`Unsupported resource for getList: ${resource}`);
+
     },
 
-    create: async (resource, params) => {
+     create: async (resource, params) => {
         if (resource === 'guides') {
-            const { name, experience, ...rest } = params.data;
-
+            // --- FIX #2: Remove the incorrect payload transformation ---
+            // The form data already has the correct field names like "full_name".
             const apiPayload = {
-                ...rest,
-                full_name: name,
-                years_of_experience: parseInt(experience, 10) || 0
+                ...params.data,
+                years_of_experience: parseInt(params.data.years_of_experience, 10) || 0
             };
 
-            const { json } = await httpClient(`${API_URL}/auth/api/v1/guide/register`, {
+            const { json } = await httpClient(`${API_URL}/api/v1/guides/`, {
                 method: 'POST',
                 body: JSON.stringify(apiPayload)
             });
 
-            return { data: { ...json, id: json.id || json.guide_id } };
+            return { 
+                data: { ...json, id: json.guide_id } 
+            };
         }
-     
+
+        if (resource === 'customers') {
+            // 1. The form data now directly matches the API payload.
+            const apiPayload = {
+                area_code: params.data.area_code,
+                phone_number: params.data.phone_number,
+            };
+            
+            // 2. Make the single API call to your admin-service.
+            const { json } = await httpClient(`${API_URL}/api/v1/customers/`, {
+                method: 'POST',
+                body: JSON.stringify(apiPayload),
+            });
+            
+            // 3. Return the data in the format React Admin expects.
+            return { 
+                data: { ...json, id: json.customer_id } 
+            };
+        }
+            
+        if (resource === 'orders') {
+            const { customerId, ...rest } = params.data;
+            if (!customerId) throw new Error('Customer ID is required to create an order.');
+
+            const url = `${API_URL}/api/v1/customers/${customerId}/orders/`;
+            const { json } = await httpClient(url, {
+                method: 'POST',
+                body: JSON.stringify(rest),
+            });
+            return { data: { ...json, id: json.order_id } };
+        }
+        if (resource === 'admin-users') {
+            const url = `${API_URL}/api/v1/admin-users/`;
+            const { json } = await httpClient(url, {
+                method: 'POST',
+                body: JSON.stringify(params.data),
+            });
+            return { data: { ...json, id: json.id } };
+        }
+        
         throw new Error(`Unsupported resource: ${resource}`);
     },
     update: async (resource, params) => {
-        if (resource === 'guides') {
-            const guideIndex = guides.findIndex(g => g.id == params.id);
-
-            if (guideIndex > -1) {
-                const updatedGuide = {
-                    ...guides[guideIndex],
-                    ...params.data,
-                };
-                guides[guideIndex] = updatedGuide;
-                
-                return Promise.resolve({ data: updatedGuide }) as any;
-            }
-            return Promise.reject(new Error('Guide not found in mock data'));
+         if (resource === 'guides') {
+            const url = `${API_URL}/api/v1/guides/${params.id}`;
+            const { json } = await httpClient(url, {
+                method: 'PATCH',
+                body: JSON.stringify(params.data),
+            });
+            return { data: json }; 
+        }
+        if (resource === 'admin-users') {
+             const url = `${API_URL}/api/v1/admin-users/${params.id}`;
+             const { json } = await httpClient(url, {
+                method: 'PATCH', // PATCH is suitable for updating parts of a resource
+                body: JSON.stringify(params.data),
+             });
+             return { data: { ...json, id: json.id } };
         }
        
 
         return Promise.resolve({ data: { ...params.data, id: params.id } }) as any;
+        
     },
 
     getOne: async (resource, params) => {
@@ -315,51 +377,56 @@ export const dataProvider: DataProvider = {
         console.log(`getOne triggered for resource: ${resource}, id: ${params.id}`);
 
         if (resource === 'guides') {
-            const url = `${API_URL}/auth/api/v1/guide/all`;
-            const { json } = await httpClient(url);
-            const record = (json.data.guides || []).find((r: any) => r.id == params.id);
-            
-            if (!record) {
-                throw new Error('Guide not found');
-            }
-            
-            return { data: record };
-        }
-         if (resource === 'customers') {
-            // 1. Fetch the entire list of customers from the base endpoint.
-            const url = `${API_URL}/auth/api/v1/customers`;
+            const url = `${API_URL}/api/v1/guides/${params.id}`;
             const { json } = await httpClient(url);
 
-            // 2. Find the specific customer in the returned array using its ID.
-            const customer = (json.customers || []).find((c: any) => String(c.id) === params.id);
-
-            // 3. If not found, throw an error.
-            if (!customer) {
-                throw new Error('Customer not found in the fetched list.');
+            if (!json || typeof json.id === 'undefined') {
+                throw new Error('Guide data not found or is invalid in API response');
             }
-
-            // 4. Transform the found customer and return it.
-            return {
-                data: transformCustomer(customer)
-            };
+            
+            return { data: json };
         }
-        
-        throw new Error(`getOne is not implemented for resource: ${resource}`);
+        if (resource === 'customers') {
+            // CHANGED: Fetch a single customer from the API
+            const url = `${API_URL}/api/v1/customers/${params.id}`;
+            const { json } = await httpClient(url);
+            
+            // Use the same transformation for consistency
+            const transformedData = transformCustomer(json);
+
+            if (!transformedData) {
+                throw new Error('Customer not found');
+            }
+            return { data: transformedData };
+        }
+
+        console.error(`getOne not implemented for resource: ${resource}`);
+        return Promise.reject(new Error(`Unsupported resource: ${resource}`));
     },
+
+        
     updateMany: async (resource, params) => {
-    if (resource === 'guides') {
-        const { ids, data } = params;
-        
-        ids.forEach(id => {
-            const guideIndex = guides.findIndex(g => g.id == id);
-            if (guideIndex > -1) {
-                guides[guideIndex] = { ...guides[guideIndex], ...data };
-            }
-        });
-        
-        return Promise.resolve({ data: ids });
-    }
-    throw new Error(`Unsupported resource: ${resource}`);
+        if (resource === 'guides') {
+            const { ids, data } = params;
+            
+            ids.forEach(id => {
+                const guideIndex = guides.findIndex(g => g.id == id);
+                if (guideIndex > -1) {
+                    guides[guideIndex] = { ...guides[guideIndex], ...data };
+                }
+            });
+            
+            return Promise.resolve({ data: ids });
+        }
+        throw new Error(`Unsupported resource: ${resource}`);
+        },
+    
+    custom: async (type: string, resource: string, params: any) => {
+        if (resource === 'orders' && type === 'action') {
+            const { customerId, orderId, action, data } = params;
+            return orderAction(action, customerId, orderId, data);
+        }
+        throw new Error(`Unsupported custom action: ${type}`);
 },
 
     getMany: async () => ({ data: [] }),

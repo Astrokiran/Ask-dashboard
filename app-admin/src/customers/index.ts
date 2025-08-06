@@ -1,7 +1,7 @@
 import { CustomerList } from './CustomerList';
+import { CustomerShow } from './CustomerShow';
 
-const customers = {
-    list: CustomerList,
-};
-
-export default customers;
+export default {
+    list: CustomerList, 
+    show: CustomerShow,
+}

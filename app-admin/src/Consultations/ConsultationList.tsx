@@ -18,9 +18,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../components/ui/table"; // Assuming path
-import { Checkbox } from "../components/ui/checkbox"; // Assuming path
-import { Badge } from "../components/ui/badge"; // Assuming path
+} from "../components/ui/table"; 
+import { Checkbox } from "../components/ui/checkbox"; 
+import { Badge } from "../components/ui/badge"; 
 
 interface Consultation {
   id: string | number;
@@ -54,7 +54,6 @@ const ConsultationFilter: FC = (props) => (
 );
 
 
-// --- 3. StatusBadge Component ---
 const statusStyles: Record<Consultation['status'], string> = {
   "Completed": "bg-green-500/20 text-green-700 border-green-500/30 hover:bg-green-500/30",
   "In Progress": "bg-blue-500/20 text-blue-700 border-blue-500/30 hover:bg-blue-500/30",
@@ -68,7 +67,6 @@ const StatusBadge: FC<{ status: Consultation['status'] }> = ({ status }) => (
   </Badge>
 );
 
-// --- 4. ConsultationListItem Component (A single row) ---
 interface ConsultationListItemProps {
   consultation: Consultation;
   isSelected: boolean;
@@ -110,15 +108,12 @@ const ConsultationListItem: FC<ConsultationListItemProps> = ({ consultation, isS
   );
 };
 
-// --- 5. ConsultationDataGrid Component (With FIX) ---
 const ConsultationDataGrid = () => {
-  // ✅ FIX: Use `onSelect` which is the correct function from the context
   const { data, selectedIds, onToggleItem, onSelect, isLoading } = useListContext<Consultation>();
 
   if (isLoading) return <div>Loading...</div>;
   if (!data || data.length === 0) return <div>No consultations found.</div>;
 
-  // ✅ FIX: This handler now calls `onSelect` to manage bulk selection
   const handleSelectAll = (checked: boolean | 'indeterminate') => {
     if (checked) {
       onSelect(data.map(item => item.id));
@@ -165,7 +160,6 @@ const ConsultationDataGrid = () => {
 };
 
 
-// --- 6. Main ConsultationList Page Component ---
 const ConsultationListActions = () => (
   <TopToolbar>
     <CreateButton label="Create Consultation" />

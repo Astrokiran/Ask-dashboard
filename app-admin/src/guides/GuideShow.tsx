@@ -10,6 +10,23 @@ import {
     Identifier,
     EditButton,
 } from 'react-admin';
+import { Link } from 'react-router-dom';
+
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '../components/ui/alert-dialog';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { UserX } from 'lucide-react';
+import { Banknote, Eye } from 'lucide-react';
 import {
     Card,
     CardHeader,
@@ -41,6 +58,13 @@ const DocumentImage = ({ label, src }: { label: string, src?: string }) => (
     </div>
 );
 
+const maskAccountNumber = (accNum: string): string => {
+    if (accNum && accNum.length > 4) {
+        return `****${accNum.slice(-4)}`;
+    }
+    return '****';
+};
+
 const DetailItem = ({ label, children }: { label: string, children: React.ReactNode }) => (
   <div>
     <p className="text-sm text-muted-foreground">{label}</p>
@@ -61,7 +85,7 @@ const KycDocumentSection = ({ guideId }: { guideId: Identifier }) => {
             setLoading(true);
             try {
                 // --- UPDATED: Correct API endpoint for KYC docs ---
-                const { json } = await httpClient(`${API_URL}/guides/${guideId}/kyc-documents`);
+                const { json } = await httpClient(`${API_URL}/guides/kyc-documents/${guideId}`);
                 // This section can be built out when the KYC API is ready
                 setDocuments(json.data || {});
             } catch (error: any) {
@@ -90,6 +114,81 @@ const KycDocumentSection = ({ guideId }: { guideId: Identifier }) => {
                 </div>
             </CardContent>
         </Card>
+    );
+};
+
+const OffboardGuideButton = () => {
+    const record = useRecordContext();
+    const notify = useNotify();
+    const refresh = useRefresh();
+    const navigate = useNavigate();
+    
+    const [isOpen, setIsOpen] = useState(false);
+    const [inputValue, setInputValue] = useState('');
+    const [isOffboarding, setIsOffboarding] = useState(false);
+
+    if (!record) return null;
+
+  
+
+    const handleOffboard = async () => {
+        setIsOffboarding(true);
+        try {
+            await httpClient(`${API_URL}/guides/${record.id}/offboard`, {
+                method: 'POST',
+            });
+            notify('Guide offboarded successfully!', { type: 'success' });
+            setIsOpen(false);
+            refresh(); // Refresh the current view to show the new status
+            navigate('/guides'); // Optional: redirect back to the list after offboarding
+        } catch (error: any) {
+            const errorMessage = error.body?.message || error.message || 'An unknown error occurred.';
+            notify(`Error: ${errorMessage}`, { type: 'error' });
+        } finally {
+            setIsOffboarding(false);
+        }
+    };
+
+    const isConfirmationValid = inputValue === 'OFFBOARD';
+
+    return (
+        <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+            <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                    <UserX className="mr-2 h-4 w-4" />
+                    Offboard Guide
+                </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This will offboard the guide and change their status. This action can be undone, but will require manual state changes.
+                        To confirm, please type <strong>OFFBOARD</strong> in the box below.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="py-4">
+                    <Label htmlFor="offboard-confirm">Confirmation</Label>
+                    <Input
+                        id="offboard-confirm"
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        placeholder="Type OFFBOARD to confirm"
+                        autoFocus
+                    />
+                </div>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setInputValue('')}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                        onClick={handleOffboard}
+                        disabled={!isConfirmationValid || isOffboarding}
+                        className="bg-destructive hover:bg-destructive/90"
+                    >
+                        {isOffboarding ? <CircularProgress size={20} color="inherit" /> : 'Confirm Offboard'}
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     );
 };
 
@@ -150,6 +249,69 @@ const StatusControlSection = () => {
         </Card>
     );
 }
+
+
+const BankAccountSummaryCard = ({ guideId }: { guideId: Identifier }) => {
+    const [defaultAccount, setDefaultAccount] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchAccounts = async () => {
+            try {
+                setLoading(true);
+                const { json } = await httpClient(`${API_URL}/guides/${guideId}/accounts`);
+                const accounts = json || [];
+                // Find the default account or take the first one if none is default
+                const defaultAcc = accounts.find((acc: any) => acc.is_default) || accounts[0];
+                setDefaultAccount(defaultAcc);
+            } catch (error) {
+                console.error("Could not fetch bank accounts", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchAccounts();
+    }, [guideId]);
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Bank Account Details</CardTitle>
+                <CardDescription>Default account for payouts.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {loading ? (
+                    <Box display="flex" justifyContent="center"><CircularProgress size={24} /></Box>
+                ) : defaultAccount ? (
+                    <div className="space-y-4">
+                        <DetailItem label="Bank Name">{defaultAccount.bank_name}</DetailItem>
+                        <DetailItem label="Account Number">{maskAccountNumber(defaultAccount.account_number)}</DetailItem>
+                        <Button 
+                            className="w-full mt-4" 
+                            variant="outline" 
+                            onClick={() => navigate(`/guides/${guideId}/accounts`)}
+                        >
+                            <Eye className="mr-2 h-4 w-4" /> View & Manage All Accounts
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="text-center text-muted-foreground py-4">
+                        <Banknote className="mx-auto h-8 w-8 mb-2" />
+                        <p>No bank accounts found.</p>
+                        <Button 
+                            className="w-full mt-4" 
+                            onClick={() => navigate(`/guides/${guideId}/accounts`)}
+                        >
+                            Add Bank Account
+                        </Button>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
+};
+
 // --- Main Show View (Updated to display all new data) ---
 const GuideShowView = () => {
     const record = useRecordContext();
@@ -204,15 +366,7 @@ const GuideShowView = () => {
                   </Card>
                 </div>
                 <div>
-                  <Card>
-                      <CardHeader><CardTitle>Bank Account Details</CardTitle></CardHeader>
-                      <CardContent className="space-y-4">
-                          <DetailItem label="Account Holder">{record.bank_details?.holder_name}</DetailItem>
-                          <DetailItem label="Account Number">{record.bank_details?.account_number}</DetailItem>
-                          <DetailItem label="IFSC Code">{record.bank_details?.ifsc_code}</DetailItem>
-                          <DetailItem label="Bank Name">{record.bank_details?.bank_name}</DetailItem>
-                      </CardContent>
-                  </Card>
+                      <BankAccountSummaryCard guideId={record.id} />
                 </div>
             </div>
       
@@ -225,12 +379,14 @@ const GuideShowView = () => {
 export const GuideShow = () => {
     const navigate = useNavigate();
     const TopActions = () => (
-         <TopToolbar>
+        <TopToolbar>
             <Button onClick={() => navigate(-1)} variant="ghost" size="sm">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Guides
             </Button>
-        <EditButton />
+            <div className="flex-grow" /> {/* This pushes the buttons to the right */}
+            <EditButton />
+            <OffboardGuideButton /> 
         </TopToolbar>
     );
 

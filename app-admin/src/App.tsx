@@ -1,5 +1,6 @@
 import React from 'react';
-import { Admin, Resource, bwDarkTheme, bwLightTheme } from 'react-admin';
+import { Admin, Resource, bwDarkTheme, bwLightTheme, CustomRoutes } from 'react-admin';
+import { Route } from 'react-router-dom';
 import { authProvider } from './auth/authProvider';
 import { CustomLoginPage } from './auth/LoginPage';
 import { MyLayout } from './layout/MyLayout';
@@ -10,6 +11,7 @@ import { AdminUserList, AdminUserCreate, AdminUserEdit } from './users/AdminUser
 // You might want to use a more appropriate icon
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { KycPendingList } from './guides/KycPendingList';
+import { GuideBankAccountsPage } from './guides/GuideBankAccountPage'; 
 
 
 // Import the resource objects
@@ -69,6 +71,9 @@ const App: React.FC = () => (
             name="pending-verifications"
             list={KycPendingList}
         />
+        <CustomRoutes>
+            <Route path="/guides/:id/accounts" element={<GuideBankAccountsPage />} />
+        </CustomRoutes>
     </Admin>
 );
 

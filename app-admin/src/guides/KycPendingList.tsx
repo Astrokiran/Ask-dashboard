@@ -19,7 +19,7 @@ import {
 } from '@mui/icons-material';
 import { Button, Box, Tabs, Tab, Typography, Alert } from '@mui/material';
 import { UploadFile as UploadKycIcon } from '@mui/icons-material';
-import { ArrowBack, VerifiedUser, Preview } from '@mui/icons-material';
+import { ArrowBack, VerifiedUser, Preview,GppBad } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { httpClient } from '../dataProvider';
 import KycDocumentSection from './KycPreview';
@@ -43,17 +43,31 @@ export const KycActionButtons = ({ record, status, onUploadClick }: KycActionBut
     const [isLoading, setIsLoading] = useState(false);
 
     // Generic handler for most actions (Verify, Send Agreement, etc.)
-    const handleAction = async (action: 'send-agreement' | 'mark-agreement-signed' | 'complete-onboarding' | 'kyc/verify') => {
+    const handleAction = async (action: 'send-agreement' | 'mark-agreement-signed' | 'complete-onboarding' | 'kyc/verify' | 'kyc/reject') => {
         setIsLoading(true);
-        try {
-            const url = `${API_URL}/${record.id}/${action}`;
-            let options: any = { method: action === 'kyc/verify' ? 'PATCH' : 'POST' };
+        
+            try {
+                const url = `${API_URL}/${record.id}/${action}`;
+                const method = action.startsWith('kyc/') ? 'PATCH' : 'POST';
+                let body;
 
-            if (action === 'complete-onboarding') {
-                options.body = JSON.stringify({ base_rate_per_minutes: 50 });
-            } else if (action === 'kyc/verify') {
-                options.body = JSON.stringify({ status: "verified", notes: "Verified via admin panel" });
-            }
+                switch (action) {
+                    case 'complete-onboarding':
+                        body = JSON.stringify({ base_rate_per_minutes: 50 });
+                        break;
+                    case 'kyc/verify':
+                        body = JSON.stringify({ status: "verified", notes: "Verified via admin panel" });
+                        break;
+                    case 'kyc/reject':
+                        body = JSON.stringify({ status: "rejected", notes: "Rejected via admin panel" });
+                        break;
+                }
+            
+                const options = {
+                    method: method,
+                    body: body,
+                }
+
             
             await httpClient(url, options);
             const successMessage = action.replace(/-/g, ' ').replace('kyc/', '');
@@ -85,20 +99,31 @@ export const KycActionButtons = ({ record, status, onUploadClick }: KycActionBut
             )}
 
             {/* Button to Verify already uploaded KYC */}
-            {status === 'KYC_UPLOADED' && (
-                <Button 
-                    variant="contained" 
-                    size="small" 
-                    color="success" 
-                    onClick={() => handleAction('kyc/verify')} 
-                    disabled={isLoading} 
-                    startIcon={<VerifiedUser />}
-                >
-                    Verify KYC
-                </Button>
-            )}
+         {status === 'KYC_UPLOADED' && (
+                    <>
+                        <Button 
+                        variant="contained" 
+                        size="small" 
+                        color="success" 
+                        onClick={() => handleAction('kyc/verify')} 
+                        disabled={isLoading} 
+                        startIcon={<VerifiedUser />}
+                        >
+                        Verify KYC
+                        </Button>
+                        <Button
+                        variant="contained"
+                        size="small"
+                        color="error"
+                        onClick={() => handleAction('kyc/reject')}
+                        disabled={isLoading}
+                        startIcon={<GppBad />} 
+                        >
+                        Reject KYC
+                        </Button>
+                    </>
+                    )}
 
-            {/* Button to Send Agreement */}
             {status === 'KYC_VERIFIED' && (
                 <Button 
                     variant="outlined" 
@@ -108,6 +133,18 @@ export const KycActionButtons = ({ record, status, onUploadClick }: KycActionBut
                     startIcon={<Send />}
                 >
                     Send Agreement
+                </Button>
+            )}
+
+            {status==='KYC_FAILED' && (
+
+                <Button
+                  variant='outlined'
+                  size='small'
+                //   onClick={() => handleAction('kyc/verify')}
+                  startIcon={<GppBad />}
+                >
+                  
                 </Button>
             )}
 

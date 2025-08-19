@@ -120,14 +120,19 @@ for GUIDE_ID in $GUIDE_IDS; do
   echo "Guide Status after agreement signed: $GUIDE_STATUS"
 
   # Complete onboarding
-  BASE_RATE_PER_MINUTES=100
+  BASE_RATE_PER_MINUTES="150"
+  REVENUE_SHARE=75
   echo "Completing Onboarding for Guide $GUIDE_ID..."
-  COMPLETE_ONBOARDING_PAYLOAD="{\"base_rate_per_minutes\": $BASE_RATE_PER_MINUTES}"
-  COMPLETE_ONBOARDING_RESP=$(curl -s -X POST "${ADMIN_BASE}/guides/${GUIDE_ID}/complete-onboarding" \
-    -H "Authorization: Bearer $ADMIN_ACCESS_TOKEN" \
-    -H "Content-Type: application/json" \
-    -d "$COMPLETE_ONBOARDING_PAYLOAD")
-  echo "Complete Onboarding Response: $COMPLETE_ONBOARDING_RESP"
+  COMPLETE_ONBOARDING_PAYLOAD="{\"price_per_minute\": \"$BASE_RATE_PER_MINUTES\", \"revenue_share\": $REVENUE_SHARE}"
+
+# --- Send the Request ---
+echo "Sending Payload: $COMPLETE_ONBOARDING_PAYLOAD"
+COMPLETE_ONBOARDING_RESP=$(curl -s -X POST "${ADMIN_BASE}/guides/${GUIDE_ID}/complete-onboarding" \
+  -H "Authorization: Bearer $ADMIN_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "$COMPLETE_ONBOARDING_PAYLOAD")
+
+echo "Complete Onboarding Response: $COMPLETE_ONBOARDING_RESP"
   GUIDE_STATUS=$(curl -s -H "Authorization: Bearer $ADMIN_ACCESS_TOKEN" "${ADMIN_BASE}/guides/${GUIDE_ID}/status")
   echo "Guide Status after onboarding complete: $GUIDE_STATUS"
 done

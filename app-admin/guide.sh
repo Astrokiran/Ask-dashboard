@@ -159,10 +159,10 @@ for i in $(seq -f "%03g" 1 50)
 do
   log_message "Starting iteration $i/20"
   # --- Calculate Current Guide's Details ---
-  GUIDE_ID_SUFFIX=$((500 + 10#$i))  # Force decimal interpretation
+  GUIDE_ID_SUFFIX=$((100 + 10#$i))  # Force decimal interpretation
   GUIDE_PHONE="6000400${GUIDE_ID_SUFFIX}"
   GUIDE_NAME="guide${GUIDE_ID_SUFFIX}"
-  GUIDE_EMAIL="guide${GUIDE_ID_SUFFIX}22@gmail.com"
+  GUIDE_EMAIL="guide${GUIDE_ID_SUFFIX}19@gmail.com"
   TRACE_ID=$(uuidgen)  # Generate unique trace ID for logging
 
   log_message "\n=================================================="

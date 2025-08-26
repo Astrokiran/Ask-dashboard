@@ -1,145 +1,86 @@
 // /consultations/ConsultationList.tsx
-import React from 'react';
 import {
-    Box,
-    Button,
-    Card,
-    Typography,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Avatar,
-    Chip,
-    Stack,
-    SvgIcon,
-} from '@mui/material';
-import { PlusCircle, Video, MessageSquare, Phone } from 'lucide-react';
+    List,
+    Datagrid,
+    TextField,
+    TextInput,
+    SelectInput,
+    FunctionField,
+    TopToolbar,
+    FilterButton,
+    CreateButton,
+    ExportButton,
+    NumberField,
+    DateField,
+} from 'react-admin';
+import { Chip } from '@mui/material';
 
-// --- Types for our dummy data ---
-type ConsultationStatus = 'Completed' | 'In-Progress' | 'Failed' | 'Scheduled';
-type ConsultationMode = 'Video' | 'Chat' | 'Call';
-
-interface Consultation {
-    id: string;
-    guide: {
-        name: string;
-        avatarUrl: string;
+// --- Reusable StatusField Component ---
+// This component renders the colorful status chip.
+const StatusField = ({ record }: { record?: any }) => {
+    if (!record || !record.state) return null;
+    const status = record.state;
+    // Map API status values to colors and labels
+    const statusStyles: { [key: string]: any } = {
+        requested: { bgcolor: 'rgba(245, 124, 0, 0.1)', color: '#f57c00' },
+        in_progress: { bgcolor: 'rgba(2, 136, 209, 0.1)', color: '#0288d1' },
+        completed: { bgcolor: 'rgba(56, 142, 60, 0.1)', color: '#388e3c' },
+        cancelled: { bgcolor: 'rgba(109, 109, 109, 0.1)', color: '#6d6d6d' },
+        failed: { bgcolor: 'rgba(211, 47, 47, 0.1)', color: '#d32f2f' },
+        // Add any other states from your API here
     };
-    customer: {
-        name: string;
-        avatarUrl: string;
-    };
-    mode: ConsultationMode;
-    duration: number; // in seconds
-    status: ConsultationStatus;
-}
-
-// --- Dummy Data ---
-const consultations: Consultation[] = [
-    { id: 'CON-001', guide: { name: 'Dr. Aris', avatarUrl: '/avatars/guide1.png' }, customer: { name: 'John Doe', avatarUrl: '/avatars/customer1.png' }, mode: 'Video', duration: 3600, status: 'Completed' },
-    { id: 'CON-002', guide: { name: 'Isabelle', avatarUrl: '/avatars/guide2.png' }, customer: { name: 'Jane Smith', avatarUrl: '/avatars/customer2.png' }, mode: 'Chat', duration: 1250, status: 'In-Progress' },
-    { id: 'CON-003', guide: { name: 'Master Zed', avatarUrl: '/avatars/guide3.png' }, customer: { name: 'Peter Jones', avatarUrl: '/avatars/customer3.png' }, mode: 'Call', duration: 500, status: 'Failed' },
-    { id: 'CON-004', guide: { name: 'Dr. Aris', avatarUrl: '/avatars/guide1.png' }, customer: { name: 'Mary Jane', avatarUrl: '/avatars/customer4.png' }, mode: 'Video', duration: 1800, status: 'Completed' },
-    { id: 'CON-005', guide: { name: 'Oracle Kai', avatarUrl: '/avatars/guide4.png' }, customer: { name: 'Chris Lee', avatarUrl: '/avatars/customer5.png' }, mode: 'Chat', duration: 0, status: 'Scheduled' },
-];
-
-// --- Helper Components for Styling ---
-
-// A styled Chip for the status
-const StatusChip = ({ status }: { status: ConsultationStatus }) => {
-    const statusStyles = {
-        Completed: { bgcolor: 'rgba(56, 142, 60, 0.1)', color: '#388e3c' },
-        'In-Progress': { bgcolor: 'rgba(2, 136, 209, 0.1)', color: '#0288d1' },
-        Failed: { bgcolor: 'rgba(211, 47, 47, 0.1)', color: '#d32f2f' },
-        Scheduled: { bgcolor: 'rgba(245, 124, 0, 0.1)', color: '#f57c00' },
-    };
-    return <Chip label={status} sx={{ ...statusStyles[status], fontWeight: 500 }} />;
+    return <Chip label={status} sx={{ ...statusStyles[status], fontWeight: 500, textTransform: 'capitalize' }} />;
 };
 
-// A component to display user info with an avatar
-const UserCell = ({ name, avatarUrl }: { name: string; avatarUrl: string }) => (
-    <Stack direction="row" alignItems="center" spacing={1.5}>
-        <Avatar src={avatarUrl} sx={{ width: 32, height: 32 }} />
-        <Typography variant="body2" fontWeight={500}>{name}</Typography>
-    </Stack>
+// --- Filters for the Consultation List ---
+// Each input's `source` prop maps directly to a query parameter in the API call.
+const consultationFilters = [
+    <TextInput key="q" label="Search by Name" source="q" alwaysOn />,
+    <SelectInput key="status" source="status" label="Status" alwaysOn choices={[
+        { id: 'requested', name: 'Requested' },
+        { id: 'in_progress', name: 'In Progress' },
+        { id: 'completed', name: 'Completed' },
+        { id: 'cancelled', name: 'Cancelled' },
+        { id: 'failed', name: 'Failed' },
+    ]} />,
+    <TextInput key="id" label="Filter by Consultation ID" source="id" />,
+
+    <TextInput key="guide_id" label="Filter by Guide ID" source="guide_id" />,
+    <TextInput key="customer_id" label="Filter by Customer ID" source="customer_id" />,
+];
+
+// --- Custom Actions for the List Header (e.g., Create & Filter buttons) ---
+const ListActions = () => (
+    <TopToolbar>
+        <FilterButton />
+        <CreateButton />
+        <ExportButton />
+    </TopToolbar>
 );
 
 // --- Main Component ---
-export const ConsultationList = () => {
-    const ModeIcon = ({ mode }: { mode: ConsultationMode }) => {
-        const icons = {
-            Video: Video,
-            Chat: MessageSquare,
-            Call: Phone,
-        };
-        const Icon = icons[mode];
-        return (
-            <Stack direction="row" alignItems="center" spacing={1} color="text.secondary">
-                 <SvgIcon component={Icon} sx={{width: 16, height: 16}} />
-                 <Typography variant="body2">{mode}</Typography>
-            </Stack>
-        );
-    };
-    
-    return (
-        <Box sx={{ p: 3, backgroundColor: '#f9fafb', minHeight: '100vh' }}>
-            {/* Header */}
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-                <Typography variant="h4" fontWeight={700}>
-                    Consultations
-                </Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<PlusCircle size={20} />}
-                    sx={{ textTransform: 'none', fontWeight: 600, py: 1.5, px: 3 }}
-                >
-                    Create Consultation
-                </Button>
-            </Stack>
+export const ConsultationList = () => (
+    <List 
+      filters={consultationFilters} 
+      actions={<ListActions />}
+      title="Consultations"
+    >
+        <Datagrid rowClick="show" bulkActionButtons={false} sx={{ '& .RaDatagrid-headerCell': { fontWeight: 'bold' } }}>
+            {/* The `source` prop must match a key in the API response objects */}
+            <TextField source="id" label="Consultation ID" />
+            <TextField source="customer_name" label="Customer Name" />
+            <TextField source="guide_name" label="Guide Name" />
+            <NumberField source="guide_id" label="Guide ID" />
 
-            {/* Table Card */}
-            <Card sx={{ borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-                <TableContainer>
-                    <Table>
-                        <TableHead sx={{ '& .MuiTableCell-head': {
-                            bgcolor: 'grey.50',
-                            color: 'text.secondary',
-                            fontWeight: 600,
-                            borderBottom: '1px solid #e0e0e0',
-                        } }}>
-                            <TableRow>
-                                <TableCell>CONSULTATION ID</TableCell>
-                                <TableCell>GUIDE</TableCell>
-                                <TableCell>CUSTOMER</TableCell>
-                                <TableCell>MODE</TableCell>
-                                <TableCell>TIME SPENT</TableCell>
-                                <TableCell>STATUS</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody sx={{ '& .MuiTableRow-root:hover': { bgcolor: 'grey.100' } }}>
-                            {consultations.map((row) => (
-                                <TableRow key={row.id} sx={{ '& .MuiTableCell-root': { border: 0, py: 2 } }}>
-                                    <TableCell>
-                                        <Typography variant="body2" color="text.secondary">{row.id}</Typography>
-                                    </TableCell>
-                                    <TableCell><UserCell name={row.guide.name} avatarUrl={row.guide.avatarUrl} /></TableCell>
-                                    <TableCell><UserCell name={row.customer.name} avatarUrl={row.customer.avatarUrl} /></TableCell>
-                                    <TableCell><ModeIcon mode={row.mode} /></TableCell>
-                                    <TableCell>
-                                        <Typography variant="body2">{`${Math.floor(row.duration / 60)} min ${row.duration % 60} sec`}</Typography>
-                                    </TableCell>
-                                    <TableCell><StatusChip status={row.status} /></TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Card>
-        </Box>
-    );
-};
+            {/* Use FunctionField to render our custom StatusField component */}
+            <FunctionField
+                label="Status"
+                render={(record: any) => <StatusField record={record} />}
+            />
+            
+            <DateField source="requested_at" label="Requested At" showTime />
+        </Datagrid>
+    </List>
+);
 
 export default ConsultationList;

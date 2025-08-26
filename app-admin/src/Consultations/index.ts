@@ -1,9 +1,9 @@
 import { ConsultationList } from "./ConsultationList";
-import { ConsultationCreate } from "./ConsultationCreate";
+import { ConsultationShow } from "./ConsultationShow";
 
 const consultations = {
     list: ConsultationList,
-    create: ConsultationCreate,
+    show: ConsultationShow,
 };
 
 export default consultations;

@@ -130,6 +130,31 @@ const transformCustomer = (customer: any) => {
     };
 };
 
+const transformGuide = (guide: any) => {
+    if (!guide) return null;
+    return {
+        id: guide.ID, // Map uppercase 'ID' to lowercase 'id'
+        x_auth_id: guide.XAuthID,
+        full_name: guide.FullName,
+        email: guide.Email,
+        phone_number: guide.PhoneNumber,
+        created_at: guide.CreatedAt,
+        profile_picture_url: guide.ProfilePictureURL,
+        chat_enabled: guide.ChatEnabled,
+        voice_enabled: guide.VoiceEnabled,
+        video_enabled: guide.VideoEnabled,
+        is_online: guide.is_online,
+        voice_channel_name: guide.VoiceChannelName,
+        video_channel_name: guide.VideoChannelName,
+        years_of_experience: guide.YearsOfExperience,
+        is_busy: guide.is_busy,
+        skills: guide.skills,
+        languages: guide.languages,
+        rating: guide.rating,
+        number_of_consultation: guide.number_of_consultation,
+    };
+};
+
 export const dataProvider: DataProvider = {
     getList: async (resource, params) => {
         if (resource === 'users') {
@@ -263,6 +288,34 @@ export const dataProvider: DataProvider = {
 
                 
         }
+        if (resource === 'consultations') {
+            const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
+            // Destructure the filters for cleaner access
+            const { q, status, guide_id, customer_id,id } = params.filter;
+
+            const query = {
+                page: page,
+                pageSize: perPage,
+                // Add the filters to the query object.
+                // queryString will ignore any that are null or undefined.
+                query: q, 
+                status: status,
+                guide_id: guide_id,
+                customer_id: customer_id,
+                id: id,
+            };
+
+            // --- THIS IS THE FIX ---
+            // Use queryString.stringify to correctly append the filters to the URL
+            const url = `${API_URL}/api/pixel-admin/api/v1/consultations?${queryString.stringify(query)}`;
+            
+            const { json } = await httpClient(url);
+
+            return {
+                data: json.data.data,
+                total: json.data.pagination.total_items,
+            };
+        }
 
      
         if (resource === 'orders') {
@@ -356,8 +409,7 @@ export const dataProvider: DataProvider = {
                 method: 'PATCH',
                 body: JSON.stringify(params.data),
             });
-            return { data: json }; 
-        }
+            return { data: transformGuide(json) };        }
         if (resource === 'admin-users') {
              const url = `${API_URL}/api/pixel-admin/api/v1/admin-users/${params.id}`;
              const { json } = await httpClient(url, {
@@ -377,14 +429,38 @@ export const dataProvider: DataProvider = {
         console.log(`getOne triggered for resource: ${resource}, id: ${params.id}`);
 
         if (resource === 'guides') {
-            const url = `${API_URL}/api/pixel-admin/api/v1/guides/${params.id}`;
-            const { json } = await httpClient(url);
+        const url = `${API_URL}/api/pixel-admin/api/v1/guides/${params.id}`;
+        const { json } = await httpClient(url);
 
-            if (!json || typeof json.id === 'undefined') {
-                throw new Error('Guide data not found or is invalid in API response');
-            }
-            
-            return { data: json };
+        // Check if the API returned any data at all
+        if (!json) {
+            throw new Error('API returned no data for the guide');
+        }
+
+        // --- FIX: Transform the API data to what react-admin expects ---
+        const transformedData = {
+            id: json.ID, // Map uppercase 'ID' to lowercase 'id' (Required)
+            x_auth_id: json.XAuthID,
+            full_name: json.FullName,
+            email: json.Email,
+            phone_number: json.PhoneNumber,
+            created_at: json.CreatedAt,
+            profile_picture_url: json.ProfilePictureURL,
+            chat_enabled: json.ChatEnabled,
+            voice_enabled: json.VoiceEnabled,
+            video_enabled: json.VideoEnabled,
+            is_online: json.is_online,
+            voice_channel_name: json.VoiceChannelName,
+            video_channel_name: json.VideoChannelName,
+            years_of_experience: json.YearsOfExperience,
+            is_busy: json.is_busy,
+            skills: json.skills,
+            languages: json.languages,
+            rating: json.rating,
+            number_of_consultation: json.number_of_consultation,
+        };
+        
+        return { data: transformedData };
         }
         if (resource === 'customers') {
             // CHANGED: Fetch a single customer from the API
@@ -398,6 +474,16 @@ export const dataProvider: DataProvider = {
                 throw new Error('Customer not found');
             }
             return { data: transformedData };
+        }
+        if (resource === 'consultations') {
+            // This assumes you will create a `getOne` endpoint in your Go service
+            const url = `${API_URL}/api/pixel-admin/api/v1/consultations/${params.id}`;
+            const { json } = await httpClient(url);
+            
+            // Assuming the getOne response is { success: true, data: { ...consultation } }
+            return {
+                data: json.data,
+            };
         }
 
         console.error(`getOne not implemented for resource: ${resource}`);

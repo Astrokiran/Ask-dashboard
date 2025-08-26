@@ -9,7 +9,7 @@ import { Label } from '../components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from '../components/ui/dialog';
 import { CircularProgress } from '@mui/material';
 
-const API_URL = 'http://localhost:8082/api/v1';
+const API_URL = 'http://localhost:8083/api/pixel-admin/api/v1';
 
 interface AddBankAccountFormProps {
     guideId: string;

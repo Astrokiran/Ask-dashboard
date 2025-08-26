@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import { UploadFile } from '@mui/icons-material';
 
-const API_URL = 'http://localhost:8082/api/v1/guides';
+const API_URL = 'http://localhost:8083/api/pixel-admin/api/v1/guides';
 
 interface KycUploadFormProps {
     authUserId: number;

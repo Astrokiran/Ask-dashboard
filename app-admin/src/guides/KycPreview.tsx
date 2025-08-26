@@ -3,7 +3,7 @@ import { useNotify, Identifier } from 'react-admin';
 import { Box, CircularProgress } from '@mui/material';
 import { httpClient } from '../dataProvider';
 
-const API_URL = 'https://appdev.astrokiran.com/auth/api/v1/admin/guides';
+const API_URL = 'http://localhost:8083/api/pixel-admin/api/v1/admin/guides';
 
 
 const KycDocumentSection = ({ guideId }: { guideId: Identifier }) => {

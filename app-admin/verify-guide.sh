@@ -8,17 +8,12 @@ set -e
 ADMIN_BASE="https://appdev.astrokiran.com/auth/api/v1/admin"
 AREA_CODE="+91"
 
-# Generate random 10-digit phone number starting with 6,7,8,9 if not provided
-if [ -z "$1" ]; then
-  FIRST_DIGIT=$((RANDOM % 4 + 6))
-  REST_DIGITS=$(shuf -i 100000000-999999999 -n 1)
-  ADMIN_PHONE="${FIRST_DIGIT}${REST_DIGITS}"
-else
-  ADMIN_PHONE="$1"
-fi
+# Set the admin phone number and user details
+ADMIN_PHONE="7676753620"
 USER_TYPE="admin"
 PURPOSE="login"
-OTP_CODE="${2:-123456}"
+# The OTP code is now the first argument, defaulting to 123456
+OTP_CODE="${1:-123456}"
 
 # 1. Generate OTP for admin
 echo "Generating OTP for admin..."

@@ -34,8 +34,8 @@ export const GuideForm = ({ onCreationSuccess }: GuideFormProps) => {
     const fetchChoices = async () => {
         try {
             // Destructure the `json` property from the httpClient response
-            const { json: langResponse } = await httpClient('http://localhost:8082/api/v1/guides/languages');
-            const { json: skillResponse } = await httpClient('http://localhost:8082/api/v1/guides/skills');
+            const { json: langResponse } = await httpClient('http://localhost:8083/api/pixel-admin/api/v1/guides/languages');
+            const { json: skillResponse } = await httpClient('http://localhost:8083/api/pixel-admin/api/v1/guides/skills');
             
             // Access the 'data' key from each response object
             const langData = langResponse.data;

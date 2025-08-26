@@ -43,7 +43,7 @@ import { httpClient } from '../dataProvider';
 import { CircularProgress, Box, Switch, FormControlLabel } from '@mui/material';
 
 
-const API_URL = 'http://localhost:8082/api/v1';
+const API_URL = 'http://localhost:8083/api/pixel-admin/api/v1';
 
 // --- Reusable UI Components ---
 

@@ -35,7 +35,7 @@ import { User, CreditCard, Users, History, Cake,PlusCircle,Clock, MapPin, Langua
 
 import { httpClient } from '../dataProvider';
 
-const API_URL = 'http://localhost:8082';
+const API_URL = 'http://localhost:8083/api/pixel-admin';
 
 
 

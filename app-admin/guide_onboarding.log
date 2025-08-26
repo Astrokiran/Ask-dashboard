@@ -1,42 +1,24 @@
-Starting guide onboarding script at Sat Aug 16 09:39:28 UTC 2025
-Starting iteration 001/20
+Starting guide registration script for 1 specific guides at Sat Aug 23 11:18:11 UTC 2025
 \n==================================================
-Processing Guide 001/20: guide101 | Phone: 6000400101 | Email: guide10119@gmail.com | Trace-ID: 32f86251-fc60-48c6-a069-53c9899ac462
+Processing Guide 1/1: astroamanjain | Phone: 6366597069
 ==================================================
 Generating OTP...
-OTP Generate Payload: {
-  "area_code": "+91",
-  "phone_number": "6000400101",
-  "user_type": "guide",
-  "purpose": "login"
-}
 Executing curl (attempt 1/3): curl -s -L --write-out '%{http_code}' https://appdev.astrokiran.com/auth/api/v1/auth/otp/generate -H
-Raw response: {"message":"OTP generated and sent successfully","otp_request_id":"e0bc52a0-fad4-437b-9ef8-b65556014bc1","expires_in_seconds":300,"resend_count":1,"max_resends":3,"can_resend":true}
 Success: HTTP Code: 200
-OTP Request ID: e0bc52a0-fad4-437b-9ef8-b65556014bc1
-Validating OTP to get access token...
-OTP Validate Payload: {
-  "area_code": "+91",
-  "phone_number": "6000400101",
-  "user_type": "guide",
-  "otp_code": "123456",
-  "request_id": "e0bc52a0-fad4-437b-9ef8-b65556014bc1",
-  "device_info": {
-    "device_type": "mobile",
-    "app_version": "0.1.0"
-  }
-}
+OTP Request ID: a6261aed-9429-415d-bbda-aff4ab4a325b
+Validating OTP...
 Executing curl (attempt 1/3): curl -s -L --write-out '%{http_code}' https://appdev.astrokiran.com/auth/api/v1/auth/otp/validate -H
-Raw response: {"access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhdXRoLWdhdGV3YXktdXNlcnMiLCJkZXZpY2VfdHlwZSI6Im1vYmlsZSIsImV4cCI6MTc1NTMzODA2OSwiaWF0IjoxNzU1MzM3MTY5LCJpc3MiOiJhdXRoLWdhdGV3YXkiLCJqdGkiOiIzYTU5ZjYyYS0yZTI2LTQxYTYtYWYxMi1mOTViMmRkYjcwMDciLCJuYmYiOjE3NTUzMzcxNjksInNlc3Npb25faWQiOiI2MWRlZTNkMC1jODdlLTQ0YWQtYTdiYy0zZmFhOGY4MWExODUiLCJzdWIiOiI3MTkiLCJ0b2tlbl90eXBlIjoiYWNjZXNzIiwidXNlcl9pZCI6NzE5LCJ1c2VyX3R5cGUiOiJndWlkZSJ9.NMiVuLai1Z59ztISj9N75zoYxyRe97Ef0WypPJScNqU","refresh_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhdXRoLWdhdGV3YXktdXNlcnMiLCJkZXZpY2VfdHlwZSI6Im1vYmlsZSIsImV4cCI6MTc1NTk0MTk2OSwiaWF0IjoxNzU1MzM3MTY5LCJpc3MiOiJhdXRoLWdhdGV3YXkiLCJqdGkiOiI3NjliNDJhYi03NzBhLTRkYTMtODY2Yy0wYzM2MTA4YWRhNjAiLCJuYmYiOjE3NTUzMzcxNjksInNlc3Npb25faWQiOiI2MWRlZTNkMC1jODdlLTQ0YWQtYTdiYy0zZmFhOGY4MWExODUiLCJzdWIiOiI3MTkiLCJ0b2tlbl90eXBlIjoicmVmcmVzaCIsInVzZXJfaWQiOjcxOSwidXNlcl90eXBlIjoiZ3VpZGUifQ.ODQ70qxVokDxRYRl-k047N4yAyJdg6gLQDRzuYuuo9Q","expires_in":899,"auth_user_id":719,"user_type":"guide","user_roles":["guide"],"session":{"session_id":"0d88f7c3-391b-4203-aeca-4fc2058ad050","device_type":"mobile","ip_address":"103.163.65.25","last_accessed_at":"2025-08-16T09:39:29.930925055Z","created_at":"2025-08-16T09:39:29.931068033Z","is_active":true},"device":{"device_id":"dev_175533716992980de64fa2a07cc9a","device_type":"mobile","device_name":"","platform":"","is_new_device":true,"previous_session_terminated":true}}
 Success: HTTP Code: 200
-Successfully obtained access token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhdXRoLWdhdGV3YXktdXNlcnMiLCJkZXZpY2VfdHlwZSI6Im1vYmlsZSIsImV4cCI6MTc1NTMzODA2OSwiaWF0IjoxNzU1MzM3MTY5LCJpc3MiOiJhdXRoLWdhdGV3YXkiLCJqdGkiOiIzYTU5ZjYyYS0yZTI2LTQxYTYtYWYxMi1mOTViMmRkYjcwMDciLCJuYmYiOjE3NTUzMzcxNjksInNlc3Npb25faWQiOiI2MWRlZTNkMC1jODdlLTQ0YWQtYTdiYy0zZmFhOGY4MWExODUiLCJzdWIiOiI3MTkiLCJ0b2tlbl90eXBlIjoiYWNjZXNzIiwidXNlcl9pZCI6NzE5LCJ1c2VyX3R5cGUiOiJndWlkZSJ9.NMiVuLai1Z59ztISj9N75zoYxyRe97Ef0WypPJScNqU
-Successfully obtained auth_user_id: 719
-Fetching languages and skills...
-Executing curl (attempt 1/3): curl -s -L --write-out '%{http_code}' https://appdev.astrokiran.com/auth/api/v1/guide/languages -H
-Raw response: {"success":true,"error":false,"message":"Languages fetched successfully","data":{"languages":[{"id":1,"title":"hindi"},{"id":2,"title":"english"},{"id":3,"title":"marathi"},{"id":4,"title":"tamil"}]}}
+Successfully obtained access token.
+Registering guide...
+Executing curl (attempt 1/3): curl -s -L --write-out '%{http_code}' https://appdev.astrokiran.com/auth/api/v1/guide/register -H
 Success: HTTP Code: 200
-Languages API Response: {"success":true,"error":false,"message":"Languages fetched successfully","data":{"languages":[{"id":1,"title":"hindi"},{"id":2,"title":"english"},{"id":3,"title":"marathi"},{"id":4,"title":"tamil"}]}}
-Executing curl (attempt 1/3): curl -s -L --write-out '%{http_code}' https://appdev.astrokiran.com/auth/api/v1/guide/skills -H
-Raw response: {"success":true,"error":false,"message":"Skills fetched successfully","data":{"skills":[{"id":1,"title":"Vedic Astrology"},{"id":2,"title":"Tarot Reading"},{"id":3,"title":"Numerology"},{"id":4,"title":"Palmistry"},{"id":5,"title":"Vastu Shastra"}]}}
+Successfully registered astroamanjain.
+Submitting KYC...
+Executing curl (attempt 1/3): curl -s -L --write-out '%{http_code}' https://appdev.astrokiran.com/auth/api/v1/guide/kyc/submit -H
 Success: HTTP Code: 200
-Skills API Response: {"success":true,"error":false,"message":"Skills fetched successfully","data":{"skills":[{"id":1,"title":"Vedic Astrology"},{"id":2,"title":"Tarot Reading"},{"id":3,"title":"Numerology"},{"id":4,"title":"Palmistry"},{"id":5,"title":"Vastu Shastra"}]}}
+Successfully submitted KYC for astroamanjain.
+\n--- Script finished at Sat Aug 23 11:18:16 UTC 2025. ---
+Processed 1 guides. Success: 1, Failures: 0
+Successful guides: astroamanjain
+Cleaned up temporary files.

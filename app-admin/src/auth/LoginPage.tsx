@@ -7,7 +7,7 @@ import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 
 // The API endpoint for generating an OTP
-const OTP_GENERATE_URL = 'http://localhost:8080/api/v1/auth/otp/generate';
+const OTP_GENERATE_URL = 'https://appdev.astrokiran.com/auth/api/v1/auth/otp/generate';
 
 export const CustomLoginPage = () => {
     const [phone, setPhone] = useState('');

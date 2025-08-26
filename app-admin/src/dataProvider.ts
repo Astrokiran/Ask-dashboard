@@ -2,7 +2,7 @@ import { DataProvider, fetchUtils } from 'react-admin';
 import { guides } from './guideMockData';
 import queryString from 'query-string';
 
-const API_URL = 'http://localhost:8082';
+const API_URL = 'http://localhost:8083';
 
 const refreshToken = async () => {
     const refreshToken = localStorage.getItem('refresh_token');
@@ -10,7 +10,7 @@ const refreshToken = async () => {
         throw new Error('No refresh token found');
     }
 
-    const request = new Request(`${API_URL}/api/v1/auth/refresh`, {
+    const request = new Request(`${API_URL}/auth/api/v1/auth/refresh`, {
         method: 'POST',
         body: JSON.stringify({ refresh_token: refreshToken }),
         headers: new Headers({ 'Content-Type': 'application/json' }),
@@ -37,10 +37,10 @@ export const httpClient = async (url: string, options: fetchUtils.Options = {}) 
     const token = localStorage.getItem('access_token');
     (options.headers as Headers).set('Authorization', `Bearer ${token}`);
 
-    const apiKey = 'pixel-auth'; 
+    const apiKey = 'dummy_service_secret'; 
     (options.headers as Headers).set('X-Internal-API-Key', apiKey);
 
-    if (options.body) {
+    if (options.body) { 
         (options.headers as Headers).set('Content-Type', 'application/json');
     }
 
@@ -99,7 +99,7 @@ interface Consultation {
 }
 
 const orderAction = (action: string, customerId: number, orderId: number, data?: any) => {
-    const url = `${API_URL}/api/v1/customers/${customerId}/orders/${orderId}/${action}`;
+    const url = `${API_URL}/api/pixel-admin/api/v1/customers/${customerId}/orders/${orderId}/${action}`;
     return httpClient(url, {
         method: 'POST',
         body: data ? JSON.stringify(data) : undefined,
@@ -151,7 +151,7 @@ export const dataProvider: DataProvider = {
                 per_page: perPage,
             };
             
-            const url = `${API_URL}/api/v1/admin-users/?${queryString.stringify(query)}`;
+            const url = `${API_URL}/api/pixel-admin/api/v1/admin-users/?${queryString.stringify(query)}`;
             const { json } = await httpClient(url);
 
             return {
@@ -164,7 +164,7 @@ export const dataProvider: DataProvider = {
             const { field, order } = params.sort || { field: 'id', order: 'ASC' };
             const filter = params.filter;
 
-            const url = `http://localhost:8082/api/v1/guides/`;
+            const url = `http://localhost:8083/api/pixel-admin/api/v1/guides/`;
             const { json } = await httpClient(url);
             
              let guides = (json.data.guides || []).map((guide: any) => ({
@@ -200,7 +200,7 @@ export const dataProvider: DataProvider = {
         if (resource === 'pending-verifications') {
                 const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
                 // This URL should already be correct from the previous fix
-                const url = `${API_URL}/api/v1/guides/pending-verifications?page=${page}&per_page=${perPage}`;
+                const url = `${API_URL}/api/pixel-admin/api/v1/guides/pending-verifications?page=${page}&per_page=${perPage}`;
                 
                 const { json } = await httpClient(url);
 
@@ -240,7 +240,7 @@ export const dataProvider: DataProvider = {
                 const { q: searchTerm } = params.filter;
                 
                 // CHANGED: Point to the correct admin-service list endpoint
-                const url = `${API_URL}/api/v1/customers/?page=${page}&per_page=${perPage}${searchTerm ? `&search=${searchTerm}` : ''}`;
+                const url = `${API_URL}/api/pixel-admin/api/v1/customers/?page=${page}&per_page=${perPage}${searchTerm ? `&search=${searchTerm}` : ''}`;
                 const { json } = await httpClient(url);
 
                 const processedCustomers = json.customers.map(transformCustomer);
@@ -274,7 +274,7 @@ export const dataProvider: DataProvider = {
                 return { data: [], total: 0 };
             }
 
-            const url = `${API_URL}/api/v1/customers/${customerId}/orders/`;
+            const url = `${API_URL}/api/pixel-admin/api/v1/customers/${customerId}/orders/`;
             const { json } = await httpClient(url);
             
             // The API response for orders is nested under 'items'
@@ -298,7 +298,7 @@ export const dataProvider: DataProvider = {
                 years_of_experience: parseInt(params.data.years_of_experience, 10) || 0
             };
 
-            const { json } = await httpClient(`${API_URL}/api/v1/guides/`, {
+            const { json } = await httpClient(`${API_URL}/api/pixel-admin/api/v1/guides/`, {
                 method: 'POST',
                 body: JSON.stringify(apiPayload)
             });
@@ -316,7 +316,7 @@ export const dataProvider: DataProvider = {
             };
             
             // 2. Make the single API call to your admin-service.
-            const { json } = await httpClient(`${API_URL}/api/v1/customers/`, {
+            const { json } = await httpClient(`${API_URL}/api/pixel-admin/api/v1/customers/`, {
                 method: 'POST',
                 body: JSON.stringify(apiPayload),
             });
@@ -331,7 +331,7 @@ export const dataProvider: DataProvider = {
             const { customerId, ...rest } = params.data;
             if (!customerId) throw new Error('Customer ID is required to create an order.');
 
-            const url = `${API_URL}/api/v1/customers/${customerId}/orders/`;
+            const url = `${API_URL}/api/pixel-admin/api/v1/customers/${customerId}/orders/`;
             const { json } = await httpClient(url, {
                 method: 'POST',
                 body: JSON.stringify(rest),
@@ -339,7 +339,7 @@ export const dataProvider: DataProvider = {
             return { data: { ...json, id: json.order_id } };
         }
         if (resource === 'admin-users') {
-            const url = `${API_URL}/api/v1/admin-users/`;
+            const url = `${API_URL}/api/pixel-admin/api/v1/admin-users/`;
             const { json } = await httpClient(url, {
                 method: 'POST',
                 body: JSON.stringify(params.data),
@@ -351,7 +351,7 @@ export const dataProvider: DataProvider = {
     },
     update: async (resource, params) => {
          if (resource === 'guides') {
-            const url = `${API_URL}/api/v1/guides/${params.id}`;
+            const url = `${API_URL}/api/pixel-admin/api/v1/guides/${params.id}`;
             const { json } = await httpClient(url, {
                 method: 'PATCH',
                 body: JSON.stringify(params.data),
@@ -359,7 +359,7 @@ export const dataProvider: DataProvider = {
             return { data: json }; 
         }
         if (resource === 'admin-users') {
-             const url = `${API_URL}/api/v1/admin-users/${params.id}`;
+             const url = `${API_URL}/api/pixel-admin/api/v1/admin-users/${params.id}`;
              const { json } = await httpClient(url, {
                 method: 'PATCH', // PATCH is suitable for updating parts of a resource
                 body: JSON.stringify(params.data),
@@ -377,7 +377,7 @@ export const dataProvider: DataProvider = {
         console.log(`getOne triggered for resource: ${resource}, id: ${params.id}`);
 
         if (resource === 'guides') {
-            const url = `${API_URL}/api/v1/guides/${params.id}`;
+            const url = `${API_URL}/api/pixel-admin/api/v1/guides/${params.id}`;
             const { json } = await httpClient(url);
 
             if (!json || typeof json.id === 'undefined') {
@@ -388,7 +388,7 @@ export const dataProvider: DataProvider = {
         }
         if (resource === 'customers') {
             // CHANGED: Fetch a single customer from the API
-            const url = `${API_URL}/api/v1/customers/${params.id}`;
+            const url = `${API_URL}/api/pixel-admin/api/v1/customers/${params.id}`;
             const { json } = await httpClient(url);
             
             // Use the same transformation for consistency

@@ -18,7 +18,7 @@ import { useState, FormEvent, useEffect } from 'react';
 import { httpClient } from '../dataProvider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 
-const API_URL = 'http://localhost:8082';
+const API_URL = 'http://localhost:8083/api/pixel-admin';
 
 // Service Order Form
 const ServiceOrderCreateForm = ({ onSave, saving }: { onSave: (data: any) => void; saving: boolean }) => {

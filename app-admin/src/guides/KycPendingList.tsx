@@ -25,7 +25,7 @@ import { httpClient } from '../dataProvider';
 import KycDocumentSection from './KycPreview';
 import { KycUploadForm } from './KycUploadForm';
 
-const API_URL = 'http://localhost:8082/api/v1/guides';
+const API_URL = 'http://localhost:8083/api/pixel-admin/api/v1/guides';
 
 const formatStatus = (status: string) => {
     return status.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());

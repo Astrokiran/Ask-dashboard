@@ -1,143 +1,87 @@
+// /consultations/ConsultationList.tsx
 import {
-  List,
-  useListContext,
-  CreateButton,
-  TopToolbar,
-  ExportButton,
-  DateField,
-} from "react-admin";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
-import { Checkbox } from "../components/ui/checkbox";
-import { Badge } from "../components/ui/badge";
-import { FC } from "react";
+    List,
+    Datagrid,
+    TextField,
+    TextInput,
+    SelectInput,
+    FunctionField,
+    TopToolbar,
+    FilterButton,
+    CreateButton,
+    ExportButton,
+    NumberField,
+    DateField,
+} from 'react-admin';
+import { Chip } from '@mui/material';
 
-// Helper component to render status with appropriate colors
-const StatusBadge: FC<{ status: string }> = ({ status }) => {
-  let variant: "default" | "secondary" | "destructive" | "outline" = "default";
-  switch (status) {
-    case "Completed":
-      variant = "default";
-      break;
-    case "In Progress":
-      variant = "secondary";
-      break;
-    case "Customer Canceled":
-    case "Short Duration":
-      variant = "destructive";
-      break;
-    default:
-      variant = "outline";
-  }
-
-  const style = {
-    Completed: "bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30",
-    "In Progress": "bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30",
-    "Customer Canceled": "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30",
-    "Short Duration": "bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30",
-  };
-
-  return (
-    <Badge variant={variant} className={style[status as keyof typeof style] || ''}>
-      {status}
-    </Badge>
-  );
+// --- Reusable StatusField Component ---
+// This component renders the colorful status chip.
+const StatusField = ({ record }: { record?: any }) => {
+    if (!record || !record.state) return null;
+    const status = record.state;
+    // Map API status values to colors and labels
+    const statusStyles: { [key: string]: any } = {
+        requested: { bgcolor: 'rgba(245, 124, 0, 0.1)', color: '#f57c00' },
+        in_progress: { bgcolor: 'rgba(2, 136, 209, 0.1)', color: '#0288d1' },
+        completed: { bgcolor: 'rgba(56, 142, 60, 0.1)', color: '#388e3c' },
+        cancelled: { bgcolor: 'rgba(109, 109, 109, 0.1)', color: '#6d6d6d' },
+        failed: { bgcolor: 'rgba(211, 47, 47, 0.1)', color: '#d32f2f' },
+        // Add any other states from your API here
+    };
+    return <Chip label={status} sx={{ ...statusStyles[status], fontWeight: 500, textTransform: 'capitalize' }} />;
 };
 
+// --- Filters for the Consultation List ---
+// Each input's `source` prop maps directly to a query parameter in the API call.
+const consultationFilters = [
+    <TextInput key="q" label="Search by Name" source="q" alwaysOn />,
+    <SelectInput key="status" source="status" label="Status" alwaysOn choices={[
+        { id: 'requested', name: 'Requested' },
+        { id: 'in_progress', name: 'In Progress' },
+        { id: 'completed', name: 'Completed' },
+        { id: 'cancelled', name: 'Cancelled' },
+        { id: 'failed', name: 'Failed' },
+    ]} />,
+    <TextInput key="id" label="Filter by Consultation ID" source="id" />,
 
-// Custom Datagrid View using shadcn/ui Table
-const ConsultationDataGrid = () => {
-  const { data, selectedIds, onToggleItem, isLoading } = useListContext();
+    <TextInput key="guide_id" label="Filter by Guide ID" source="guide_id" />,
+    <TextInput key="customer_id" label="Filter by Customer ID" source="customer_id" />,
+];
 
-  if (isLoading) return <div>Loading...</div>;
-
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead style={{ width: '50px' }}>
-            <Checkbox
-              onCheckedChange={(checked) => {
-                if (checked) {
-                  onToggleItem(data.map((item) => item.id));
-                } else {
-                  onToggleItem([]);
-                }
-              }}
-              checked={selectedIds.length > 0 && selectedIds.length === data.length}
-              indeterminate={selectedIds.length > 0 && selectedIds.length < data.length}
-            />
-          </TableHead>
-          <TableHead>Consultation ID</TableHead>
-          <TableHead>Guide</TableHead>
-          <TableHead>Customer</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Duration</TableHead>
-          <TableHead>Conversation Duration</TableHead>
-          <TableHead>Created At</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {data.map((consultation) => (
-          <TableRow 
-            key={consultation.id} 
-            className="cursor-pointer"
-            onClick={() => onToggleItem(consultation.id)}
-          >
-            <TableCell>
-              <Checkbox
-                checked={selectedIds.includes(consultation.id)}
-                onCheckedChange={() => onToggleItem(consultation.id)}
-              />
-            </TableCell>
-            <TableCell className="font-medium">
-              {consultation.id}
-            </TableCell>
-            <TableCell>{consultation.guide}</TableCell>
-            <TableCell>
-              <div>{consultation.customer.name}</div>
-              <div className="text-muted-foreground text-sm">
-                {consultation.customer.phone}
-              </div>
-            </TableCell>
-            <TableCell>
-              <StatusBadge status={consultation.status} />
-            </TableCell>
-            <TableCell>{consultation.duration} mins</TableCell>
-            <TableCell>{consultation.conversationDuration}s</TableCell>
-            <TableCell>
-              <DateField record={consultation} source="createdAt" showTime />
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
-};
-
-// Actions for the List view with the FilterButton REMOVED
-const ConsultationListActions = () => (
+// --- Custom Actions for the List Header (e.g., Create & Filter buttons) ---
+const ListActions = () => (
     <TopToolbar>
-        {/* <FilterButton />  // REMOVED to prevent the error */}
-        <CreateButton label="Create Consultation" />
+        <FilterButton />
+        <CreateButton />
         <ExportButton />
     </TopToolbar>
 );
 
-// The main List component export with the filters prop REMOVED
+// --- Main Component ---
 export const ConsultationList = () => (
-  <List
-    actions={<ConsultationListActions />}
-    // filters prop REMOVED
-    empty={false} 
-    sort={{ field: 'createdAt', order: 'DESC' }}
-  >
-    <ConsultationDataGrid />
-  </List>
+    <List
+      filters={consultationFilters}
+      actions={<ListActions />}
+      title="Consultations"
+      perPage={25}
+    >
+        <Datagrid rowClick="show" bulkActionButtons={false} sx={{ '& .RaDatagrid-headerCell': { fontWeight: 'bold' } }}>
+            {/* The `source` prop must match a key in the API response objects */}
+            <TextField source="id" label="Consultation ID" />
+            <TextField source="customer_name" label="Customer Name" />
+            <TextField source="guide_name" label="Guide Name" />
+            <NumberField source="guide_id" label="Guide ID" />
+
+            {/* Use FunctionField to render our custom StatusField component */}
+            <FunctionField
+                label="Status"
+                render={(record: any) => <StatusField record={record} />}
+            />
+
+            <DateField source="requested_at" label="Requested At" showTime />
+        </Datagrid>
+    </List>
 );
+
+export default ConsultationList;

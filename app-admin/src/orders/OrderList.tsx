@@ -1,4 +1,3 @@
-// src/orders/OrderList.tsx
 import {
   List,
   useListContext,
@@ -51,9 +50,7 @@ const OrderListView = () => {
   if (isLoading || !data) return null;
 
   return (
-    // --- THIS IS THE MAIN FIX ---
-    // Replaced 'bg-white' with 'bg-card' and added 'text-card-foreground'
-    <div className="bg-card text-card-foreground rounded-lg border shadow-sm">
+        <div className="bg-card text-card-foreground rounded-lg border shadow-sm">
       <Table>
         <TableHeader>
           <TableRow>
@@ -78,7 +75,6 @@ const OrderListView = () => {
               </TableCell>
               <TableCell>{order.consultationType}</TableCell>
               <TableCell>
-                {/* A white background is often needed for QR codes to scan reliably */}
                 <div style={{ padding: '8px', width: 'fit-content', borderRadius: '4px' }}>
                   <QrCode value={order.paymentUrl || 'no-url'} size={64} />
                 </div>

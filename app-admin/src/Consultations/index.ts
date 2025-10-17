@@ -1,5 +1,9 @@
 import { ConsultationList } from "./ConsultationList";
+import { ConsultationShow } from "./ConsultationShow";
 
-export default {
+const consultations = {
     list: ConsultationList,
+    show: ConsultationShow,
 };
+
+export default consultations;

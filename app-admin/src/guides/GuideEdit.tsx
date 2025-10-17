@@ -1,24 +1,38 @@
-// src/guides/GuideEdit.tsx
-import { Edit, TabbedForm, FormTab, TextInput } from 'react-admin';
-import { GuideForm } from './GuideForm'; // We will reuse the main form
+// Create a new file: GuideEdit.tsx
+
+import {
+    Edit,
+    SimpleForm,
+    TextInput,
+    NumberInput,
+    required,
+    email,
+    Toolbar,
+    SaveButton,
+    DeleteButton,
+} from 'react-admin';
+import { Card, CardContent } from '../components/ui/card';
+
+// Custom toolbar to remove the "Delete" button if you don't need it
+const EditToolbar = () => (
+    <Toolbar>
+        <SaveButton />
+    </Toolbar>
+);
 
 export const GuideEdit = () => (
-  // Add the sx prop to make the form wider
-  <Edit sx={{ maxWidth: '800px', margin: 'auto' }}>
-    <TabbedForm>
-        <FormTab label="Guide Profile">
-            {/* The first tab reuses our existing GuideForm */}
-            <GuideForm />
-        </FormTab>
-        <FormTab label="KYC Verification">
-            {/* This is the new tab for KYC documents */}
-            <div className="p-4">
-                <h3 className="text-xl font-bold mb-4">Verify Documents</h3>
-                <p className="mb-4">Review the uploaded documents and update the verification status.</p>
-                {/* We can use the verificationStatus field from the GuideForm here */}
-                <TextInput source="verificationStatus" fullWidth helperText="Change status to Verified or Rejected" />
-            </div>
-        </FormTab>
-    </TabbedForm>
-  </Edit>
+    <Edit title="Edit Guide Profile">
+        <SimpleForm toolbar={<EditToolbar />}>
+            <Card className="p-4 w-full max-w-2xl">
+                <CardContent className="space-y-4">
+                    <TextInput source="id" disabled fullWidth />
+                    <TextInput source="full_name" validate={[required()]} fullWidth />
+                    <TextInput source="email" validate={[required(), email()]} fullWidth />
+                    <TextInput source="phone_number" validate={[required()]} fullWidth />
+                    <NumberInput source="years_of_experience" fullWidth />
+                    <TextInput source="bio" multiline fullWidth />
+                </CardContent>
+            </Card>
+        </SimpleForm>
+    </Edit>
 );

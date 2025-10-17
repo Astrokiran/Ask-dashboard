@@ -1,11 +1,72 @@
-// src/auth/authProvider.ts
-import { AuthProvider } from 'react-admin';
+import { AuthProvider, fetchUtils } from 'react-admin';
 
-const AUTH_API_URL = 'https://appdev.astrokiran.com/auth/api/v1/auth';
+const AUTH_API_URL = 'https://devazstg.astrokiran.com/auth/api/v1/auth';
+
+/**
+ * A function that refreshes the access token using the refresh token.
+ * This is called by the httpClient when a 401 error is received.
+ */
+const refreshToken = async () => {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) {
+        throw new Error('No refresh token found');
+    }
+
+    const request = new Request(`${AUTH_API_URL}/refresh`, {
+        method: 'POST',
+        body: JSON.stringify({ refresh_token: refreshToken }),
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+    });
+
+    const response = await fetch(request);
+    if (!response.ok) {
+        throw new Error('Failed to refresh token');
+    }
+
+    const data = await response.json();
+    localStorage.setItem('access_token', data.access_token);
+    // Some services rotate refresh tokens; update if a new one is provided.
+    if (data.refresh_token) {
+        localStorage.setItem('refresh_token', data.refresh_token);
+    }
+
+    return data.access_token;
+};
+
+export const httpClient = async (url: string, options: fetchUtils.Options = {}) => {
+    if (!options.headers) {
+        options.headers = new Headers({ Accept: 'application/json' });
+    }
+    const token = localStorage.getItem('access_token');
+    (options.headers as Headers).set('Authorization', `Bearer ${token}`);
+
+    try {
+        // First, try the request with the current token
+        return await fetchUtils.fetchJson(url, options);
+    } catch (error: any) {
+        // If the request fails with a 401 status, it means the token expired
+        if (error.status === 401) {
+            try {
+                // Attempt to get a new token
+                const newAccessToken = await refreshToken();
+                // Update the header with the new token
+                (options.headers as Headers).set('Authorization', `Bearer ${newAccessToken}`);
+                // Retry the original request with the new token
+                return await fetchUtils.fetchJson(url, options);
+            } catch (refreshError) {
+                // If refreshing the token fails, then log the user out
+                localStorage.clear();
+                // We re-throw the original error to trigger the checkError logic
+                throw error;
+            }
+        }
+        // If the error is not 401, just re-throw it
+        throw error;
+    }
+};
 
 export const authProvider: AuthProvider = {
-    // --- LOGIN ---
-     login: async ({ phone, otp, otpRequestId }) => {
+    login: async ({ phone, otp, otpRequestId }) => {
         const request = new Request(`${AUTH_API_URL}/otp/validate`, {
             method: 'POST',
             body: JSON.stringify({
@@ -26,58 +87,44 @@ export const authProvider: AuthProvider = {
         }
 
         const data = await response.json();
-                // After successful validation, store tokens and user info
-        const identity = {
-            id: data.auth_user_id,
-            fullName: `Admin User`, 
-            phone: phone, 
-        };
-
-        // Save tokens and the new identity object to localStorage
         localStorage.setItem('access_token', data.access_token);
         localStorage.setItem('refresh_token', data.refresh_token);
-        localStorage.setItem('user', JSON.stringify(identity));
-
-        return Promise.resolve();
-    },
-        getIdentity: () => {
-        const user = localStorage.getItem('user');
-        if (user) {
-            // Return the full user object we saved during login
-            return Promise.resolve(JSON.parse(user));
-        }
-        return Promise.reject();
+        const userToStore = {
+            id: data.auth_user_id,
+            fullName: 'Admin User',
+            phone_number: phone, 
+            status: 'Verified' 
+        };
+        localStorage.setItem('user', JSON.stringify(userToStore));
+                return Promise.resolve();
     },
 
-
-
-    // --- LOGOUT ---
     logout: () => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
+        localStorage.clear();
         return Promise.resolve();
     },
 
-    checkError: ({ status }) => {
+    checkError: (error) => {
+        const status = error.status;
         if (status === 401 || status === 403) {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            localStorage.removeItem('user');
-            return Promise.reject(); 
+            localStorage.clear();
+            return Promise.reject(); // This will redirect to the login page
         }
         return Promise.resolve();
     },
 
     checkAuth: () => {
-        return localStorage.getItem('access_token')
-            ? Promise.resolve()
-            : Promise.reject();
+        return localStorage.getItem('access_token') ? Promise.resolve() : Promise.reject();
     },
 
-    getPermissions: () => {
-        return Promise.resolve(['admin']);
+    getIdentity: () => {
+        try {
+            const user = localStorage.getItem('user');
+            return user ? Promise.resolve(JSON.parse(user)) : Promise.reject();
+        } catch (error) {
+            return Promise.reject(error);
+        }
     },
 
- 
+    getPermissions: () => Promise.resolve(['admin']),
 };

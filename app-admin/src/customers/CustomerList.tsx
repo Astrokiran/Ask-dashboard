@@ -1,65 +1,60 @@
-// src/customers/CustomerList.tsx
 import {
-  List,
-  useListContext,
-  TopToolbar,
-  FilterButton,
-  TextInput,
-  DateField,
-  useNotify,
-  useRefresh,
-  useCreate,
+    List,
+    useListContext,
+    TopToolbar,
+    FilterButton,
+    TextInput,
+    DateField,
+    useNotify,
+    useRefresh,
+    useCreate,
+    Link,
+    RecordContextProvider,
 } from 'react-admin';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from '../components/ui/table';
 import { Button } from '../components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from '../components/ui/dialog';
 import { FormEvent, useState } from 'react';
 
 const customerFilters = [
-    <TextInput label="Search by Name or Phone" source="q" alwaysOn />,
+    <TextInput label="Search (ID, Phone, Name)" source="q" alwaysOn placeholder="Enter customer ID, phone number or name" />,
 ];
 
-// Reusable Customer Form for the Dialog
 const NewCustomerForm = ({ onSave, saving }: { onSave: (data: any) => void; saving: boolean }) => {
-    const [name, setName] = useState('');
-    const [phone, setPhone] = useState('');
-    const [altPhone, setAltPhone] = useState('');
+    const [areaCode, setAreaCode] = useState('+91');
+    const [phoneNumber, setPhoneNumber] = useState('');
 
     const handleSubmit = (event: FormEvent) => {
         event.preventDefault();
-        if (!name || !phone) {
-            alert('Name and Phone Number are required.');
+        if (!areaCode || !phoneNumber) {
+            alert('Area Code and Phone Number are required.');
             return;
         }
-        onSave({ name, phone, altPhone });
+        onSave({ area_code: areaCode, phone_number: phoneNumber });
     };
     
     return (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4">
+       <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4">
             <div>
-              <label className="text-sm font-medium capitalize">Full Name *</label>
-              <input value={name} onChange={e => setName(e.target.value)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                <label className="text-sm font-medium capitalize">Area Code *</label>
+                <input value={areaCode} onChange={e => setAreaCode(e.target.value)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="text-sm font-medium capitalize">Phone Number *</label>
-              <input value={phone} onChange={e => setPhone(e.target.value)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="text-sm font-medium capitalize">Alternative Number</label>
-              <input value={altPhone} onChange={e => setAltPhone(e.target.value)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                <label className="text-sm font-medium capitalize">Phone Number (10 digits) *</label>
+                <input value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
             </div>
             <Button type="submit" disabled={saving} className="mt-4">
                 {saving ? 'Saving...' : 'Save Customer'}
@@ -67,7 +62,6 @@ const NewCustomerForm = ({ onSave, saving }: { onSave: (data: any) => void; savi
         </form>
     );
 }
-
 
 const ListActions = () => {
     const [open, setOpen] = useState(false);
@@ -109,39 +103,51 @@ const ListActions = () => {
 
 
 const CustomerListView = () => {
-  const { data, isLoading } = useListContext();
-  if (isLoading || !data) return null;
+    const { data, isLoading } = useListContext();
+    if (isLoading) return <div>Loading...</div>;
+    if (!data) return null;
 
-  return (
-    // --- THIS IS THE FIX ---
-    // Changed 'bg-white' to 'bg-card' and added 'text-card-foreground'
-    <div className="bg-card text-card-foreground rounded-lg border shadow-sm">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Phone Number</TableHead>
-            <TableHead>Created At</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map(customer => (
-            <TableRow key={customer.id}>
-              <TableCell>{customer.name}</TableCell>
-              <TableCell>{customer.phone}</TableCell>
-              <TableCell>
-                <DateField record={customer} source="createdAt" showTime />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
+    return (
+        <div className="bg-card text-card-foreground rounded-lg border shadow-sm">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Customer ID</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Phone Number</TableHead>
+                        <TableHead>Created At</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {data.map(customer => (
+                        <RecordContextProvider value={customer} key={customer.id}>
+                            <TableRow>
+                                <TableCell>
+                                    <Link to={`/customers/${customer.id}/show`} className="text-blue-600 hover:underline">
+                                        {`#${customer.id}`}
+                                    </Link>
+                                </TableCell>
+                                <TableCell>{customer.name}</TableCell>
+                                <TableCell>{customer.phone}</TableCell>
+                                <TableCell>
+                                    <DateField source="created_at" showTime />
+                                </TableCell>
+                            </TableRow>
+                        </RecordContextProvider>
+                    ))}
+                </TableBody>
+            </Table>
+        </div>
+    );
 };
 
 export const CustomerList = () => (
-  <List actions={<ListActions />} filters={customerFilters} title="Customers">
-    <CustomerListView />
-  </List>
+    <List
+        actions={<ListActions />}
+        filters={customerFilters}
+        title="Customers"
+        perPage={25}
+    >
+        <CustomerListView />
+    </List>
 );

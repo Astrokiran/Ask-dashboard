@@ -43,7 +43,7 @@ import { httpClient } from '../dataProvider';
 import { CircularProgress, Box, Switch, FormControlLabel } from '@mui/material';
 
 
-const API_URL = 'http://localhost:8083/api/pixel-admin/api/v1';
+const API_URL = 'https://devazstg.astrokiran.com/auth/api/pixel-admin';
 
 // --- Reusable UI Components ---
 
@@ -72,6 +72,92 @@ const DetailItem = ({ label, children }: { label: string, children: React.ReactN
   </div>
 );
 
+// --- Guide Stats Section ---
+const GuideStatsSection = () => {
+    const record = useRecordContext();
+
+    if (!record || !record.guide_stats) {
+        return null;
+    }
+
+    const stats = record.guide_stats;
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Guide Statistics</CardTitle>
+                <CardDescription>Performance metrics and consultation history</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <DetailItem label="Total Consultations">
+                        <span className="text-2xl font-bold text-primary">
+                            {stats.total_number_of_completed_consultations || 0}
+                        </span>
+                    </DetailItem>
+                    <DetailItem label="Average Rating">
+                        <span className="text-2xl font-bold text-orange-500">
+                            {stats.rating ? `${stats.rating} ⭐` : 'N/A'}
+                        </span>
+                    </DetailItem>
+                    <DetailItem label="Total Reviews">
+                        <span className="text-2xl font-bold">
+                            {stats.total_number_of_reviews || 0}
+                        </span>
+                    </DetailItem>
+                    <DetailItem label="Total Minutes">
+                        <span className="text-2xl font-bold text-blue-600">
+                            {stats.total_consultation_minutes || 0}
+                        </span>
+                    </DetailItem>
+                </div>
+
+                <div className="mt-6 pt-6 border-t">
+                    <h3 className="font-semibold mb-4">Consultation Breakdown</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <h4 className="text-sm font-medium text-muted-foreground mb-3">Chat Consultations</h4>
+                            <DetailItem label="Total Sessions">{stats.total_number_of_chat_consultations || 0}</DetailItem>
+                            <DetailItem label="Total Minutes">{stats.total_chat_minutes || 0}</DetailItem>
+                            <DetailItem label="Avg Length">{stats.average_consultation_length_chat || 0} min</DetailItem>
+                        </div>
+                        <div>
+                            <h4 className="text-sm font-medium text-muted-foreground mb-3">Voice Consultations</h4>
+                            <DetailItem label="Total Sessions">{stats.total_number_of_voice_consultations || 0}</DetailItem>
+                            <DetailItem label="Total Minutes">{stats.total_voice_minutes || 0}</DetailItem>
+                            <DetailItem label="Avg Length">{stats.average_consultation_length_voice || 0} min</DetailItem>
+                        </div>
+                        <div>
+                            <h4 className="text-sm font-medium text-muted-foreground mb-3">Video Consultations</h4>
+                            <DetailItem label="Total Sessions">{stats.total_number_of_video_consultations || 0}</DetailItem>
+                            <DetailItem label="Total Minutes">{stats.total_video_minutes || 0}</DetailItem>
+                            <DetailItem label="Avg Length">{stats.average_consultation_length_video || 0} min</DetailItem>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-6 pt-6 border-t">
+                    <h3 className="font-semibold mb-4">Quick Connect</h3>
+                    <div className="grid grid-cols-2 gap-6">
+                        <DetailItem label="Quick Connect Sessions">{stats.total_quick_connect_consultations || 0}</DetailItem>
+                        <DetailItem label="Quick Connect Minutes">{stats.total_quick_connect_consultation_minutes || 0}</DetailItem>
+                    </div>
+                </div>
+
+                {stats.average_consultation_length > 0 && (
+                    <div className="mt-6 pt-6 border-t">
+                        <DetailItem label="Overall Average Consultation Length">
+                            <span className="text-lg font-semibold text-green-600">
+                                {stats.average_consultation_length} minutes
+                            </span>
+                        </DetailItem>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
+};
+
 // --- KYC Document Section (Displays Images Only) ---
 
 const KycDocumentSection = ({ guideId }: { guideId: Identifier }) => {
@@ -85,7 +171,7 @@ const KycDocumentSection = ({ guideId }: { guideId: Identifier }) => {
             setLoading(true);
             try {
                 // --- UPDATED: Correct API endpoint for KYC docs ---
-                const { json } = await httpClient(`${API_URL}/guides/kyc-documents/${guideId}`);
+                const { json } = await httpClient(`${API_URL}/api/v1/guides/kyc-documents/${guideId}`);
                 // This section can be built out when the KYC API is ready
                 setDocuments(json.data || {});
             } catch (error: any) {
@@ -134,7 +220,7 @@ const OffboardGuideButton = () => {
     const handleOffboard = async () => {
         setIsOffboarding(true);
         try {
-            await httpClient(`${API_URL}/guides/${record.id}/offboard`, {
+            await httpClient(`${API_URL}/api/v1/guides/${record.id}/offboard`, {
                 method: 'POST',
             });
             notify('Guide offboarded successfully!', { type: 'success' });
@@ -260,7 +346,7 @@ const BankAccountSummaryCard = ({ guideId }: { guideId: Identifier }) => {
         const fetchAccounts = async () => {
             try {
                 setLoading(true);
-                const { json } = await httpClient(`${API_URL}/guides/${guideId}/accounts`);
+                const { json } = await httpClient(`${API_URL}/api/v1/guides/${guideId}/accounts`);
                 const accounts = json || [];
                 // Find the default account or take the first one if none is default
                 const defaultAcc = accounts.find((acc: any) => acc.is_default) || accounts[0];
@@ -346,22 +432,37 @@ const GuideShowView = () => {
               <StatusControlSection />
             </div>
 
+            <div className="grid grid-cols-1 gap-6 mb-6">
+              <GuideStatsSection />
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 <div className="lg:col-span-2">
                   <Card>
                       <CardHeader><CardTitle>Guide Information</CardTitle></CardHeader>
                       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <DetailItem label="Phone">{record.phone_number}</DetailItem>
-                          <DetailItem label="Email Address">{record.email}</DetailItem>
+                          <DetailItem label="Email Address">{record.email || 'Not provided'}</DetailItem>
                           <DetailItem label="Years of Experience">{record.years_of_experience} years</DetailItem>
                           <DetailItem label="Languages Spoken">{(record.languages || []).join(', ')}</DetailItem>
                           <DetailItem label='Rating'>
-                              <span className="text-orange-500 font-semibold">{record.rating || 'N/A'}</span>
+                              <span className="text-orange-500 font-semibold">{record.guide_stats?.rating || record.rating || 'N/A'}</span>
                           </DetailItem>
-                          <DetailItem label="Total Consultations">{record.number_of_consultation}</DetailItem>
+                          <DetailItem label="Total Consultations">{record.guide_stats?.total_number_of_completed_consultations || record.number_of_consultation || 0}</DetailItem>
+                          <DetailItem label="Price per Minute">
+                              <span className="text-green-600 font-semibold">₹{record.price_per_minute || 'N/A'}</span>
+                          </DetailItem>
+                          <DetailItem label="Revenue Share">
+                              <span className="font-semibold">{record.revenue_share ? `${record.revenue_share}%` : 'N/A'}</span>
+                          </DetailItem>
                           <DetailItem label="Onboarded On">
                               <span>{new Date(record.created_at).toLocaleDateString()}</span>
                           </DetailItem>
+                          {record.bio && (
+                              <div className="md:col-span-2">
+                                  <DetailItem label="Bio">{record.bio}</DetailItem>
+                              </div>
+                          )}
                       </CardContent>
                   </Card>
                 </div>

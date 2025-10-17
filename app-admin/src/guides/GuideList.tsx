@@ -9,7 +9,7 @@ import {
   Filter,
   SelectInput,
   ShowButton,
-  
+
   BulkDeleteButton,
   BulkUpdateButton,
   BooleanField,
@@ -26,6 +26,7 @@ import {
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
+import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -98,12 +99,13 @@ const GuideListView = () => {
                             />
                         </TableHead>
                         <TableHead>ID</TableHead>
+                        <TableHead>Profile</TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead>Phone Number</TableHead>
                         <TableHead>Status</TableHead>
-
                         <TableHead>Skills</TableHead>
                         <TableHead>Total Consultations</TableHead>
+                        <TableHead>Rating</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -117,6 +119,12 @@ const GuideListView = () => {
                                 />
                             </TableCell>
                             <TableCell>{guide.id}</TableCell>
+                            <TableCell>
+                                <Avatar className="h-10 w-10">
+                                    <AvatarImage src={guide.profile_picture_url} alt={guide.full_name} />
+                                    <AvatarFallback>{guide.full_name?.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                            </TableCell>
                             <TableCell className="font-medium">
                                 <Button variant="link" asChild className="p-0 h-auto">
                                     <Link to={`/guides/${guide.id}/show`}>{guide.full_name}</Link>
@@ -133,8 +141,12 @@ const GuideListView = () => {
                                     {guide.skills?.map((skill: any) => <Badge key={skill.id || skill} variant="secondary">{skill.name || skill}</Badge>)}
                                 </div>
                             </TableCell>
-
-                            <TableCell>{guide.number_of_consultation}</TableCell>
+                            <TableCell>{guide.guide_stats?.total_number_of_completed_consultations || guide.number_of_consultation || 0}</TableCell>
+                            <TableCell>
+                                <span className="text-orange-500 font-semibold">
+                                    {guide.guide_stats?.rating || guide.rating || 'N/A'}
+                                </span>
+                            </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>

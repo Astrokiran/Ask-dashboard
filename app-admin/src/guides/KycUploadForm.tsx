@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import { UploadFile } from '@mui/icons-material';
 
-const API_URL = 'http://localhost:8083/api/pixel-admin/api/v1/guides';
+const API_URL = 'https://devazstg.astrokiran.com/auth/api/pixel-admin';
 
 interface KycUploadFormProps {
     authUserId: number;
@@ -42,7 +42,7 @@ export const KycUploadForm = ({ authUserId, onSuccess }: KycUploadFormProps) => 
 
     const auth = JSON.parse(localStorage.getItem('auth') || '{}');
     const token = auth.token;
-    const internalApiKey = 'pixel-auth';
+    const internalApiKey = 'dummy_service_secret';
 
     // if (!token) {
     //     setError('Authentication token not found. Please log in again.');
@@ -60,7 +60,7 @@ export const KycUploadForm = ({ authUserId, onSuccess }: KycUploadFormProps) => 
       if (value) { formData.append(key, value); }
     });
 
-    fetch(`${API_URL}/${authUserId}/kyc/submit`, {
+    fetch(`${API_URL}/api/v1/guides/${authUserId}/kyc/submit`, {
         method: 'POST',
         headers: headers,
         body: formData,

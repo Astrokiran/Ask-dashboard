@@ -155,14 +155,14 @@ fi
 log_message "Starting guide onboarding script at $(date)"
 
 # --- Loop to Sign Up, Register, and KYC 20 Guides ---
-for i in $(seq -f "%03g" 1 20)
+for i in $(seq -f "%03g" 1 30)
 do
   log_message "Starting iteration $i/20"
   # --- Calculate Current Guide's Details ---
-  GUIDE_ID_SUFFIX=$((300 + 10#$i))  # Force decimal interpretation
-  GUIDE_PHONE="6000500${GUIDE_ID_SUFFIX}"
+  GUIDE_ID_SUFFIX=$((100 + 10#$i))  # Force decimal interpretation
+  GUIDE_PHONE="6000700${GUIDE_ID_SUFFIX}"
   GUIDE_NAME="guide${GUIDE_ID_SUFFIX}"
-  GUIDE_EMAIL="guide${GUIDE_ID_SUFFIX}10@gmail.com"
+  GUIDE_EMAIL="guide${GUIDE_ID_SUFFIX}90@gmail.com"
   TRACE_ID=$(uuidgen)  # Generate unique trace ID for logging
 
   log_message "\n=================================================="

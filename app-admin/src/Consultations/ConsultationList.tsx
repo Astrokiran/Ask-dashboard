@@ -60,10 +60,11 @@ const ListActions = () => (
 
 // --- Main Component ---
 export const ConsultationList = () => (
-    <List 
-      filters={consultationFilters} 
+    <List
+      filters={consultationFilters}
       actions={<ListActions />}
       title="Consultations"
+      perPage={25}
     >
         <Datagrid rowClick="show" bulkActionButtons={false} sx={{ '& .RaDatagrid-headerCell': { fontWeight: 'bold' } }}>
             {/* The `source` prop must match a key in the API response objects */}
@@ -77,7 +78,7 @@ export const ConsultationList = () => (
                 label="Status"
                 render={(record: any) => <StatusField record={record} />}
             />
-            
+
             <DateField source="requested_at" label="Requested At" showTime />
         </Datagrid>
     </List>

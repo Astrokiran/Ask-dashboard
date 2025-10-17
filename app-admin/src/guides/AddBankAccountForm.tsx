@@ -9,7 +9,7 @@ import { Label } from '../components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from '../components/ui/dialog';
 import { CircularProgress } from '@mui/material';
 
-const API_URL = 'http://localhost:8083/api/pixel-admin/api/v1';
+const API_URL = 'https://devazstg.astrokiran.com/auth/api/pixel-admin' ;
 
 interface AddBankAccountFormProps {
     guideId: string;
@@ -44,7 +44,7 @@ export const AddBankAccountForm = ({ guideId, isOpen, onClose, onSuccess }: AddB
         }
 
         try {
-            await httpClient(`${API_URL}/guides/${guideId}/accounts`, {
+            await httpClient(`${API_URL}/api/v1/guides/${guideId}/accounts`, {
                 method: 'POST',
                 body: JSON.stringify(formData),
             });

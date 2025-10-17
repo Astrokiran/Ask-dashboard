@@ -16,6 +16,9 @@ import { ArrowRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { httpClient } from '../dataProvider';
 
+
+const API_URL = 'https://devazstg.astrokiran.com/auth/api/pixel-admin';
+
 // Props definition for the form
 interface GuideFormProps {
     onCreationSuccess: (data: any) => void;
@@ -34,9 +37,9 @@ export const GuideForm = ({ onCreationSuccess }: GuideFormProps) => {
     const fetchChoices = async () => {
         try {
             // Destructure the `json` property from the httpClient response
-            const { json: langResponse } = await httpClient('http://localhost:8083/api/pixel-admin/api/v1/guides/languages');
-            const { json: skillResponse } = await httpClient('http://localhost:8083/api/pixel-admin/api/v1/guides/skills');
-            
+            const { json: langResponse } = await httpClient(`${API_URL}/api/v1/guides/languages`);
+            const { json: skillResponse } = await httpClient(`${API_URL}/api/v1/guides/skills`);
+
             // Access the 'data' key from each response object
             const langData = langResponse.data;
             const skillData = skillResponse.data;

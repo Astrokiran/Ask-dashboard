@@ -43,8 +43,8 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "node --max-old-space-size=4096 ./node_modules/.bin/react-scripts start",
-    "build": "NODE_OPTIONS=--max-old-space-size=8192 craco build",
+    "start": "cross-env NODE_OPTIONS=--max-old-space-size=8192 craco start",
+    "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 craco build",
     "test": "craco test",
     "eject": "react-scripts eject"
   },

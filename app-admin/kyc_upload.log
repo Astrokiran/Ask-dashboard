@@ -1,0 +1,23 @@
+Starting KYC upload script for guide: 8887706853 at Mon Oct  6 13:38:23 UTC 2025
+Generating OTP for 8887706853...
+Executing curl (attempt 1/3): curl -s -L --write-out '%{http_code}' https://devazstg.astrokiran.com/auth/api/v1/auth/otp/generate -H
+Success: HTTP Code: 200
+OTP Request ID: a4d94425-a270-42cd-b736-49c739ec4e65
+Validating OTP...
+Executing curl (attempt 1/3): curl -s -L --write-out '%{http_code}' https://devazstg.astrokiran.com/auth/api/v1/auth/otp/validate -H
+Success: HTTP Code: 200
+Successfully obtained access token.
+Submitting KYC documents...
+Bank Account Details: {
+  "holder_name": "Pankaj Tripathi",
+  "account_number": "123456853",
+  "ifsc": "TEST0001234",
+  "bank_name": "Test Bank",
+  "branch": "Main Branch"
+}
+Executing curl (attempt 1/3): curl -s -L --write-out '%{http_code}' https://devazstg.astrokiran.com/auth/api/v1/guide/kyc/submit -H
+Success: HTTP Code: 200
+Successfully submitted KYC for Pankaj Tripathi (8887706853)!
+\n=== KYC UPLOAD COMPLETED SUCCESSFULLY ===
+\n--- Script finished at Mon Oct  6 13:38:28 UTC 2025. ---
+Cleaned up temporary files.

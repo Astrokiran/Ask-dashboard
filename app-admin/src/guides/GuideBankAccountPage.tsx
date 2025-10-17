@@ -13,7 +13,7 @@ import { CircularProgress, Box } from '@mui/material';
 import { AddBankAccountForm } from './AddBankAccountForm';
 
 
-const API_URL = 'http://localhost:8083/api/pixel-admin/api/v1';
+const API_URL = 'https://devazstg.astrokiran.com/auth/api/pixel-admin';
 
 
 export const GuideBankAccountsPage = () => {
@@ -31,8 +31,8 @@ export const GuideBankAccountsPage = () => {
         setLoading(true);
         try {
             const [{ json: guideJson }, { json: accountsJson }] = await Promise.all([
-                httpClient(`${API_URL}/guides/${guideId}`),
-                httpClient(`${API_URL}/guides/${guideId}/accounts`),
+                httpClient(`${API_URL}/api/v1/guides/${guideId}`),
+                httpClient(`${API_URL}/api/v1/guides/${guideId}/accounts`),
             ]);
             setGuide(guideJson.data);
             setAccounts(accountsJson || []);
@@ -49,7 +49,7 @@ export const GuideBankAccountsPage = () => {
 
     const handleSetDefault = async (accountId: number) => {
         try {
-            await httpClient(`${API_URL}/guides/${guideId}/accounts/${accountId}/default`, {
+            await httpClient(`${API_URL}/api/v1/guides/${guideId}/accounts/${accountId}/default`, {
                 method: 'POST',
             });
             notify('Default bank account updated successfully.', { type: 'success' });
@@ -61,7 +61,7 @@ export const GuideBankAccountsPage = () => {
     
     const handleDelete = async (accountId: number) => {
         try {
-            await httpClient(`${API_URL}/guides/${guideId}/accounts/${accountId}`, {
+            await httpClient(`${API_URL}/api/v1/guides/${guideId}/accounts/${accountId}`, {
                 method: 'DELETE',
             });
             notify('Bank account deleted successfully.', { type: 'success' });
@@ -169,4 +169,4 @@ export const GuideBankAccountsPage = () => {
         )}
     </> 
     );
-};
+};  

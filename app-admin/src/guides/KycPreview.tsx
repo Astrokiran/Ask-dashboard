@@ -3,8 +3,7 @@ import { useNotify, Identifier } from 'react-admin';
 import { Box, CircularProgress } from '@mui/material';
 import { httpClient } from '../dataProvider';
 
-const API_URL = 'http://localhost:8083/api/pixel-admin/api/v1/admin/guides';
-
+const API_URL = 'https://devazstg.astrokiran.com/auth/api/pixel-admin';
 
 const KycDocumentSection = ({ guideId }: { guideId: Identifier }) => {
     const notify = useNotify();
@@ -16,7 +15,7 @@ const KycDocumentSection = ({ guideId }: { guideId: Identifier }) => {
         const fetchDocs = async () => {
             setLoading(true);
             try {
-                const { json } = await httpClient(`${API_URL}/${guideId}/kyc-documents`);
+                const { json } = await httpClient(`${API_URL}/api/v1/admin/guides/${guideId}/kyc-documents`);
                 const processedDocs: any = {};
                 (json.data.documents || []).forEach((doc: any) => {
                     if (!processedDocs[doc.document_type]) processedDocs[doc.document_type] = {};

@@ -6,7 +6,7 @@
 set -euo pipefail # Exit on error, unset variables, and pipe failures
 
 # --- Configuration ---
-BASE_URL="https://appdev.astrokiran.com/auth/api/v1"
+BASE_URL="https://askapp.astrokiran.com/api/v1"
 GUIDE_BASE="${BASE_URL}/guide"
 AREA_CODE="+91"
 STATIC_OTP="123456" # Fixed OTP for testing
@@ -21,10 +21,12 @@ TEMP_AADHAAR_FRONT="tmp/afront.jpg"
 TEMP_AADHAAR_BACK="tmp/aback.jpg"
 TEMP_PAN_FRONT="tmp/pfront.jpg"
 TEMP_PAN_BACK="tmp/pback.jpg"
+TEMP_PROFILE_PICTURE="tmp/image.png"
 
 # --- Predefined Guide Data ---
-declare -a guide_names=("astroamanjain")
-declare -a guide_phones=("6366597069")
+declare -a guide_names=("Chay")
+declare -a guide_phones=("7676753620")
+declare -a guide_bios=("Born into a spiritual Brahmin family, my life was steeped in rituals and devotion. This foundation, combined with a fascination for the scientific side of the cosmos, guided me to a 16-year career in professional astrology. My work is dedicated to providing clients with measurable benefits and clarity, helping them navigate life's challenges with effective, time-tested remedies.")
 TOTAL_GUIDES=${#guide_names[@]}
 
 # --- Function to Log Messages ---
@@ -91,9 +93,10 @@ for i in "${!guide_names[@]}"; do
   # --- Set Current Guide's Details ---
   GUIDE_NAME="${guide_names[$i]}"
   GUIDE_PHONE="${guide_phones[$i]}"
+  GUIDE_BIO="${guide_bios[$i]}"
   # Generate a unique email and bank account suffix
   CLEAN_NAME_LOWERCASE=$(echo "$GUIDE_NAME" | tr -d ' ' | tr '[:upper:]' '[:lower:]')
-  GUIDE_EMAIL="${CLEAN_NAME_LOWERCASE}_${GUIDE_PHONE}@example.com" 
+  GUIDE_EMAIL="chay@gmail.com"
   BANK_ACC_SUFFIX=$(echo "$GUIDE_PHONE" | tail -c 5)
   TRACE_ID=$(uuidgen)
 
@@ -141,8 +144,8 @@ for i in "${!guide_names[@]}"; do
   # 3. Register the Guide (using default skills/languages for simplicity)
   log_message "Registering guide..."
   TEMP_RESPONSE="/tmp/curl_response_register.json"
-  REGISTER_PAYLOAD=$(jq -n --arg name "$GUIDE_NAME" --arg phone "$GUIDE_PHONE" --arg email "$GUIDE_EMAIL" \
-    '{"full_name":$name,"phone":$phone,"email":$email,"address":{"line1":"123 Test St","city":"Bengaluru","state":"Karnataka","pincode":"560001","country":"India"},"languages":[1,2],"skills":[1,3],"years_of_experience":5}')
+  REGISTER_PAYLOAD=$(jq -n --arg name "$GUIDE_NAME" --arg phone "$GUIDE_PHONE" --arg email "$GUIDE_EMAIL"  \
+    '{"full_name":$name,"phone":$phone,"email":$email,"address":{"line1":"123 Test St","city":"Bengaluru","state":"Karnataka","pincode":"560001","country":"India"},"languages":[1,2],"skills":[2,5,6],"years_of_experience":7}')
   if ! curl_with_retry "${GUIDE_BASE}/register" "$TEMP_RESPONSE" -H "Content-Type: application/json" -H "Authorization: Bearer $ACCESS_TOKEN" -H "X-Auth-Id: $AUTH_USER_ID" -H "X-Trace-Id: $TRACE_ID" -d "$REGISTER_PAYLOAD"; then
     log_message "ERROR: Failed to register ${GUIDE_NAME}. Response: $(cat "$TEMP_RESPONSE")"
     ((FAILURES++))
@@ -150,7 +153,21 @@ for i in "${!guide_names[@]}"; do
   fi
   log_message "Successfully registered ${GUIDE_NAME}."
 
-  # 4. Submit KYC
+  # 4. Upload Profile Picture
+  log_message "Uploading profile picture..."
+  if [[ -f "$TEMP_PROFILE_PICTURE" ]]; then
+    TEMP_RESPONSE="/tmp/curl_response_profile_picture.json"
+    if ! curl_with_retry "${GUIDE_BASE}/profile-picture" "$TEMP_RESPONSE" -H "Authorization: Bearer $ACCESS_TOKEN" -H "X-Auth-Id: $AUTH_USER_ID" -H "X-Trace-Id: $TRACE_ID" \
+      -F "image=@${TEMP_PROFILE_PICTURE}"; then
+      log_message "WARNING: Failed to upload profile picture for ${GUIDE_NAME}. Continuing..."
+    else
+      log_message "Successfully uploaded profile picture for ${GUIDE_NAME}."
+    fi
+  else
+    log_message "WARNING: Profile picture not found at ${TEMP_PROFILE_PICTURE}. Skipping profile picture upload."
+  fi
+
+  # 5. Submit KYC (moved to end after profile picture)
   log_message "Submitting KYC..."
   TEMP_RESPONSE="/tmp/curl_response_kyc_submit.json"
   BANK_JSON=$(jq -n --arg name "$GUIDE_NAME" --arg acc_num "12345${BANK_ACC_SUFFIX}" \

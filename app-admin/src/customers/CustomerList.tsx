@@ -30,7 +30,7 @@ import {
 import { FormEvent, useState } from 'react';
 
 const customerFilters = [
-    <TextInput label="Search" source="q" alwaysOn />,
+    <TextInput label="Search (ID, Phone, Name)" source="q" alwaysOn placeholder="Enter customer ID, phone number or name" />,
 ];
 
 const NewCustomerForm = ({ onSave, saving }: { onSave: (data: any) => void; saving: boolean }) => {
@@ -142,7 +142,12 @@ const CustomerListView = () => {
 };
 
 export const CustomerList = () => (
-    <List actions={<ListActions />} filters={customerFilters} title="Customers" perPage={10}>
+    <List
+        actions={<ListActions />}
+        filters={customerFilters}
+        title="Customers"
+        perPage={25}
+    >
         <CustomerListView />
     </List>
 );

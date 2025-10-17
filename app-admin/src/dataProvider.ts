@@ -2,7 +2,10 @@ import { DataProvider, fetchUtils } from 'react-admin';
 import { guides } from './guideMockData';
 import queryString from 'query-string';
 
-const API_URL = 'http://localhost:8083';
+
+const API_URL = 'https://devazstg.astrokiran.com/auth/api/pixel-admin'; 
+console.log('API_URL:', API_URL); // Log the API URL to verify it's being read correctly
+const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_URL; // Base URL for your API
 
 const refreshToken = async () => {
     const refreshToken = localStorage.getItem('refresh_token');
@@ -10,7 +13,7 @@ const refreshToken = async () => {
         throw new Error('No refresh token found');
     }
 
-    const request = new Request(`${API_URL}/auth/api/v1/auth/refresh`, {
+    const request = new Request(`${AUTH_API_URL}/refresh`, {
         method: 'POST',
         body: JSON.stringify({ refresh_token: refreshToken }),
         headers: new Headers({ 'Content-Type': 'application/json' }),
@@ -99,7 +102,7 @@ interface Consultation {
 }
 
 const orderAction = (action: string, customerId: number, orderId: number, data?: any) => {
-    const url = `${API_URL}/api/pixel-admin/api/v1/customers/${customerId}/orders/${orderId}/${action}`;
+    const url = `${API_URL}/api/v1/customers/${customerId}/orders/${orderId}/${action}`;
     return httpClient(url, {
         method: 'POST',
         body: data ? JSON.stringify(data) : undefined,
@@ -133,25 +136,31 @@ const transformCustomer = (customer: any) => {
 const transformGuide = (guide: any) => {
     if (!guide) return null;
     return {
-        id: guide.ID, // Map uppercase 'ID' to lowercase 'id'
-        x_auth_id: guide.XAuthID,
-        full_name: guide.FullName,
-        email: guide.Email,
-        phone_number: guide.PhoneNumber,
-        created_at: guide.CreatedAt,
-        profile_picture_url: guide.ProfilePictureURL,
-        chat_enabled: guide.ChatEnabled,
-        voice_enabled: guide.VoiceEnabled,
-        video_enabled: guide.VideoEnabled,
+        id: guide.ID || guide.id, // Map uppercase 'ID' to lowercase 'id' or use existing id
+        x_auth_id: guide.XAuthID || guide.x_auth_id,
+        full_name: guide.FullName || guide.full_name,
+        email: guide.Email || guide.email,
+        phone_number: guide.PhoneNumber || guide.phone_number,
+        created_at: guide.CreatedAt || guide.created_at,
+        profile_picture_url: guide.ProfilePictureURL || guide.profile_picture_url,
+        chat_enabled: guide.ChatEnabled !== undefined ? guide.ChatEnabled : guide.chat_enabled,
+        voice_enabled: guide.VoiceEnabled !== undefined ? guide.VoiceEnabled : guide.voice_enabled,
+        video_enabled: guide.VideoEnabled !== undefined ? guide.VideoEnabled : guide.video_enabled,
         is_online: guide.is_online,
-        voice_channel_name: guide.VoiceChannelName,
-        video_channel_name: guide.VideoChannelName,
-        years_of_experience: guide.YearsOfExperience,
+        voice_channel_name: guide.VoiceChannelName || guide.voice_channel_name,
+        video_channel_name: guide.VideoChannelName || guide.video_channel_name,
+        years_of_experience: guide.YearsOfExperience || guide.years_of_experience,
         is_busy: guide.is_busy,
+        is_celebrity: guide.is_celebrity,
+        bio: guide.bio || guide.Bio || '',
         skills: guide.skills,
         languages: guide.languages,
         rating: guide.rating,
         number_of_consultation: guide.number_of_consultation,
+        price_per_minute: guide.price_per_minute,
+        revenue_share: guide.revenue_share,
+        guide_stats: guide.guide_stats || {},
+        reports: guide.reports || [],
     };
 };
 
@@ -175,8 +184,8 @@ export const dataProvider: DataProvider = {
                 page: page,
                 per_page: perPage,
             };
-            
-            const url = `${API_URL}/api/pixel-admin/api/v1/admin-users/?${queryString.stringify(query)}`;
+
+            const url = `${API_URL}/api/v1/admin-users/?${queryString.stringify(query)}`;
             const { json } = await httpClient(url);
 
             return {
@@ -189,7 +198,7 @@ export const dataProvider: DataProvider = {
             const { field, order } = params.sort || { field: 'id', order: 'ASC' };
             const filter = params.filter;
 
-            const url = `http://localhost:8083/api/pixel-admin/api/v1/guides/`;
+            const url = `${API_URL}/api/v1/guides/`;
             const { json } = await httpClient(url);
             
              let guides = (json.data.guides || []).map((guide: any) => ({
@@ -225,8 +234,8 @@ export const dataProvider: DataProvider = {
         if (resource === 'pending-verifications') {
                 const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
                 // This URL should already be correct from the previous fix
-                const url = `${API_URL}/api/pixel-admin/api/v1/guides/pending-verifications?page=${page}&per_page=${perPage}`;
-                
+                const url = `${API_URL}/api/v1/guides/pending-verifications?page=${page}&per_page=${perPage}`;
+
                 const { json } = await httpClient(url);
 
                 // --- START: CORRECTED LOGIC ---
@@ -261,32 +270,47 @@ export const dataProvider: DataProvider = {
             }
         
             if (resource === 'customers') {
-                const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
+                const { page, perPage } = params.pagination || { page: 1, perPage: 25 };
                 const { q: searchTerm } = params.filter;
-                
-                // CHANGED: Point to the correct admin-service list endpoint
-                const url = `${API_URL}/api/pixel-admin/api/v1/customers/?page=${page}&per_page=${perPage}${searchTerm ? `&search=${searchTerm}` : ''}`;
+
+                // Build query parameters
+                const queryParams = new URLSearchParams({
+                    page: page.toString(),
+                    per_page: perPage.toString(),
+                });
+
+                // Add search parameter if provided
+                if (searchTerm) {
+                    queryParams.append('search', searchTerm);
+                }
+
+                const url = `${API_URL}/api/v1/customers/?${queryParams.toString()}`;
                 const { json } = await httpClient(url);
 
-                const processedCustomers = json.customers.map(transformCustomer);
-                let total = json.total;
-                const receivedCount = json.customers?.length || 0;
+                // Handle the response
+                const customers = json.customers || [];
+                const processedCustomers = customers.map(transformCustomer);
 
-                // If the API incorrectly reports 0 but we received customers,
-                // override the total to at least show the current page.
-                if (total === 0 && receivedCount > 0) {
-                    total = receivedCount;
+                // Calculate total from pagination info
+                let total = json.total || 0;
+
+                // Backend bug workaround: Calculate from pagination metadata
+                if (total === 0) {
+                    // If we received a full page, assume there might be more
+                    if (processedCustomers.length === perPage) {
+                        // Estimate: at least one more page exists
+                        // This will make pagination show "Next" button
+                        total = page * perPage + 1;
+                    } else if (processedCustomers.length > 0) {
+                        // Last page: exact total calculation
+                        total = (page - 1) * perPage + processedCustomers.length;
+                    }
                 }
-                    
+
                 return {
                     data: processedCustomers,
-                    // NOTE: Your API should return the TOTAL number of customers in the database here.
-                    // The sample response had 'total: 0', which is likely a bug.
-                    // React Admin needs the true total for pagination to work correctly.
                     total: total,
                 };
-
-                
         }
         if (resource === 'consultations') {
             const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
@@ -307,13 +331,17 @@ export const dataProvider: DataProvider = {
 
             // --- THIS IS THE FIX ---
             // Use queryString.stringify to correctly append the filters to the URL
-            const url = `${API_URL}/api/pixel-admin/api/v1/consultations?${queryString.stringify(query)}`;
-            
+            const url = `${API_URL}/api/v1/consultations/?${queryString.stringify(query)}`;
+
             const { json } = await httpClient(url);
+
+            console.log('Consultations API Response:', json);
+            console.log('Consultations Data:', json.data);
+            console.log('Consultations Pagination:', json.data?.pagination);
 
             return {
                 data: json.data.data,
-                total: json.data.pagination.total_items,
+                total: json.data.pagination.totalItems || json.data.pagination.total_items || 0,
             };
         }
 
@@ -327,7 +355,7 @@ export const dataProvider: DataProvider = {
                 return { data: [], total: 0 };
             }
 
-            const url = `${API_URL}/api/pixel-admin/api/v1/customers/${customerId}/orders/`;
+            const url = `${API_URL}/api/v1/customers/${customerId}/orders/`;
             const { json } = await httpClient(url);
             
             // The API response for orders is nested under 'items'
@@ -351,7 +379,7 @@ export const dataProvider: DataProvider = {
                 years_of_experience: parseInt(params.data.years_of_experience, 10) || 0
             };
 
-            const { json } = await httpClient(`${API_URL}/api/pixel-admin/api/v1/guides/`, {
+            const { json } = await httpClient(`${API_URL}/api/v1/guides/`, {
                 method: 'POST',
                 body: JSON.stringify(apiPayload)
             });
@@ -369,7 +397,7 @@ export const dataProvider: DataProvider = {
             };
             
             // 2. Make the single API call to your admin-service.
-            const { json } = await httpClient(`${API_URL}/api/pixel-admin/api/v1/customers/`, {
+            const { json } = await httpClient(`${API_URL}/api/v1/customers/`, {
                 method: 'POST',
                 body: JSON.stringify(apiPayload),
             });
@@ -384,7 +412,7 @@ export const dataProvider: DataProvider = {
             const { customerId, ...rest } = params.data;
             if (!customerId) throw new Error('Customer ID is required to create an order.');
 
-            const url = `${API_URL}/api/pixel-admin/api/v1/customers/${customerId}/orders/`;
+            const url = `${API_URL}/api/v1/customers/${customerId}/orders/`;
             const { json } = await httpClient(url, {
                 method: 'POST',
                 body: JSON.stringify(rest),
@@ -392,7 +420,7 @@ export const dataProvider: DataProvider = {
             return { data: { ...json, id: json.order_id } };
         }
         if (resource === 'admin-users') {
-            const url = `${API_URL}/api/pixel-admin/api/v1/admin-users/`;
+            const url = `${API_URL}/api/v1/admin-users/`;
             const { json } = await httpClient(url, {
                 method: 'POST',
                 body: JSON.stringify(params.data),
@@ -404,14 +432,14 @@ export const dataProvider: DataProvider = {
     },
     update: async (resource, params) => {
          if (resource === 'guides') {
-            const url = `${API_URL}/api/pixel-admin/api/v1/guides/${params.id}`;
+            const url = `${API_URL}/api/v1/guides/${params.id}`;
             const { json } = await httpClient(url, {
                 method: 'PATCH',
                 body: JSON.stringify(params.data),
             });
             return { data: transformGuide(json) };        }
         if (resource === 'admin-users') {
-             const url = `${API_URL}/api/pixel-admin/api/v1/admin-users/${params.id}`;
+             const url = `${API_URL}/api/v1/admin-users/${params.id}`;
              const { json } = await httpClient(url, {
                 method: 'PATCH', // PATCH is suitable for updating parts of a resource
                 body: JSON.stringify(params.data),
@@ -429,42 +457,29 @@ export const dataProvider: DataProvider = {
         console.log(`getOne triggered for resource: ${resource}, id: ${params.id}`);
 
         if (resource === 'guides') {
-        const url = `${API_URL}/api/pixel-admin/api/v1/guides/${params.id}`;
-        const { json } = await httpClient(url);
+            // Fetch from the guides list endpoint which has complete data including guide_stats
+            const url = `${API_URL}/api/v1/guides/`;
+            const { json } = await httpClient(url);
 
-        // Check if the API returned any data at all
-        if (!json) {
-            throw new Error('API returned no data for the guide');
-        }
+            // Find the specific guide by ID
+            const guides = json.data.guides || [];
+            const guide = guides.find((g: any) => g.id === params.id || g.id === parseInt(params.id as string));
 
-        // --- FIX: Transform the API data to what react-admin expects ---
-        const transformedData = {
-            id: json.ID, // Map uppercase 'ID' to lowercase 'id' (Required)
-            x_auth_id: json.XAuthID,
-            full_name: json.FullName,
-            email: json.Email,
-            phone_number: json.PhoneNumber,
-            created_at: json.CreatedAt,
-            profile_picture_url: json.ProfilePictureURL,
-            chat_enabled: json.ChatEnabled,
-            voice_enabled: json.VoiceEnabled,
-            video_enabled: json.VideoEnabled,
-            is_online: json.is_online,
-            voice_channel_name: json.VoiceChannelName,
-            video_channel_name: json.VideoChannelName,
-            years_of_experience: json.YearsOfExperience,
-            is_busy: json.is_busy,
-            skills: json.skills,
-            languages: json.languages,
-            rating: json.rating,
-            number_of_consultation: json.number_of_consultation,
-        };
-        
-        return { data: transformedData };
+            if (!guide) {
+                throw new Error(`Guide with ID ${params.id} not found`);
+            }
+
+            // Add the status field
+            const guideWithStatus = {
+                ...guide,
+                status: guide.online ? 'online' : 'offline',
+            };
+
+            return { data: guideWithStatus };
         }
         if (resource === 'customers') {
             // CHANGED: Fetch a single customer from the API
-            const url = `${API_URL}/api/pixel-admin/api/v1/customers/${params.id}`;
+            const url = `${API_URL}/api/v1/customers/${params.id}`;
             const { json } = await httpClient(url);
             
             // Use the same transformation for consistency
@@ -477,7 +492,7 @@ export const dataProvider: DataProvider = {
         }
         if (resource === 'consultations') {
             // This assumes you will create a `getOne` endpoint in your Go service
-            const url = `${API_URL}/api/pixel-admin/api/v1/consultations/${params.id}`;
+            const url = `${API_URL}/api/v1/consultations/${params.id}`;
             const { json } = await httpClient(url);
             
             // Assuming the getOne response is { success: true, data: { ...consultation } }
@@ -520,3 +535,8 @@ export const dataProvider: DataProvider = {
     delete: async (resource, params) => ({ data: { id: params.id } as any }),
     deleteMany: async () => ({ data: [] }),
 };
+
+
+
+
+

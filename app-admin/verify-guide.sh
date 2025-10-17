@@ -5,11 +5,11 @@
 
 set -e
 
-ADMIN_BASE="https://appdev.astrokiran.com/auth/api/v1/admin"
+ADMIN_BASE="https://devazstg.astrokiran.com/auth/api/v1/admin"
 AREA_CODE="+91"
 
 # Set the admin phone number and user details
-ADMIN_PHONE="7676753620"
+ADMIN_PHONE="8851850842"
 USER_TYPE="admin"
 PURPOSE="login"
 # The OTP code is now the first argument, defaulting to 123456
@@ -17,7 +17,7 @@ OTP_CODE="${1:-123456}"
 
 # 1. Generate OTP for admin
 echo "Generating OTP for admin..."
-GEN_RESPONSE=$(curl -s -X POST "https://appdev.astrokiran.com/auth/api/v1/auth/otp/generate" \
+GEN_RESPONSE=$(curl -s -X POST "https://devazstg.astrokiran.com/auth/api/v1/auth/otp/generate" \
   -H "Content-Type: application/json" \
   -d "{\"area_code\":\"${AREA_CODE}\",\"phone_number\":\"${ADMIN_PHONE}\",\"user_type\":\"${USER_TYPE}\",\"purpose\":\"${PURPOSE}\"}")
 
@@ -49,7 +49,7 @@ VALIDATE_PAYLOAD=$(cat <<EOF
 EOF
 )
 
-VALIDATE_RESPONSE=$(curl -s -X POST "https://appdev.astrokiran.com/auth/api/v1/auth/otp/validate" \
+VALIDATE_RESPONSE=$(curl -s -X POST "https://devazstg.astrokiran.com/auth/api/v1/auth/otp/validate" \
   -H "Content-Type: application/json" \
   -d "$VALIDATE_PAYLOAD")
 
@@ -69,17 +69,23 @@ PENDING_VERIFICATIONS_RESPONSE=$(curl -s -H "Authorization: Bearer $ADMIN_ACCESS
   "${ADMIN_BASE}/guides/pending-verifications?page=${PAGE}&page_size=${PAGE_SIZE}")
 echo "Pending Verifications API Response: $PENDING_VERIFICATIONS_RESPONSE"
 
-# 4. Extract guide IDs from KYC_UPLOADED
-GUIDE_IDS=$(echo "$PENDING_VERIFICATIONS_RESPONSE" | jq -r '.data.KYC_UPLOADED[].id')
+# 4. Extract guide data from KYC_UPLOADED (ID and Name)
+GUIDE_DATA=$(echo "$PENDING_VERIFICATIONS_RESPONSE" | jq -r '.data.KYC_UPLOADED[] | "\(.id)|\(.full_name)|\(.phone_number)"')
 
-if [ -z "$GUIDE_IDS" ]; then
+if [ -z "$GUIDE_DATA" ]; then
   echo "No kyc_uploaded guides found to verify."
   exit 0
 fi
 
+echo -e "\n=== Pending Guides for Verification ==="
+echo "$GUIDE_DATA" | while IFS='|' read -r gid gname gphone; do
+  echo "ID: $gid | Name: $gname | Phone: $gphone"
+done
+echo "=================================="
+
 # 5. Process each guide
-for GUIDE_ID in $GUIDE_IDS; do
-  echo -e "\n--- Processing Guide $GUIDE_ID ---"
+while IFS='|' read -r GUIDE_ID GUIDE_NAME GUIDE_PHONE; do
+  echo -e "\n--- Processing Guide: $GUIDE_NAME (ID: $GUIDE_ID, Phone: $GUIDE_PHONE) ---"
 
   # Fetch KYC documents
   echo "Fetching KYC Documents for Guide $GUIDE_ID..."
@@ -114,23 +120,27 @@ for GUIDE_ID in $GUIDE_IDS; do
   GUIDE_STATUS=$(curl -s -H "Authorization: Bearer $ADMIN_ACCESS_TOKEN" "${ADMIN_BASE}/guides/${GUIDE_ID}/status")
   echo "Guide Status after agreement signed: $GUIDE_STATUS"
 
-  # Complete onboarding
-  BASE_RATE_PER_MINUTES="150"
-  REVENUE_SHARE=75
-  echo "Completing Onboarding for Guide $GUIDE_ID..."
+  # Complete onboarding - Ask for price per minute
+  REVENUE_SHARE=50
+
+  echo -e "\n>>> Enter price_per_minute for $GUIDE_NAME (default: 2): "
+  read -r PRICE_INPUT
+  BASE_RATE_PER_MINUTES="${PRICE_INPUT:-2}"
+
+  echo "Completing Onboarding for Guide $GUIDE_ID with price_per_minute=$BASE_RATE_PER_MINUTES..."
   COMPLETE_ONBOARDING_PAYLOAD="{\"price_per_minute\": \"$BASE_RATE_PER_MINUTES\", \"revenue_share\": $REVENUE_SHARE}"
 
-# --- Send the Request ---
-echo "Sending Payload: $COMPLETE_ONBOARDING_PAYLOAD"
-COMPLETE_ONBOARDING_RESP=$(curl -s -X POST "${ADMIN_BASE}/guides/${GUIDE_ID}/complete-onboarding" \
-  -H "Authorization: Bearer $ADMIN_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "$COMPLETE_ONBOARDING_PAYLOAD")
+  # --- Send the Request ---
+  echo "Sending Payload: $COMPLETE_ONBOARDING_PAYLOAD"
+  COMPLETE_ONBOARDING_RESP=$(curl -s -X POST "${ADMIN_BASE}/guides/${GUIDE_ID}/complete-onboarding" \
+    -H "Authorization: Bearer $ADMIN_ACCESS_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "$COMPLETE_ONBOARDING_PAYLOAD")
 
-echo "Complete Onboarding Response: $COMPLETE_ONBOARDING_RESP"
+  echo "Complete Onboarding Response: $COMPLETE_ONBOARDING_RESP"
   GUIDE_STATUS=$(curl -s -H "Authorization: Bearer $ADMIN_ACCESS_TOKEN" "${ADMIN_BASE}/guides/${GUIDE_ID}/status")
   echo "Guide Status after onboarding complete: $GUIDE_STATUS"
-done
+done <<< "$GUIDE_DATA"
 
 # 6. List all active guides to verify
 echo -e "\n--- Listing All Active Guides ---"

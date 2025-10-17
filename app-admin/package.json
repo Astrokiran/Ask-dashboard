@@ -28,6 +28,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "cross-env": "^7.0.3",
+    "fork-ts-checker-webpack-plugin": "^8.0.0",
     "lucide-react": "^0.525.0",
     "query-string": "^9.2.2",
     "ra-data-json-server": "^5.9.0",
@@ -45,8 +46,8 @@
   },
   "scripts": {
     "start": "cross-env NODE_OPTIONS=--max-old-space-size=8192 craco start",
-    "build": "NODE_OPTIONS=--max-old-space-size=8192 npx craco build",
-    "test": "npx craco test",
+    "build": "NODE_OPTIONS=--max-old-space-size=8192 ./node_modules/.bin/craco build",
+    "test": "./node_modules/.bin/craco test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

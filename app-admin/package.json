@@ -45,8 +45,8 @@
   },
   "scripts": {
     "start": "cross-env NODE_OPTIONS=--max-old-space-size=8192 craco start",
-    "build": "NODE_OPTIONS=--max-old-space-size=8192 craco build",
-    "test": "craco test",
+    "build": "NODE_OPTIONS=--max-old-space-size=8192 npx craco build",
+    "test": "npx craco test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

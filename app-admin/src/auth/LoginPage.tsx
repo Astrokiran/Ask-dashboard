@@ -1,4 +1,4 @@
-// src/auth/LoginPage.tsx
+// srcLoginPage.tsx
 import { useState } from 'react';
 import { useLogin, useNotify } from 'react-admin';
 import { Button } from '../components/ui/button';
@@ -7,7 +7,7 @@ import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 
 // The API endpoint for generating an OTP
-const OTP_GENERATE_URL = 'https://devazstg.astrokiran.com/auth/api/v1/auth/otp/generate';
+const OTP_GENERATE_URL = 'https://askapp.astrokiran.com/api/v1otp/generate';
 
 export const CustomLoginPage = () => {
     const [phone, setPhone] = useState('');

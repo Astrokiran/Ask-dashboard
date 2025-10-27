@@ -43,7 +43,7 @@ import { httpClient } from '../dataProvider';
 import { CircularProgress, Box, Switch, FormControlLabel } from '@mui/material';
 
 
-const API_URL = 'https://devazstg.astrokiran.com/auth/api/pixel-admin';
+const API_URL = 'https://askapp.astrokiran.com/api/pixel-admin';
 
 // --- Reusable UI Components ---
 

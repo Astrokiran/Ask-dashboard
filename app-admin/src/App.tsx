@@ -1,8 +1,8 @@
 import React from 'react';
 import { Admin, Resource, bwDarkTheme, bwLightTheme, CustomRoutes } from 'react-admin';
 import { Route } from 'react-router-dom';
-import { authProvider } from './auth/authProvider';
-import { CustomLoginPage } from './auth/LoginPage';
+import { authProvider } from '.authProvider';
+import { CustomLoginPage } from '.LoginPage';
 import { MyLayout } from './layout/MyLayout';
 import Dashboard from './dashboard/Dashboard';
 import { dataProvider } from './dataProvider';

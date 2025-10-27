@@ -17,7 +17,7 @@ import { useEffect, useState } from 'react';
 import { httpClient } from '../dataProvider';
 
 
-const API_URL = 'https://devazstg.astrokiran.com/auth/api/pixel-admin';
+const API_URL = 'https://askapp.astrokiran.com/api/pixel-admin';
 
 // Props definition for the form
 interface GuideFormProps {

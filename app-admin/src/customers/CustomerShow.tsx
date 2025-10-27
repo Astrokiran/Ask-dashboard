@@ -35,7 +35,7 @@ import { User, CreditCard, Users, History, Cake,PlusCircle,Clock, MapPin, Langua
 
 import { httpClient } from '../dataProvider';
 
-const API_URL = 'https://devazstg.astrokiran.com/auth/api/pixel-admin';
+const API_URL = 'https://askapp.astrokiran.com/api/pixel-admin';
 
 const CreateProfileForm = ({ onSave, saving }: { onSave: (data: any) => void; saving: boolean }) => {
     const [name, setName] = useState('');

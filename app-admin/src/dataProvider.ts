@@ -3,7 +3,7 @@ import { guides } from './guideMockData';
 import queryString from 'query-string';
 
 
-const API_URL = 'https://devazstg.astrokiran.com/auth/api/pixel-admin'; 
+const API_URL = 'https://askapp.astrokiran.com/api/pixel-admin'; 
 console.log('API_URL:', API_URL); // Log the API URL to verify it's being read correctly
 const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_URL; // Base URL for your API
 

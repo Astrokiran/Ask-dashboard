@@ -25,7 +25,7 @@ import { httpClient } from '../dataProvider';
 import KycDocumentSection from './KycPreview';
 import { KycUploadForm } from './KycUploadForm';
 
-const API_URL = 'https://devazstg.astrokiran.com/auth/api/pixel-admin';
+const API_URL = 'https://askapp.astrokiran.com/api/pixel-admin';
 
 const formatStatus = (status: string) => {
     return status.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());

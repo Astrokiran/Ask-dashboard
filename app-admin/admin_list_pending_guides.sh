@@ -17,7 +17,7 @@ OTP_CODE="${1:-123456}"
 
 # 1. Generate OTP for admin
 echo "Generating OTP for admin..."
-GEN_RESPONSE=$(curl -s -X POST "https://askapp.astrokiran.com/api/v1otp/generate" \
+GEN_RESPONSE=$(curl -s -X POST "https://askapp.astrokiran.com/api/v1/otp/generate" \
   -H "Content-Type: application/json" \
   -d "{\"area_code\":\"${AREA_CODE}\",\"phone_number\":\"${ADMIN_PHONE}\",\"user_type\":\"${USER_TYPE}\",\"purpose\":\"${PURPOSE}\"}")
 

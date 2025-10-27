@@ -33,7 +33,7 @@ echo "Revenue share: $REVENUE_SHARE%"
 
 # 1. Generate OTP for admin
 echo "Generating OTP for admin..."
-GEN_RESPONSE=$(curl -s -X POST "https://askapp.astrokiran.com/api/v1otp/generate" \
+GEN_RESPONSE=$(curl -s -X POST "https://askapp.astrokiran.com/api/v1/otp/generate" \
   -H "Content-Type: application/json" \
   -d "{\"area_code\":\"${AREA_CODE}\",\"phone_number\":\"${ADMIN_PHONE}\",\"user_type\":\"${USER_TYPE}\",\"purpose\":\"${PURPOSE}\"}")
 
@@ -65,7 +65,7 @@ VALIDATE_PAYLOAD=$(cat <<EOF
 EOF
 )
 
-VALIDATE_RESPONSE=$(curl -s -X POST "https://askapp.astrokiran.com/api/v1otp/validate" \
+VALIDATE_RESPONSE=$(curl -s -X POST "https://askapp.astrokiran.com/api/v1/otp/validate" \
   -H "Content-Type: application/json" \
   -d "$VALIDATE_PAYLOAD")
 

@@ -421,9 +421,18 @@ export const dataProvider: DataProvider = {
         }
         if (resource === 'admin-users') {
             const url = `${API_URL}/api/v1/admin-users/`;
+
+            // Add +91 prefix to phone_number if not already present
+            const modifiedData = {
+                ...params.data,
+                phone_number: params.data.phone_number && !params.data.phone_number.startsWith('+91')
+                    ? `+91${params.data.phone_number}`
+                    : params.data.phone_number
+            };
+
             const { json } = await httpClient(url, {
                 method: 'POST',
-                body: JSON.stringify(params.data),
+                body: JSON.stringify(modifiedData),
             });
             return { data: { ...json, id: json.id } };
         }
@@ -440,9 +449,18 @@ export const dataProvider: DataProvider = {
             return { data: transformGuide(json) };        }
         if (resource === 'admin-users') {
              const url = `${API_URL}/api/v1/admin-users/${params.id}`;
+
+             // Add +91 prefix to phone_number if not already present (for consistency)
+             const modifiedData = {
+                 ...params.data,
+                 phone_number: params.data.phone_number && !params.data.phone_number.startsWith('+91')
+                     ? `+91${params.data.phone_number}`
+                     : params.data.phone_number
+             };
+
              const { json } = await httpClient(url, {
                 method: 'PATCH', // PATCH is suitable for updating parts of a resource
-                body: JSON.stringify(params.data),
+                body: JSON.stringify(modifiedData),
              });
              return { data: { ...json, id: json.id } };
         }

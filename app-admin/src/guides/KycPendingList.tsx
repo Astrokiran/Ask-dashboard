@@ -1,4 +1,4 @@
-import React, { useState, useMemo, Fragment } from 'react';
+import React, { useState, useMemo, Fragment, useEffect } from 'react';
 import {
     Datagrid,
     TextField,
@@ -17,7 +17,8 @@ import {
     DoneAll, 
     CheckCircle 
 } from '@mui/icons-material';
-import { Button, Box, Tabs, Tab, Typography, Alert } from '@mui/material';
+import { Button, Box, Tabs, Tab, Typography, Alert, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { TextField as MuiTextField } from '@mui/material';
 import { UploadFile as UploadKycIcon } from '@mui/icons-material';
 import { ArrowBack, VerifiedUser, Preview,GppBad } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -37,24 +38,121 @@ interface KycActionButtonsProps {
     onUploadClick: (authUserId: number) => void;
 }
 
+interface OnboardingDialogProps {
+    open: boolean;
+    onClose: () => void;
+    onConfirm: (pricePerMinute: string, revenueShare: string) => void;
+    guideName: string;
+}
+
+const OnboardingDialog = ({ open, onClose, onConfirm, guideName }: OnboardingDialogProps) => {
+    const [pricePerMinute, setPricePerMinute] = useState('50.00');
+    const [revenueShare, setRevenueShare] = useState('20');
+
+    const handleSubmit = () => {
+        // Validate inputs
+        const price = parseFloat(pricePerMinute);
+        const share = parseFloat(revenueShare);
+
+        if (isNaN(price) || price <= 0) {
+            alert('Please enter a valid price per minute');
+            return;
+        }
+
+        if (isNaN(share) || share < 0 || share > 100) {
+            alert('Revenue share must be between 0 and 100');
+            return;
+        }
+
+        onConfirm(pricePerMinute, revenueShare);
+        onClose();
+    };
+
+    return (
+        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+            <DialogTitle>Complete Onboarding - {guideName}</DialogTitle>
+            <DialogContent>
+                <Box sx={{ pt: 2 }}>
+                    <MuiTextField
+                        label="Price Per Minute (₹)"
+                        type="number"
+                        value={pricePerMinute}
+                        onChange={(e) => setPricePerMinute(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        inputProps={{
+                            min: "0",
+                            step: "0.01"
+                        }}
+                        helperText="Enter the per-minute consultation rate for this guide"
+                    />
+                    <MuiTextField
+                        label="Admin Revenue Share (%)"
+                        type="number"
+                        value={revenueShare}
+                        onChange={(e) => setRevenueShare(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        inputProps={{
+                            min: "0",
+                            max: "100",
+                            step: "1"
+                        }}
+                        helperText="Enter the percentage share for the admin (0-100)"
+                    />
+                </Box>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={onClose}>Cancel</Button>
+                <Button onClick={handleSubmit} variant="contained" color="primary">
+                    Complete Onboarding
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
+};
+
 export const KycActionButtons = ({ record, status, onUploadClick }: KycActionButtonsProps) => {
     const notify = useNotify();
     const refresh = useRefresh();
     const [isLoading, setIsLoading] = useState(false);
+    const [showOnboardingDialog, setShowOnboardingDialog] = useState(false);
+
+    // Handler for complete onboarding with price and share input
+    const handleCompleteOnboarding = async (pricePerMinute: string, revenueShare: string) => {
+        setIsLoading(true);
+        try {
+            // Use the correct admin API endpoint for complete onboarding
+            const url = `https://askapp.astrokiran.com/api/v1/admin/guides/${record.id}/complete-onboarding`;
+            const body = JSON.stringify({
+                price_per_minute: pricePerMinute,
+                revenue_share: parseInt(revenueShare, 10)
+            });
+
+            await httpClient(url, {
+                method: 'POST',
+                body: body
+            });
+
+            notify('Guide onboarded successfully!', { type: 'success' });
+            refresh();
+        } catch (error: any) {
+            notify(`Error completing onboarding: ${error.message}`, { type: 'error' });
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     // Generic handler for most actions (Verify, Send Agreement, etc.)
-    const handleAction = async (action: 'send-agreement' | 'mark-agreement-signed' | 'complete-onboarding' | 'kyc/verify' | 'kyc/reject') => {
+    const handleAction = async (action: 'send-agreement' | 'mark-agreement-signed' | 'kyc/verify' | 'kyc/reject') => {
         setIsLoading(true);
-        
+
             try {
                 const url = `${API_URL}/api/v1/guides/${record.id}/${action}`;
                 const method = action.startsWith('kyc/') ? 'PATCH' : 'POST';
                 let body;
 
                 switch (action) {
-                    case 'complete-onboarding':
-                        body = JSON.stringify({ price_per_minute: 50 , revenue_share: 0.20 });
-                        break;
                     case 'kyc/verify':
                         body = JSON.stringify({ status: "verified", notes: "Verified via admin panel" });
                         break;
@@ -62,13 +160,13 @@ export const KycActionButtons = ({ record, status, onUploadClick }: KycActionBut
                         body = JSON.stringify({ status: "rejected", notes: "Rejected via admin panel" });
                         break;
                 }
-            
+
                 const options = {
                     method: method,
                     body: body,
                 }
 
-            
+
             await httpClient(url, options);
             const successMessage = action.replace(/-/g, ' ').replace('kyc/', '');
             notify(`Action '${successMessage}' completed successfully.`, { type: 'success' });
@@ -163,17 +261,25 @@ export const KycActionButtons = ({ record, status, onUploadClick }: KycActionBut
 
             {/* Button to Complete Onboarding */}
             {status === 'AGREEMENT_SIGNED' && (
-                <Button 
-                    variant="contained" 
-                    size="small" 
-                    color="primary" 
-                    onClick={() => handleAction('complete-onboarding')} 
-                    disabled={isLoading} 
+                <Button
+                    variant="contained"
+                    size="small"
+                    color="primary"
+                    onClick={() => setShowOnboardingDialog(true)}
+                    disabled={isLoading}
                     startIcon={<CheckCircle />}
                 >
                     Onboard Guide
                 </Button>
             )}
+
+            {/* Onboarding Dialog */}
+            <OnboardingDialog
+                open={showOnboardingDialog}
+                onClose={() => setShowOnboardingDialog(false)}
+                onConfirm={handleCompleteOnboarding}
+                guideName={record.full_name || `Guide #${record.id}`}
+            />
         </Box>
     );
 };
@@ -210,6 +316,20 @@ const KycPendingView = () => {
     const statusKeys = useMemo(() => Object.keys(groupedData), [groupedData]);
     const activeStatus = statusKeys[currentTab];
     const activeData = groupedData[activeStatus] || [];
+
+    // Reset tab if current tab index is out of bounds after data changes
+    useEffect(() => {
+        if (statusKeys.length === 0) {
+            // No tabs available, set to 0
+            setCurrentTab(0);
+        } else if (currentTab >= statusKeys.length) {
+            // Current tab is out of bounds, reset to first tab
+            setCurrentTab(0);
+        } else if (currentTab < 0) {
+            // Current tab is negative, reset to first tab
+            setCurrentTab(0);
+        }
+    }, [statusKeys, currentTab]);
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
         setCurrentTab(newValue);

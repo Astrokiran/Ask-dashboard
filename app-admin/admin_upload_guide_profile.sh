@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Usage: bash scripts/admin_upload_guide_profile.sh [GUIDE_PHONE] [OTP_CODE] [PROFILE_PICTURE_PATH]
-# Example: bash scripts/admin_upload_guide_profile.sh 8178211511 123456 /tmp/image.png
+# Usage: bash admin_upload_guide_profile.sh [GUIDE_PHONE] [PROFILE_PICTURE_PATH]
+# Example: bash admin_upload_guide_profile.sh 8178211511 /tmp/image.png
+# Note: Script will prompt for OTP after generating it
 
 set -e
 
@@ -14,9 +15,9 @@ USER_TYPE="guide"
 PURPOSE="login"
 
 # Parse arguments
-OTP_CODE="${1:-123456}"
-GUIDE_PHONE_ARG="${2:-$GUIDE_PHONE}"
-PROFILE_PICTURE_PATH="${3:-tmp/image.png}"
+GUIDE_PHONE_ARG="${1:-$GUIDE_PHONE}"
+PROFILE_PICTURE_PATH="${2:-tmp/image.png}"
+OTP_CODE=""  # Will be prompted later
 
 # Validate required arguments
 if [ ! -f "$PROFILE_PICTURE_PATH" ]; then
@@ -29,7 +30,7 @@ echo "Profile picture path: $PROFILE_PICTURE_PATH"
 
 # 1. Generate OTP for guide
 echo "Generating OTP for guide..."
-GEN_RESPONSE=$(curl -s -X POST "https://askapp.astrokiran.com/api/v1otp/generate" \
+GEN_RESPONSE=$(curl -s -X POST "https://askapp.astrokiran.com/api/v1/auth/otp/generate" \
   -H "Content-Type: application/json" \
   -d "{\"area_code\":\"${AREA_CODE}\",\"phone_number\":\"${GUIDE_PHONE_ARG}\",\"user_type\":\"${USER_TYPE}\",\"purpose\":\"${PURPOSE}\"}")
 
@@ -41,7 +42,29 @@ if [ -z "$OTP_REQUEST_ID" ] || [ "$OTP_REQUEST_ID" == "null" ]; then
   exit 1
 fi
 
-# 2. Validate OTP for guide
+echo "✅ OTP generated successfully!"
+echo "📱 OTP sent to: $AREA_CODE$GUIDE_PHONE_ARG"
+echo "📋 Request ID: $OTP_REQUEST_ID"
+
+# 2. Prompt for OTP input
+echo ""
+echo "Please check your phone for the OTP and enter it below:"
+echo -n "Enter OTP (6 digits): "
+read OTP_CODE
+
+# Validate OTP input
+if [ -z "$OTP_CODE" ]; then
+  echo "❌ Error: OTP code is required"
+  exit 1
+fi
+
+# Check if OTP is exactly 6 digits
+if [ ${#OTP_CODE} -ne 6 ] || ! [[ "$OTP_CODE" =~ ^[0-9]+$ ]]; then
+  echo "❌ Error: OTP must be exactly 6 digits"
+  exit 1
+fi
+
+echo "✅ OTP entered: $OTP_CODE"
 echo "Validating OTP for guide..."
 VALIDATE_PAYLOAD=$(cat <<EOF
 {
@@ -61,7 +84,7 @@ VALIDATE_PAYLOAD=$(cat <<EOF
 EOF
 )
 
-VALIDATE_RESPONSE=$(curl -s -X POST "https://askapp.astrokiran.com/api/v1otp/validate" \
+VALIDATE_RESPONSE=$(curl -s -X POST "https://askapp.astrokiran.com/api/v1/auth/otp/validate" \
   -H "Content-Type: application/json" \
   -d "$VALIDATE_PAYLOAD")
 

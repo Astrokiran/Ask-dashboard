@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Usage: bash scripts/admin_complete_onboarding.sh [ADMIN_PHONE] [OTP_CODE] [GUIDE_ID] [PRICE_PER_MINUTE] [REVENUE_SHARE]
-# Example: bash scripts/admin_complete_onboarding.sh 9000000000 123456 123 150.00 75
+# Usage: bash admin_complete_onboarding.sh [GUIDE_ID] [PRICE_PER_MINUTE] [REVENUE_SHARE]
+# Example: bash admin_complete_onboarding.sh 123 150.00 75
+# Note: Script will prompt for OTP after generating it
 
 set -e
 
@@ -9,31 +10,31 @@ ADMIN_BASE="https://askapp.astrokiran.com/api/v1/admin"
 AREA_CODE="+91"
 
 # Set the admin phone number and user details
-ADMIN_PHONE="8851850842"
+ADMIN_PHONE="8142202086"
 USER_TYPE="admin"
 PURPOSE="login"
 
 # Parse arguments
-OTP_CODE="${1:-123456}"
-GUIDE_ID="${2}"
-PRICE_PER_MINUTE="${3:-10.00}"
-REVENUE_SHARE="${4:-50}"
+GUIDE_ID="${1}"
+PRICE_PER_MINUTE="${2:-10.00}"
+REVENUE_SHARE="${3:-50}"
+OTP_CODE=""  # Will be prompted later
 
 # Validate required arguments
 if [ -z "$GUIDE_ID" ]; then
   echo "Error: Guide ID is required"
-  echo "Usage: bash scripts/admin_complete_onboarding.sh [OTP_CODE] [GUIDE_ID] [PRICE_PER_MINUTE] [REVENUE_SHARE]"
-  echo "Example: bash scripts/admin_complete_onboarding.sh 123456 123 150.00 75"
+  echo "Usage: bash admin_complete_onboarding.sh [GUIDE_ID] [PRICE_PER_MINUTE] [REVENUE_SHARE]"
+  echo "Example: bash admin_complete_onboarding.sh 123 150.00 75"
+  echo "Note: Script will prompt for OTP after generating it"
   exit 1
 fi
 
 echo "Completing onboarding for Guide ID: $GUIDE_ID"
 echo "Price per minute: $PRICE_PER_MINUTE"
 echo "Revenue share: $REVENUE_SHARE%"
-
 # 1. Generate OTP for admin
 echo "Generating OTP for admin..."
-GEN_RESPONSE=$(curl -s -X POST "https://askapp.astrokiran.com/api/v1/otp/generate" \
+GEN_RESPONSE=$(curl -s -X POST "https://askapp.astrokiran.com/api/v1/auth/otp/generate" \
   -H "Content-Type: application/json" \
   -d "{\"area_code\":\"${AREA_CODE}\",\"phone_number\":\"${ADMIN_PHONE}\",\"user_type\":\"${USER_TYPE}\",\"purpose\":\"${PURPOSE}\"}")
 
@@ -45,7 +46,29 @@ if [ -z "$OTP_REQUEST_ID" ] || [ "$OTP_REQUEST_ID" == "null" ]; then
   exit 1
 fi
 
-# 2. Validate OTP for admin
+echo "✅ OTP generated successfully!"
+echo "📱 OTP sent to: $AREA_CODE$ADMIN_PHONE"
+echo "📋 Request ID: $OTP_REQUEST_ID"
+
+# 2. Prompt for OTP input
+echo ""
+echo "Please check your phone for the OTP and enter it below:"
+echo -n "Enter OTP (6 digits): "
+read OTP_CODE
+
+# Validate OTP input
+if [ -z "$OTP_CODE" ]; then
+  echo "❌ Error: OTP code is required"
+  exit 1
+fi
+
+# Check if OTP is exactly 6 digits
+if [ ${#OTP_CODE} -ne 6 ] || ! [[ "$OTP_CODE" =~ ^[0-9]+$ ]]; then
+  echo "❌ Error: OTP must be exactly 6 digits"
+  exit 1
+fi
+
+echo "✅ OTP entered: $OTP_CODE"
 echo "Validating OTP for admin..."
 VALIDATE_PAYLOAD=$(cat <<EOF
 {
@@ -65,7 +88,7 @@ VALIDATE_PAYLOAD=$(cat <<EOF
 EOF
 )
 
-VALIDATE_RESPONSE=$(curl -s -X POST "https://askapp.astrokiran.com/api/v1/otp/validate" \
+VALIDATE_RESPONSE=$(curl -s -X POST "https://askapp.astrokiran.com/api/v1/auth/otp/validate" \
   -H "Content-Type: application/json" \
   -d "$VALIDATE_PAYLOAD")
 

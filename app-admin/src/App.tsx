@@ -18,6 +18,7 @@ import { GuideBankAccountsPage } from './guides/GuideBankAccountPage';
 import guides from './guides';
 import customers from './customers';
 import consultations from './Consultations';
+import offers from './offers';
 
 import {
     Users,
@@ -25,6 +26,7 @@ import {
     ClipboardList,
     UserCircle,
     ShoppingCart,
+    Gift,
 } from 'lucide-react';
 import { OrderList } from './orders/Orders';
 
@@ -66,6 +68,11 @@ const App: React.FC = () => (
             name="consultations"
             {...consultations}
             icon={ClipboardList}
+        />
+        <Resource
+            name="offers"
+            {...offers}
+            icon={Gift}
         />
         <Resource
             name="pending-verifications"

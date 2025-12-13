@@ -9,6 +9,7 @@ import {
     UserCircle,
     ShoppingCart,
     FileText,
+    Gift,
 } from 'lucide-react';
 import { Box, Collapse, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
@@ -54,7 +55,8 @@ export const MyMenu = () => {
             <Menu.Item to="/customers" primaryText="Customers" leftIcon={<Users />} />
             <Menu.Item to="/orders" primaryText="Orders" leftIcon={<ShoppingCart />} />
             <Menu.Item to="/consultations" primaryText="Consultations" leftIcon={<ClipboardList />} />
-            
+            <Menu.Item to="/offers" primaryText="Offers" leftIcon={<Gift />} />
+
             {/* Guides Submenu */}
             <SubMenu
                 handleToggle={handleToggle}

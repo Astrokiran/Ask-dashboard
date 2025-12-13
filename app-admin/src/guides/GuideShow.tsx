@@ -43,7 +43,7 @@ import { httpClient } from '../dataProvider';
 import { CircularProgress, Box, Switch, FormControlLabel } from '@mui/material';
 
 
-const API_URL = 'https://askapp.astrokiran.com/api/pixel-admin';
+const API_URL = 'https://devvm.astrokiran.com/auth/api/pixel-admin';
 
 // --- Reusable UI Components ---
 
@@ -455,6 +455,7 @@ const GuideShowView = () => {
                           <DetailItem label="Revenue Share">
                               <span className="font-semibold">{record.revenue_share ? `${record.revenue_share}%` : 'N/A'}</span>
                           </DetailItem>
+                          <DetailItem label="Tier">{record.tier || 'Standard'}</DetailItem>
                           <DetailItem label="Onboarded On">
                               <span>{new Date(record.created_at).toLocaleDateString()}</span>
                           </DetailItem>

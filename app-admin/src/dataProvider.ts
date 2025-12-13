@@ -3,7 +3,7 @@ import { guides } from './guideMockData';
 import queryString from 'query-string';
 
 
-const API_URL = 'https://askapp.astrokiran.com/api/pixel-admin'; 
+const API_URL = 'https://devvm.astrokiran.com/auth/api/pixel-admin'; 
 console.log('API_URL:', API_URL); // Log the API URL to verify it's being read correctly
 const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_URL; // Base URL for your API
 
@@ -151,6 +151,7 @@ const transformGuide = (guide: any) => {
         video_channel_name: guide.VideoChannelName || guide.video_channel_name,
         years_of_experience: guide.YearsOfExperience || guide.years_of_experience,
         is_busy: guide.is_busy,
+        tier: guide.tier,
         is_celebrity: guide.is_celebrity,
         bio: guide.bio || guide.Bio || '',
         skills: guide.skills,
@@ -357,14 +358,98 @@ export const dataProvider: DataProvider = {
 
             const url = `${API_URL}/api/v1/customers/${customerId}/orders/`;
             const { json } = await httpClient(url);
-            
+
             // The API response for orders is nested under 'items'
             const orders = json.items || [];
-            
+
             return {
                 data: orders.map((order: any) => ({ ...order, id: order.order_id })),
                 total: json.pagination?.total_items || 0,
             };
+        }
+        if (resource === 'offers') {
+            const url = `https://devvm.astrokiran.com/auth/api/v1/offers`;
+
+            try {
+                const { json } = await httpClient(url);
+
+                // The API returns an array of offers directly
+                const offers = Array.isArray(json) ? json : [];
+
+                // Transform offers to ensure they have id field for react-admin
+                const transformedOffers = offers.map((offer: any) => ({
+                    ...offer,
+                    id: offer.offer_id, // Use offer_id as the id field
+                }));
+
+                // Apply filtering if provided
+                if (params.filter) {
+                    const filteredOffers = transformedOffers.filter((offer: any) => {
+                        // Filter by offer name
+                        if (params.filter.offer_name) {
+                            const searchMatch = offer.offer_name
+                                .toLowerCase()
+                                .includes(params.filter.offer_name.toLowerCase());
+                            if (!searchMatch) return false;
+                        }
+
+                        // Filter by offer type
+                        if (params.filter.offer_type) {
+                            if (offer.offer_type !== params.filter.offer_type) return false;
+                        }
+
+                        // Filter by offer category
+                        if (params.filter.offer_category) {
+                            if (offer.offer_category !== params.filter.offer_category) return false;
+                        }
+
+                        return true;
+                    });
+
+                    // Apply pagination
+                    const { page = 1, perPage = 25 } = params.pagination;
+                    const { field = 'created_at', order = 'DESC' } = params.sort;
+
+                    // Sort the filtered results
+                    filteredOffers.sort((a: any, b: any) => {
+                        const aVal = a[field];
+                        const bVal = b[field];
+
+                        if (aVal < bVal) return order === 'ASC' ? -1 : 1;
+                        if (aVal > bVal) return order === 'ASC' ? 1 : -1;
+                        return 0;
+                    });
+
+                    // Paginate the sorted results
+                    const total = filteredOffers.length;
+                    const data = filteredOffers.slice((page - 1) * perPage, page * perPage);
+
+                    return { data, total };
+                }
+
+                // If no filters, apply pagination to all offers
+                const { page = 1, perPage = 25 } = params.pagination;
+                const { field = 'created_at', order = 'DESC' } = params.sort;
+
+                // Sort all offers
+                const sortedOffers = [...transformedOffers].sort((a: any, b: any) => {
+                    const aVal = a[field];
+                    const bVal = b[field];
+
+                    if (aVal < bVal) return order === 'ASC' ? -1 : 1;
+                    if (aVal > bVal) return order === 'ASC' ? 1 : -1;
+                    return 0;
+                });
+
+                // Paginate
+                const total = sortedOffers.length;
+                const data = sortedOffers.slice((page - 1) * perPage, page * perPage);
+
+                return { data, total };
+            } catch (error) {
+                console.error('Error fetching offers:', error);
+                throw error;
+            }
         }
             throw new Error(`Unsupported resource for getList: ${resource}`);
 
@@ -436,7 +521,28 @@ export const dataProvider: DataProvider = {
             });
             return { data: { ...json, id: json.id } };
         }
-        
+        if (resource === 'offers') {
+            const url = `https://devvm.astrokiran.com/auth/api/v1/offers/admin/create`;
+
+            try {
+                const { json } = await httpClient(url, {
+                    method: 'POST',
+                    body: JSON.stringify(params.data),
+                });
+
+                // The API should return the created offer data
+                return {
+                    data: {
+                        ...json,
+                        id: json.offer_id || json.data?.offer_id || json.id,
+                    }
+                };
+            } catch (error) {
+                console.error('Error creating offer:', error);
+                throw error;
+            }
+        }
+
         throw new Error(`Unsupported resource: ${resource}`);
     },
     update: async (resource, params) => {
@@ -512,18 +618,61 @@ export const dataProvider: DataProvider = {
             // This assumes you will create a `getOne` endpoint in your Go service
             const url = `${API_URL}/api/v1/consultations/${params.id}`;
             const { json } = await httpClient(url);
-            
+
             // Assuming the getOne response is { success: true, data: { ...consultation } }
             return {
                 data: json.data,
             };
+        }
+        if (resource === 'offers') {
+            // Fetch a single offer from the API
+            const url = `https://devvm.astrokiran.com/auth/api/v1/offers`;
+
+            try {
+                const { json } = await httpClient(url);
+
+                // The API returns an array of offers, so we need to find the specific one
+                const offers = Array.isArray(json) ? json : [];
+                const offer = offers.find((o: any) => o.offer_id === params.id);
+
+                if (!offer) {
+                    throw new Error(`Offer with ID ${params.id} not found`);
+                }
+
+                // Transform the offer to ensure it has id field
+                const transformedOffer = {
+                    ...offer,
+                    id: offer.offer_id,
+                };
+
+                return { data: transformedOffer };
+            } catch (error) {
+                console.error('Error fetching offer:', error);
+                throw error;
+            }
         }
 
         console.error(`getOne not implemented for resource: ${resource}`);
         return Promise.reject(new Error(`Unsupported resource: ${resource}`));
     },
 
-        
+    update: async (resource, params) => {
+        if (resource === 'offers') {
+            const { id, data } = params;
+            const url = `https://devvm.astrokiran.com/auth/api/v1/offers/admin/${id}`;
+
+            const { json } = await httpClient(url, {
+                method: 'PUT',
+                body: JSON.stringify(data),
+            });
+
+            return { data: { ...json, id: json.offer_id || json.id } };
+        }
+
+        console.error(`update not implemented for resource: ${resource}`);
+        return Promise.reject(new Error(`Unsupported resource: ${resource}`));
+    },
+
     updateMany: async (resource, params) => {
         if (resource === 'guides') {
             const { ids, data } = params;
@@ -550,7 +699,21 @@ export const dataProvider: DataProvider = {
 
     getMany: async () => ({ data: [] }),
     getManyReference: async () => ({ data: [], total: 0 }),
-    delete: async (resource, params) => ({ data: { id: params.id } as any }),
+    delete: async (resource, params) => {
+        if (resource === 'offers') {
+            const { id } = params;
+            const url = `https://devvm.astrokiran.com/auth/api/v1/offers/admin/${id}`;
+
+            await httpClient(url, {
+                method: 'DELETE',
+            });
+
+            return { data: { id } };
+        }
+
+        // Default fallback for other resources
+        return { data: { id: params.id } as any };
+    },
     deleteMany: async () => ({ data: [] }),
 };
 

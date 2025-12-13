@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import { UploadFile } from '@mui/icons-material';
 
-const API_URL = 'https://askapp.astrokiran.com/api/pixel-admin';
+const API_URL = 'https://devvm.astrokiran.com/auth/api/pixel-admin';
 
 interface KycUploadFormProps {
     authUserId: number;

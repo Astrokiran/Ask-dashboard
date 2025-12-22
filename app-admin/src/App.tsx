@@ -11,14 +11,16 @@ import { AdminUserList, AdminUserCreate, AdminUserEdit } from './users/AdminUser
 // You might want to use a more appropriate icon
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { KycPendingList } from './guides/KycPendingList';
-import { GuideBankAccountsPage } from './guides/GuideBankAccountPage'; 
+import { GuideBankAccountsPage } from './guides/GuideBankAccountPage';
+import GuideEarnings from './guides/GuideEarnings';
+import GuideOrders from './guides/GuideOrders'; 
 
 
 // Import the resource objects
 import guides from './guides';
 import customers from './customers';
 import consultations from './Consultations';
-import offers from './offers';
+// import offers from './offers'; // Temporarily disabled
 
 import {
     Users,
@@ -29,6 +31,18 @@ import {
     Gift,
 } from 'lucide-react';
 import { OrderList } from './orders/Orders';
+import { PaymentOrderList } from './orders/PaymentOrders';
+import PaymentOrderShow from './orders/PaymentOrderShow';
+import { ConsultationOrderList } from './orders/ConsultationOrders';
+import ConsultationOrderShow from './orders/ConsultationOrderShow';
+
+// Debug environment variables at the root level
+console.log('=== ENVIRONMENT VARIABLES DEBUG ===');
+console.log('All REACT_APP vars:', Object.keys(process.env).filter(key => key.startsWith('REACT_APP_')));
+console.log('REACT_APP_AUTH_URL:', process.env.REACT_APP_AUTH_URL);
+console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('=====================================');
 
 const App: React.FC = () => (
     <Admin
@@ -58,28 +72,36 @@ const App: React.FC = () => (
             {...customers}
             icon={Users}
         />
-        <Resource 
-            name="orders" 
-            list={OrderList} 
-            // create={OrderCreate} 
-            icon={ShoppingCart} 
-        />
-        <Resource
+          <Resource
             name="consultations"
             {...consultations}
             icon={ClipboardList}
         />
-        <Resource
+        {/* <Resource
             name="offers"
             {...offers}
             icon={Gift}
-        />
+        /> */} // Temporarily disabled
         <Resource
             name="pending-verifications"
             list={KycPendingList}
         />
+        <Resource
+            name="payment-orders"
+            list={PaymentOrderList}
+            show={PaymentOrderShow}
+        />
+        <Resource
+            name="consultation-orders"
+            list={ConsultationOrderList}
+            show={ConsultationOrderShow}
+        />
         <CustomRoutes>
             <Route path="/guides/:id/accounts" element={<GuideBankAccountsPage />} />
+            <Route path="/guide-earnings/:id" element={<GuideEarnings />} />
+            <Route path="/guide-earnings" element={<GuideEarnings />} />
+            <Route path="/guide-orders/:id" element={<GuideOrders />} />
+            <Route path="/guide-orders" element={<GuideOrders />} />
         </CustomRoutes>
     </Admin>
 );

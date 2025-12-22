@@ -26,7 +26,7 @@ import { httpClient } from '../dataProvider';
 import KycDocumentSection from './KycPreview';
 import { KycUploadForm } from './KycUploadForm';
 
-const API_URL = 'https://devvm.astrokiran.com/auth/api/pixel-admin';
+const API_URL = process.env.REACT_APP_API_URL;
 
 const formatStatus = (status: string) => {
     return status.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
@@ -123,7 +123,7 @@ export const KycActionButtons = ({ record, status, onUploadClick }: KycActionBut
         setIsLoading(true);
         try {
             // Use the correct admin API endpoint for complete onboarding
-            const url = `https://devvm.astrokiran.com/auth/api/v1/admin/guides/${record.id}/complete-onboarding`;
+            const url = `${process.env.REACT_APP_API_URL}/api/v1/admin/guides/${record.id}/complete-onboarding`;
             const body = JSON.stringify({
                 price_per_minute: pricePerMinute,
                 revenue_share: parseInt(revenueShare, 10)

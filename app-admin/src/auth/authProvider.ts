@@ -1,6 +1,6 @@
 import { AuthProvider, fetchUtils } from 'react-admin';
 
-const AUTH_API_URL = 'https://devvm.astrokiran.com/auth/api/v1/auth';
+const AUTH_API_URL = process.env.REACT_APP_AUTH_URL;
 
 /**
  * A function that refreshes the access token using the refresh token.

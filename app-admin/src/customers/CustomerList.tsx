@@ -30,7 +30,21 @@ import {
 import { FormEvent, useState } from 'react';
 
 const customerFilters = [
-    <TextInput label="Search (ID, Phone, Name)" source="q" alwaysOn placeholder="Enter customer ID, phone number or name" />,
+    <TextInput
+        label="Customer ID"
+        source="customer_id"
+        placeholder="Enter exact customer ID (e.g., 185)"
+    />,
+    <TextInput
+        label="Phone Number"
+        source="phone_number"
+        placeholder="Enter phone number (e.g., 9929999992)"
+    />,
+    <TextInput
+        label="Profile Name"
+        source="profile_name"
+        placeholder="Enter profile name"
+    />,
 ];
 
 const NewCustomerForm = ({ onSave, saving }: { onSave: (data: any) => void; saving: boolean }) => {

@@ -6,6 +6,7 @@ import {
     useNotify,
     useRefresh,
 } from 'react-admin';
+import { useNavigate } from 'react-router-dom';
 import {
     Card,
     CardContent,
@@ -31,11 +32,11 @@ import {
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { FormEvent, useState,useEffect } from 'react';
-import { User, CreditCard, Users, History, Cake,PlusCircle,Clock, MapPin, Languages, Sparkles,ShoppingCart, Pencil } from 'lucide-react'; 
+import { User, CreditCard, Users, History, Cake,PlusCircle,Clock, MapPin, Languages, Sparkles,ShoppingCart, Pencil, ChevronDown, ChevronRight } from 'lucide-react'; 
 
 import { httpClient } from '../dataProvider';
 
-const API_URL = 'https://devvm.astrokiran.com/auth/api/pixel-admin';
+const API_URL = process.env.REACT_APP_API_URL;
 
 const CreateProfileForm = ({ onSave, saving }: { onSave: (data: any) => void; saving: boolean }) => {
     const [name, setName] = useState('');
@@ -255,6 +256,250 @@ const ProfilesGrid = () => {
     );
 };
 
+// --- Payment Orders Component (fetches its own data) ---
+const CustomerPaymentOrders = ({ customerId }: { customerId: number }) => {
+    const [orders, setOrders] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!customerId) return;
+        setIsLoading(true);
+        httpClient(`${API_URL}/api/v1/customers/${customerId}/wallet/payment-orders`)
+            .then(({ json }) => {
+                // Handle different response structures
+                if (Array.isArray(json)) {
+                    setOrders(json);
+                } else if (json.data && Array.isArray(json.data)) {
+                    setOrders(json.data);
+                } else if (json.items && Array.isArray(json.items)) {
+                    setOrders(json.items);
+                } else {
+                    setOrders([]);
+                }
+            })
+            .finally(() => setIsLoading(false));
+    }, [customerId]);
+
+    const handlePaymentOrderClick = (orderId: number) => {
+        navigate(`/payment-orders/${orderId}/show`);
+    };
+
+    // Calculate payment order statistics
+    const getPaymentOrderStats = () => {
+        if (orders.length === 0) {
+            return {
+                total: 0,
+                successful: 0,
+                failed: 0,
+                pending: 0,
+                successfulPercentage: 0,
+                failedPercentage: 0,
+                pendingPercentage: 0,
+                totalAmount: 0,
+                successfulAmount: 0
+            };
+        }
+
+        const successful = orders.filter(order => order.status?.toLowerCase() === 'successful').length;
+        const failed = orders.filter(order => order.status?.toLowerCase() === 'failed').length;
+        const pending = orders.filter(order => order.status?.toLowerCase() === 'pending').length;
+
+        const totalAmount = orders.reduce((sum, order) => sum + (parseFloat(order.amount || '0')), 0);
+        const successfulAmount = orders
+            .filter(order => order.status?.toLowerCase() === 'successful')
+            .reduce((sum, order) => sum + (parseFloat(order.amount || '0')), 0);
+
+        return {
+            total: orders.length,
+            successful,
+            failed,
+            pending,
+            successfulPercentage: orders.length > 0 ? ((successful / orders.length) * 100).toFixed(1) : '0',
+            failedPercentage: orders.length > 0 ? ((failed / orders.length) * 100).toFixed(1) : '0',
+            pendingPercentage: orders.length > 0 ? ((pending / orders.length) * 100).toFixed(1) : '0',
+            totalAmount,
+            successfulAmount
+        };
+    };
+
+    const stats = getPaymentOrderStats();
+
+    const getOrderStatusColor = (status: string) => {
+        switch (status?.toLowerCase()) {
+            case 'successful':
+                return 'text-green-600';
+            case 'failed':
+                return 'text-red-600';
+            case 'pending':
+                return 'text-yellow-600';
+            default:
+                return 'text-gray-600';
+        }
+    };
+
+    return (
+        <div>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Payment Order ID</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Date</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {isLoading ? (
+                         <TableRow><TableCell colSpan={4} className="text-center">Loading payment orders...</TableCell></TableRow>
+                    ) : orders.length > 0 ? (
+                        orders.map((order: any) => (
+                            <TableRow key={order.id || order.payment_order_id}>
+                                <TableCell>
+                                    <button
+                                        onClick={() => handlePaymentOrderClick(order.id || order.payment_order_id)}
+                                        className="text-blue-600 hover:text-blue-800 hover:underline font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+                                        title="Click to view payment order details"
+                                    >
+                                        #{order.id || order.payment_order_id}
+                                    </button>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge variant={order.status?.toLowerCase() === 'successful' ? 'default' : 'secondary'}>
+                                        {order.status}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell className="font-medium">
+                                    ₹{parseFloat(order.amount || '0').toFixed(2)}
+                                </TableCell>
+                                <TableCell>{new Date(order.created_at).toLocaleString()}</TableCell>
+                            </TableRow>
+                        ))
+                    ) : (
+                         <TableRow><TableCell colSpan={4} className="text-center">No payment orders found.</TableCell></TableRow>
+                    )}
+                </TableBody>
+            </Table>
+
+            {/* Payment Order Statistics Summary */}
+            <div className="mt-4 border-t bg-gray-50 p-4 rounded-lg">
+                <div className="space-y-4">
+                    <h3 className="font-semibold text-sm text-gray-700 uppercase tracking-wider">Payment Order Summary</h3>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {/* Total Payment Orders */}
+                        <div className="text-center p-3 bg-white rounded-lg border">
+                            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
+                            <div className="text-xs text-gray-500 font-medium">Total Orders</div>
+                        </div>
+
+                        {/* Successful Orders */}
+                        <div className="text-center p-3 bg-white rounded-lg border">
+                            <div className="text-2xl font-bold text-green-600">{stats.successful}</div>
+                            <div className="text-xs text-gray-500 font-medium">Successful ({stats.successfulPercentage}%)</div>
+                        </div>
+
+                        {/* Failed Orders */}
+                        <div className="text-center p-3 bg-white rounded-lg border">
+                            <div className="text-2xl font-bold text-red-600">{stats.failed}</div>
+                            <div className="text-xs text-gray-500 font-medium">Failed ({stats.failedPercentage}%)</div>
+                        </div>
+
+                        {/* Pending Orders */}
+                        <div className="text-center p-3 bg-white rounded-lg border">
+                            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+                            <div className="text-xs text-gray-500 font-medium">Pending ({stats.pendingPercentage}%)</div>
+                        </div>
+                    </div>
+
+                    {/* Amount Summary */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="text-center p-3 bg-white rounded-lg border">
+                            <div className="text-2xl font-bold text-blue-600">
+                                ₹{stats.totalAmount.toFixed(2)}
+                            </div>
+                            <div className="text-xs text-gray-500 font-medium">Total Amount (All Orders)</div>
+                        </div>
+
+                        <div className="text-center p-3 bg-white rounded-lg border">
+                            <div className="text-2xl font-bold text-green-600">
+                                ₹{stats.successfulAmount.toFixed(2)}
+                            </div>
+                            <div className="text-xs text-gray-500 font-medium">Amount from Successful Orders</div>
+                        </div>
+                    </div>
+
+                    {/* Visual Status Bar */}
+                    {stats.total > 0 && (
+                        <div className="w-full bg-gray-200 rounded-full h-8 overflow-hidden flex">
+                            {stats.successful > 0 && (
+                                <div
+                                    className="bg-green-500 h-full flex items-center justify-center text-white text-xs font-medium"
+                                    style={{ width: `${stats.successfulPercentage}%` }}
+                                >
+                                    {stats.successfulPercentage}%
+                                </div>
+                            )}
+                            {stats.failed > 0 && (
+                                <div
+                                    className="bg-red-500 h-full flex items-center justify-center text-white text-xs font-medium"
+                                    style={{ width: `${stats.failedPercentage}%` }}
+                                >
+                                    {stats.failedPercentage}%
+                                </div>
+                            )}
+                            {stats.pending > 0 && (
+                                <div
+                                    className="bg-yellow-500 h-full flex items-center justify-center text-white text-xs font-medium"
+                                    style={{ width: `${stats.pendingPercentage}%` }}
+                                >
+                                    {stats.pendingPercentage}%
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- Collapsible Section Component ---
+const CollapsibleSection = ({ title, icon, children, defaultOpen = false }: {
+    title: string;
+    icon: React.ReactNode;
+    children: React.ReactNode;
+    defaultOpen?: boolean;
+}) => {
+    const [isOpen, setIsOpen] = useState(defaultOpen);
+
+    return (
+        <Card className="mt-6">
+            <CardHeader
+                className="cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        {icon}
+                        {title}
+                    </div>
+                    {isOpen ? (
+                        <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                    ) : (
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    )}
+                </CardTitle>
+            </CardHeader>
+            {isOpen && (
+                <CardContent>
+                    {children}
+                </CardContent>
+            )}
+        </Card>
+    );
+};
+
 
 
 const WalletBalance = ({ customerId }: { customerId: number }) => {
@@ -454,35 +699,173 @@ const WalletTransactions = ({ customerId }: { customerId: number }) => {
 const CustomerOrders = ({ customerId }: { customerId: number }) => {
     const [orders, setOrders] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (!customerId) return;
         setIsLoading(true);
-        httpClient(`${API_URL}/api/v1/customers/${customerId}/orders/`)
+        httpClient(`${API_URL}/api/v1/customers/${customerId}/orders`)
             .then(({ json }) => setOrders(json.items || []))
             .finally(() => setIsLoading(false));
     }, [customerId]);
 
+    const handleOrderClick = (orderId: number) => {
+        // Store the customer_id for the show page to use
+        localStorage.setItem('current_customer_id', customerId.toString());
+        // Navigate to the consultation order show page
+        navigate(`/consultation-orders/${orderId}/show`);
+    };
+
+    // Calculate order statistics
+    const getOrderStats = () => {
+        if (orders.length === 0) {
+            return {
+                total: 0,
+                completed: 0,
+                cancelled: 0,
+                pending: 0,
+                completedPercentage: 0,
+                cancelledPercentage: 0,
+                totalRevenue: 0,
+                completedRevenue: 0
+            };
+        }
+
+        const completed = orders.filter(order => order.status?.toLowerCase() === 'completed').length;
+        const cancelled = orders.filter(order => order.status?.toLowerCase() === 'cancelled').length;
+        const pending = orders.filter(order =>
+            order.status?.toLowerCase() !== 'completed' &&
+            order.status?.toLowerCase() !== 'cancelled'
+        ).length;
+
+        const totalRevenue = orders.reduce((sum, order) => sum + (order.final_amount || 0), 0);
+        const completedRevenue = orders
+            .filter(order => order.status?.toLowerCase() === 'completed')
+            .reduce((sum, order) => sum + (order.final_amount || 0), 0);
+
+        return {
+            total: orders.length,
+            completed,
+            cancelled,
+            pending,
+            completedPercentage: orders.length > 0 ? ((completed / orders.length) * 100).toFixed(1) : '0',
+            cancelledPercentage: orders.length > 0 ? ((cancelled / orders.length) * 100).toFixed(1) : '0',
+            totalRevenue,
+            completedRevenue
+        };
+    };
+
+    const stats = getOrderStats();
+
     return (
-        <Card className="mt-6">
-            <CardHeader><CardTitle className="flex items-center gap-2"><ShoppingCart className="h-5 w-5" />Customer Orders</CardTitle></CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader><TableRow><TableHead>Order ID</TableHead><TableHead>Status</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                        {isLoading ? (
-                             <TableRow><TableCell colSpan={3} className="text-center">Loading orders...</TableCell></TableRow>
-                        ) : orders.length > 0 ? (
-                            orders.map((order: any) => (
-                                <TableRow key={order.order_id}><TableCell>#{order.order_id}</TableCell><TableCell><Badge>{order.status}</Badge></TableCell><TableCell>{new Date(order.created_at).toLocaleString()}</TableCell></TableRow>
-                            ))
-                        ) : (
-                             <TableRow><TableCell colSpan={3} className="text-center">No orders found.</TableCell></TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
+        <div>
+            <Table>
+                <TableHeader><TableRow><TableHead>Order ID</TableHead><TableHead>Status</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
+                <TableBody>
+                    {isLoading ? (
+                         <TableRow><TableCell colSpan={3} className="text-center">Loading orders...</TableCell></TableRow>
+                    ) : orders.length > 0 ? (
+                        orders.map((order: any) => (
+                            <TableRow key={order.order_id}>
+                                <TableCell>
+                                    <button
+                                        onClick={() => handleOrderClick(order.order_id)}
+                                        className="text-blue-600 hover:text-blue-800 hover:underline font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+                                        title="Click to view order details"
+                                    >
+                                        #{order.order_id}
+                                    </button>
+                                </TableCell>
+                                <TableCell><Badge>{order.status}</Badge></TableCell>
+                                <TableCell>{new Date(order.created_at).toLocaleString()}</TableCell>
+                            </TableRow>
+                        ))
+                    ) : (
+                         <TableRow><TableCell colSpan={3} className="text-center">No orders found.</TableCell></TableRow>
+                    )}
+                </TableBody>
+            </Table>
+
+            {/* Order Statistics Summary */}
+            <div className="mt-4 border-t bg-gray-50 p-4 rounded-lg">
+                <div className="space-y-4">
+                    <h3 className="font-semibold text-sm text-gray-700 uppercase tracking-wider">Order Summary</h3>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {/* Total Orders */}
+                        <div className="text-center p-3 bg-white rounded-lg border">
+                            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
+                            <div className="text-xs text-gray-500 font-medium">Total Orders</div>
+                        </div>
+
+                        {/* Completed Orders */}
+                        <div className="text-center p-3 bg-white rounded-lg border">
+                            <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
+                            <div className="text-xs text-gray-500 font-medium">Completed ({stats.completedPercentage}%)</div>
+                        </div>
+
+                        {/* Cancelled Orders */}
+                        <div className="text-center p-3 bg-white rounded-lg border">
+                            <div className="text-2xl font-bold text-red-600">{stats.cancelled}</div>
+                            <div className="text-xs text-gray-500 font-medium">Cancelled ({stats.cancelledPercentage}%)</div>
+                        </div>
+
+                        {/* Pending Orders */}
+                        <div className="text-center p-3 bg-white rounded-lg border">
+                            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+                            <div className="text-xs text-gray-500 font-medium">Other Status</div>
+                        </div>
+                    </div>
+
+                    {/* Revenue Summary */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="text-center p-3 bg-white rounded-lg border">
+                            <div className="text-2xl font-bold text-blue-600">
+                                ₹{stats.totalRevenue.toFixed(2)}
+                            </div>
+                            <div className="text-xs text-gray-500 font-medium">Total Revenue (All Orders)</div>
+                        </div>
+
+                        <div className="text-center p-3 bg-white rounded-lg border">
+                            <div className="text-2xl font-bold text-green-600">
+                                ₹{stats.completedRevenue.toFixed(2)}
+                            </div>
+                            <div className="text-xs text-gray-500 font-medium">Revenue from Completed Orders</div>
+                        </div>
+                    </div>
+
+                    {/* Visual Status Bar */}
+                    {stats.total > 0 && (
+                        <div className="w-full bg-gray-200 rounded-full h-8 overflow-hidden flex">
+                            {stats.completed > 0 && (
+                                <div
+                                    className="bg-green-500 h-full flex items-center justify-center text-white text-xs font-medium"
+                                    style={{ width: `${stats.completedPercentage}%` }}
+                                >
+                                    {stats.completedPercentage}%
+                                </div>
+                            )}
+                            {stats.cancelled > 0 && (
+                                <div
+                                    className="bg-red-500 h-full flex items-center justify-center text-white text-xs font-medium"
+                                    style={{ width: `${stats.cancelledPercentage}%` }}
+                                >
+                                    {stats.cancelledPercentage}%
+                                </div>
+                            )}
+                            {stats.pending > 0 && (
+                                <div
+                                    className="bg-yellow-500 h-full flex items-center justify-center text-white text-xs font-medium"
+                                    style={{ width: `${(100 - parseFloat(stats.completedPercentage) - parseFloat(stats.cancelledPercentage)).toFixed(1)}%` }}
+                                >
+                                    {((100 - parseFloat(stats.completedPercentage) - parseFloat(stats.cancelledPercentage))).toFixed(1)}%
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
     );  
 };
 
@@ -505,12 +888,12 @@ const CustomerShowView = () => {
                 </CardHeader>
                 <CardContent>
                      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 text-sm p-4">
-                        
+
                          <div>
                              <p className="font-semibold text-muted-foreground">Primary Phone</p>
                              <TextField source="phone" className="text-base" emptyText="N/A"/>
                          </div>
-                        
+
                          <div>
                             <p className="font-semibold text-muted-foreground">Customer ID</p>
                             <TextField source="id" className="text-base" />
@@ -524,16 +907,34 @@ const CustomerShowView = () => {
             </Card>
 
             <ProfilesGrid />
-            
-            <Card>
-                <CardHeader><CardTitle>Wallet</CardTitle></CardHeader>
-                <CardContent>
-                    <WalletBalance customerId={customerIdAsNumber} />
-                    <WalletTransactions customerId={customerIdAsNumber} />
-                </CardContent>
-            </Card>
-            
-            <CustomerOrders customerId={customerIdAsNumber} />
+
+            {/* Collapsible Wallet Section */}
+            <CollapsibleSection
+                title="Wallet"
+                icon={<CreditCard className="h-5 w-5" />}
+                defaultOpen={false}
+            >
+                <WalletBalance customerId={customerIdAsNumber} />
+                <WalletTransactions customerId={customerIdAsNumber} />
+            </CollapsibleSection>
+
+            {/* Collapsible Consultation Orders Section */}
+            <CollapsibleSection
+                title="Consultation Orders"
+                icon={<ShoppingCart className="h-5 w-5" />}
+                defaultOpen={false}
+            >
+                <CustomerOrders customerId={customerIdAsNumber} />
+            </CollapsibleSection>
+
+            {/* Collapsible Payment Orders Section */}
+            <CollapsibleSection
+                title="Payment Orders"
+                icon={<CreditCard className="h-5 w-5" />}
+                defaultOpen={false}
+            >
+                <CustomerPaymentOrders customerId={customerIdAsNumber} />
+            </CollapsibleSection>
         </div>
     );
 };

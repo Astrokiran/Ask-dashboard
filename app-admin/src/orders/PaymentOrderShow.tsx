@@ -13,7 +13,7 @@ import {
     Labeled,
     useShowController,
 } from 'react-admin';
-import { Card, CardContent, Box, Typography, Grid, Paper, styled } from '@mui/material';
+import { Card, CardContent, Box, Typography, Paper, styled } from '@mui/material';
 
 // Payment Order status configurations
 const PAYMENT_ORDER_STATUSES = {
@@ -25,12 +25,12 @@ const PAYMENT_ORDER_STATUSES = {
 };
 
 // Custom Status Field Component
-const PaymentOrderStatusField = ({ source }) => {
+const PaymentOrderStatusField = () => {
     const record = useRecordContext();
-    if (!record?.[source]) return <span>-</span>;
+    if (!record?.status) return <span>-</span>;
 
-    const status = record[source];
-    const statusConfig = PAYMENT_ORDER_STATUSES[status.toUpperCase()];
+    const statusKey = String(record.status).toUpperCase() as keyof typeof PAYMENT_ORDER_STATUSES;
+    const statusConfig = PAYMENT_ORDER_STATUSES[statusKey];
 
     return (
         <Box
@@ -70,7 +70,7 @@ const SectionTitle = styled(Typography)(({ theme }) => ({
 }));
 
 // Currency formatter component
-const CurrencyField = ({ source, label }) => {
+const CurrencyField = ({ source, label }: { source: string; label: string }) => {
     const record = useRecordContext();
     const value = record?.[source];
 
@@ -98,9 +98,9 @@ const PaymentOrderShow = () => {
     return (
         <Show actions={<PaymentOrderShowActions />}>
             <SimpleShowLayout>
-                <Grid container spacing={3}>
+                <Box display="flex" flexWrap="wrap" gap={3}>
                     {/* Order Information */}
-                    <Grid item xs={12} md={6}>
+                    <Box flex="1 1 400px" minWidth="300px">
                         <StyledPaper>
                             <SectionTitle variant="h6">Payment Order Information</SectionTitle>
                             <Box display="flex" flexDirection="column" gap={2}>
@@ -120,17 +120,17 @@ const PaymentOrderShow = () => {
                                     <Typography variant="body2" sx={{ mb: 1 }}>
                                         <strong>Status:</strong>
                                     </Typography>
-                                    <PaymentOrderStatusField source="status" />
+                                    <PaymentOrderStatusField />
                                 </Box>
                                 <Typography variant="body2">
                                     <strong>Task ID:</strong> {record?.task_id || 'N/A'}
                                 </Typography>
                             </Box>
                         </StyledPaper>
-                    </Grid>
+                    </Box>
 
                     {/* Financial Information */}
-                    <Grid item xs={12} md={6}>
+                    <Box flex="1 1 400px" minWidth="300px">
                         <StyledPaper>
                             <SectionTitle variant="h6">Financial Information</SectionTitle>
                             <Box display="flex" flexDirection="column" gap={2}>
@@ -147,10 +147,10 @@ const PaymentOrderShow = () => {
                                 </Typography>
                             </Box>
                         </StyledPaper>
-                    </Grid>
+                    </Box>
 
                     {/* Timestamps */}
-                    <Grid item xs={12} md={6}>
+                    <Box flex="1 1 400px" minWidth="300px">
                         <StyledPaper>
                             <SectionTitle variant="h6">Timestamps</SectionTitle>
                             <Box display="flex" flexDirection="column" gap={2}>
@@ -162,8 +162,8 @@ const PaymentOrderShow = () => {
                                 </Typography>
                             </Box>
                         </StyledPaper>
-                    </Grid>
-                </Grid>
+                    </Box>
+                </Box>
             </SimpleShowLayout>
         </Show>
     );

@@ -471,9 +471,9 @@ export const dataProvider: DataProvider = {
                 // Response with items array
                 consultations = json.data.items;
                 total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || consultations.length;
-            } else if (Array.isArray(json)) {
+            } else if (Array.isArray(json.data.data)) {
                 // Direct array response
-                consultations = json;
+                consultations = json.data;
                 total = json.pagination?.total || json.total || consultations.length;
             } else {
                 console.warn('Unexpected API response structure:', json);
@@ -687,13 +687,13 @@ export const dataProvider: DataProvider = {
                     });
 
                     // Apply pagination
-                    const { page = 1, perPage = 25 } = params.pagination;
-                    const { field = 'created_at', order = 'DESC' } = params.sort;
+                    const { page = 1, perPage = 25 } = params.pagination ?? {};
+                    const { field = 'created_at', order = 'DESC' } = params.sort ?? {};
 
                     // Sort the filtered results
                     filteredOffers.sort((a: any, b: any) => {
                         const aVal = a[field];
-                        const bVal = b[field];
+                        const bVal = b[field];  
 
                         if (aVal < bVal) return order === 'ASC' ? -1 : 1;
                         if (aVal > bVal) return order === 'ASC' ? 1 : -1;
@@ -708,8 +708,8 @@ export const dataProvider: DataProvider = {
                 }
 
                 // If no filters, apply pagination to all offers
-                const { page = 1, perPage = 25 } = params.pagination;
-                const { field = 'created_at', order = 'DESC' } = params.sort;
+                const { page = 1, perPage = 25 } = params.pagination ?? {};
+                const { field = 'created_at', order = 'DESC' } = params.sort ?? {};
 
                 // Sort all offers
                 const sortedOffers = [...transformedOffers].sort((a: any, b: any) => {
@@ -1040,22 +1040,22 @@ export const dataProvider: DataProvider = {
         return Promise.reject(new Error(`Unsupported resource: ${resource}`));
     },
 
-    update: async (resource, params) => {
-        if (resource === 'offers') {
-            const { id, data } = params;
-            const url = `${OFFERS_BASE_URL}/admin/${id}`;
+    // update: async (resource, params) => {
+    //     if (resource === 'offers') {
+    //         const { id, data } = params;
+    //         const url = `${OFFERS_BASE_URL}/admin/${id}`;
 
-            const { json } = await httpClient(url, {
-                method: 'PUT',
-                body: JSON.stringify(data),
-            });
+    //         const { json } = await httpClient(url, {
+    //             method: 'PUT',
+    //             body: JSON.stringify(data),
+    //         });
 
-            return { data: { ...json, id: json.offer_id || json.id } };
-        }
+    //         return { data: { ...json, id: json.offer_id || json.id } };
+    //     }
 
-        console.error(`update not implemented for resource: ${resource}`);
-        return Promise.reject(new Error(`Unsupported resource: ${resource}`));
-    },
+    //     console.error(`update not implemented for resource: ${resource}`);
+    //     return Promise.reject(new Error(`Unsupported resource: ${resource}`));
+    // },
 
     updateMany: async (resource, params) => {
         if (resource === 'guides') {

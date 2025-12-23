@@ -17,7 +17,8 @@ import {
     email,
     useRecordContext,
 } from 'react-admin';
-import { Grid, Box, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
+import Grid from '@mui/material/Grid';
 
 // A filter sidebar for the list view
 const AdminUserFilters = [
@@ -80,7 +81,7 @@ export const AdminUserEdit = () => (
         <SimpleForm>
             {/* FIX: The Grid component usage is corrected. It seems your environment expects the props directly. */}
             <Grid container spacing={2} sx={{ width: '100%' }}>
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                     <Typography variant="h6" gutterBottom>Profile</Typography>
                     <TextInput source="id" disabled fullWidth />
                     <TextInput source="phone_number" label="Phone Number" disabled fullWidth />
@@ -91,7 +92,7 @@ export const AdminUserEdit = () => (
                     <BooleanInput source="is_active" label="Is this user active?" />
                 </Grid>
 
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                     <Typography variant="h6" gutterBottom>Audit Trail</Typography>
                     <TextInput source="created_by_phone" label="Created By (Phone)" disabled fullWidth />
                     {/* FIX: Removed invalid 'disabled' and 'fullWidth' props from DateField */}

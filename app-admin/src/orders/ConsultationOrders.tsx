@@ -25,8 +25,7 @@ import {
     useRefresh,
     useDataProvider
 } from 'react-admin';
-import { Card, CardContent, Box, Typography, Paper, styled, Grid } from '@mui/material';
-import { DateProvider } from 'react-admin';
+import { Card, CardContent, Box, Typography, Paper, styled } from '@mui/material';
 import { format } from 'date-fns';
 
 // Custom styled components for better appearance
@@ -67,12 +66,13 @@ const ORDER_STATUSES = {
 };
 
 // Custom Status Field Component
-const OrderStatusField = ({ source }) => {
+const OrderStatusField = ({ source }: { source: string }) => {
     const record = useRecordContext();
     if (!record?.[source]) return <span>-</span>;
 
     const status = record[source];
-    const statusConfig = ORDER_STATUSES[status.toUpperCase()];
+    const statusKey = String(status).toUpperCase() as keyof typeof ORDER_STATUSES;
+    const statusConfig = ORDER_STATUSES[statusKey] || { label: String(status), color: '#9E9E9E' };
 
     return (
         <Box
@@ -92,7 +92,7 @@ const OrderStatusField = ({ source }) => {
 };
 
 // Order Actions Component
-const OrderActions = ({ record }) => {
+const OrderActions = ({ record }: { record: any }) => {
     const notify = useNotify();
     const refresh = useRefresh();
     const dataProvider = useDataProvider();
@@ -235,15 +235,15 @@ const getOrderStats = (orders: any[]) => {
         completed,
         cancelled,
         pending,
-        completedPercentage: orders.length > 0 ? ((completed / orders.length) * 100).toFixed(1) : '0',
-        cancelledPercentage: orders.length > 0 ? ((cancelled / orders.length) * 100).toFixed(1) : '0',
+        completedPercentage: orders.length > 0 ? parseFloat(((completed / orders.length) * 100).toFixed(1)) : 0,
+        cancelledPercentage: orders.length > 0 ? parseFloat(((cancelled / orders.length) * 100).toFixed(1)) : 0,
         totalRevenue,
         completedRevenue
     };
 };
 
 // Main Component
-const ConsultationOrderListContent = (props) => {
+const ConsultationOrderListContent = (props: any) => {
     const { data, filterValues } = useListContext();
 
     // Filter out mock data
@@ -284,11 +284,7 @@ const ConsultationOrderListContent = (props) => {
                     label="Consultant ID"
                     sortable={false}
                 />
-                <OrderStatusField
-                    source="status"
-                    label="Status"
-                    sortable={false}
-                />
+                <OrderStatusField source="status" />
                 <TextField
                     source="service_type"
                     label="Service Type"
@@ -311,7 +307,7 @@ const ConsultationOrderListContent = (props) => {
                     showTime
                     sortable={false}
                 />
-                <OrderActions />
+                <OrderActions record={undefined} />
             </Datagrid>
 
             {/* Order Statistics Summary - Only show when there's real data */}
@@ -321,9 +317,9 @@ const ConsultationOrderListContent = (props) => {
                         <SectionTitle>Order Summary</SectionTitle>
 
                         <Box mb={3}>
-                            <Grid container spacing={2}>
+                            <Box display="flex" flexWrap="wrap" gap={2}>
                                 {/* Total Orders */}
-                                <Grid item xs={6} sm={3}>
+                                <Box flex="1 1 200px" minWidth="200px">
                                     <Box textAlign="center" p={2} className="bg-white rounded border">
                                         <Typography variant="h4" fontWeight="bold" color="textPrimary">
                                             {stats.total}
@@ -332,10 +328,10 @@ const ConsultationOrderListContent = (props) => {
                                             Total Orders
                                         </Typography>
                                     </Box>
-                                </Grid>
+                                </Box>
 
                                 {/* Completed Orders */}
-                                <Grid item xs={6} sm={3}>
+                                <Box flex="1 1 200px" minWidth="200px">
                                     <Box textAlign="center" p={2} className="bg-white rounded border">
                                         <Typography variant="h4" fontWeight="bold" color="success.main">
                                             {stats.completed}
@@ -344,10 +340,10 @@ const ConsultationOrderListContent = (props) => {
                                             Completed ({stats.completedPercentage}%)
                                         </Typography>
                                     </Box>
-                                </Grid>
+                                </Box>
 
                                 {/* Cancelled Orders */}
-                                <Grid item xs={6} sm={3}>
+                                <Box flex="1 1 200px" minWidth="200px">
                                     <Box textAlign="center" p={2} className="bg-white rounded border">
                                         <Typography variant="h4" fontWeight="bold" color="error.main">
                                             {stats.cancelled}
@@ -356,10 +352,10 @@ const ConsultationOrderListContent = (props) => {
                                             Cancelled ({stats.cancelledPercentage}%)
                                         </Typography>
                                     </Box>
-                                </Grid>
+                                </Box>
 
                                 {/* Other Status Orders */}
-                                <Grid item xs={6} sm={3}>
+                                <Box flex="1 1 200px" minWidth="200px">
                                     <Box textAlign="center" p={2} className="bg-white rounded border">
                                         <Typography variant="h4" fontWeight="bold" color="warning.main">
                                             {stats.pending}
@@ -368,14 +364,14 @@ const ConsultationOrderListContent = (props) => {
                                             Other Status
                                         </Typography>
                                     </Box>
-                                </Grid>
-                            </Grid>
+                                </Box>
+                            </Box>
                         </Box>
 
                         {/* Revenue Summary */}
                         <Box mb={3}>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} sm={6}>
+                            <Box display="flex" flexWrap="wrap" gap={2}>
+                                <Box flex="1 1 300px" minWidth="300px">
                                     <Box textAlign="center" p={2} className="bg-white rounded border">
                                         <Typography variant="h5" fontWeight="bold" color="primary.main">
                                             ₹{stats.totalRevenue.toFixed(2)}
@@ -384,9 +380,9 @@ const ConsultationOrderListContent = (props) => {
                                             Total Revenue (All Orders)
                                         </Typography>
                                     </Box>
-                                </Grid>
+                                </Box>
 
-                                <Grid item xs={12} sm={6}>
+                                <Box flex="1 1 300px" minWidth="300px">
                                     <Box textAlign="center" p={2} className="bg-white rounded border">
                                         <Typography variant="h5" fontWeight="bold" color="success.main">
                                             ₹{stats.completedRevenue.toFixed(2)}
@@ -395,8 +391,8 @@ const ConsultationOrderListContent = (props) => {
                                             Revenue from Completed Orders
                                         </Typography>
                                     </Box>
-                                </Grid>
-                            </Grid>
+                                </Box>
+                            </Box>
                         </Box>
 
                         {/* Visual Status Bar */}
@@ -457,10 +453,10 @@ const ConsultationOrderListContent = (props) => {
                                                 color: 'white',
                                                 fontSize: '0.75rem',
                                                 fontWeight: 'bold',
-                                                width: `${(100 - parseFloat(stats.completedPercentage) - parseFloat(stats.cancelledPercentage)).toFixed(1)}%`
+                                                width: `${(100 - stats.completedPercentage - stats.cancelledPercentage).toFixed(1)}%`
                                             }}
                                         >
-                                            {((100 - parseFloat(stats.completedPercentage) - parseFloat(stats.cancelledPercentage))).toFixed(1)}%
+                                            {(100 - stats.completedPercentage - stats.cancelledPercentage).toFixed(1)}%
                                         </Box>
                                     )}
                                 </Box>
@@ -488,7 +484,7 @@ const ConsultationOrderListContent = (props) => {
 };
 
 // Export the component with filters and actions
-export const ConsultationOrderList = (props) => {
+export const ConsultationOrderList = (props: any) => {
     return (
         <List
             {...props}

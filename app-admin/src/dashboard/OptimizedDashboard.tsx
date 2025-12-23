@@ -4,7 +4,6 @@ import {
     CardContent,
     Typography,
     Box,
-    Grid,
     CircularProgress,
     Alert,
     Skeleton,
@@ -115,7 +114,7 @@ const withTimeout = (promise: Promise<any>, timeout: number) => {
 };
 
 // --- API CLIENT WITH RETRY ---
-const apiCall = async (dataProvider: any, resource: string, params: any, retries = 0) => {
+const apiCall = async (dataProvider: any, resource: string, params: any, retries = 0): Promise<any> => {
     try {
         return await withTimeout(dataProvider.getList(resource, params), DASHBOARD_CONFIG.TIMEOUT);
     } catch (error: any) {
@@ -144,11 +143,11 @@ const fetchConsultationsByStatus = async (dataProvider: any): Promise<Consultati
         }).then(res => ({
             status: status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' '),
             count: res.total || 0,
-            color: DASHBOARD_CONFIG.CHART_COLORS[status],
+            color: DASHBOARD_CONFIG.CHART_COLORS[status as keyof typeof DASHBOARD_CONFIG.CHART_COLORS],
         })).catch(() => ({
             status: status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' '),
             count: 0,
-            color: DASHBOARD_CONFIG.CHART_COLORS[status],
+            color: DASHBOARD_CONFIG.CHART_COLORS[status as keyof typeof DASHBOARD_CONFIG.CHART_COLORS],
         }))
     );
 
@@ -196,7 +195,7 @@ const fetchGuidesSummary = async (dataProvider: any) => {
                 rating: guide.guide_stats?.rating || 0,
                 profile_picture_url: guide.profile_picture_url,
             }))
-            .sort((a, b) => b.consultations - a.consultations)
+            .sort((a: any, b: any) => b.consultations - a.consultations)
             .slice(0, 5);
 
         const summary = {
@@ -249,21 +248,21 @@ const fetchCustomersEstimate = async (dataProvider: any) => {
 // Skeleton loading component
 const DashboardSkeleton = () => (
     <Box sx={{ width: '100%' }}>
-        <Grid container spacing={2}>
+        <Box display="flex" flexWrap="wrap" gap={2}>
             {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-                <Grid item xs={12} sm={6} md={3} key={item}>
+                <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)', md: 'calc(25% - 12px)' } }} key={item}>
                     <Skeleton variant="rectangular" height={100} />
-                </Grid>
+                </Box>
             ))}
-        </Grid>
-        <Grid container spacing={3} sx={{ mt: 3 }}>
-            <Grid item xs={12} md={6}>
+        </Box>
+        <Box display="flex" flexWrap="wrap" gap={3} sx={{ mt: 3 }}>
+            <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
                 <Skeleton variant="rectangular" height={300} />
-            </Grid>
-            <Grid item xs={12} md={6}>
+            </Box>
+            <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
                 <Skeleton variant="rectangular" height={300} />
-            </Grid>
-        </Grid>
+            </Box>
+        </Box>
     </Box>
 );
 
@@ -453,7 +452,7 @@ export const OptimizedDashboard = () => {
             </Typography>
 
             {/* Summary Cards */}
-            <Grid container spacing={2}>
+            <Box display="flex" flexWrap="wrap" gap={2}>
                 <SummaryCard title="Total Customers" value={stats.totalCustomers.toLocaleString()} />
                 <SummaryCard
                     title="Today's Customers"
@@ -466,9 +465,9 @@ export const OptimizedDashboard = () => {
                     color="info.main"
                 />
                 <SummaryCard title="Total Consultations" value={stats.totalConsultations.toLocaleString()} />
-            </Grid>
+            </Box>
 
-            <Grid container spacing={2} sx={{ mt: 2 }}>
+            <Box display="flex" flexWrap="wrap" gap={2} sx={{ mt: 2 }}>
                 <SummaryCard
                     title="Today's Consultations"
                     value={stats.todayConsultations.toLocaleString()}
@@ -485,11 +484,11 @@ export const OptimizedDashboard = () => {
                     color="info.main"
                 />
                 <SummaryCard title="Avg Response Time" value={stats.avgResponseTime} />
-            </Grid>
+            </Box>
 
             {/* Charts Row */}
-            <Grid container spacing={3} sx={{ mt: 3 }}>
-                <Grid item xs={12} md={6}>
+            <Box display="flex" flexWrap="wrap" gap={3} sx={{ mt: 3 }}>
+                <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
                     <Card>
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
@@ -510,9 +509,9 @@ export const OptimizedDashboard = () => {
                             </ResponsiveContainer>
                         </CardContent>
                     </Card>
-                </Grid>
+                </Box>
 
-                <Grid item xs={12} md={6}>
+                <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
                     <Card>
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
@@ -539,12 +538,12 @@ export const OptimizedDashboard = () => {
                             </ResponsiveContainer>
                         </CardContent>
                     </Card>
-                </Grid>
-            </Grid>
+                </Box>
+            </Box>
 
             {/* Additional Charts */}
-            <Grid container spacing={3} sx={{ mt: 2 }}>
-                <Grid item xs={12}>
+            <Box display="flex" flexWrap="wrap" gap={3} sx={{ mt: 2 }}>
+                <Box sx={{ width: '100%' }}>
                     <Card>
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
@@ -569,8 +568,8 @@ export const OptimizedDashboard = () => {
                             </ResponsiveContainer>
                         </CardContent>
                     </Card>
-                </Grid>
-            </Grid>
+                </Box>
+            </Box>
         </Box>
     );
 };

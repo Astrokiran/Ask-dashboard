@@ -49,7 +49,7 @@ export const GuideCreate = () => {
 
                     {step === 1 && newGuide && (
                         <KycUploadForm
-                            guideId={newGuide.id}
+                            authUserId={newGuide.id}
                             onSuccess={handleKycSuccess} 
                         />
                     )}

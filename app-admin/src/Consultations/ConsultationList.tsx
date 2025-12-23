@@ -144,7 +144,7 @@ const TotalConsultationsCount = ({ currentFilters }: { currentFilters: any }) =>
 
                 console.log('Total consultations count API response:', response);
                 console.log('Total consultations count API result total:', response.total);
-                setTotalCount(response.total);
+                setTotalCount(response.total ?? null);
 
               } catch (error) {
                 console.error('Error fetching total consultations count:', error);
@@ -178,7 +178,7 @@ const TotalConsultationsCount = ({ currentFilters }: { currentFilters: any }) =>
 };
 
 // --- Main Component Content ---
-const ConsultationListContent = (props) => {
+const ConsultationListContent = (props: any) => {
     const { filterValues } = useListContext();
 
     return (
@@ -204,11 +204,9 @@ const ConsultationListContent = (props) => {
             <Box mt={3}>
                 <StyledPaper>
                     <SectionTitle>Total Consultations (All Filters Applied)</SectionTitle>
-                    <Grid container spacing={2} justifyContent="center">
-                        <Grid item xs={12} sm={6} md={4} lg={3}>
-                            <TotalConsultationsCount currentFilters={filterValues || {}} />
-                        </Grid>
-                    </Grid>
+                    <Box display="flex" justifyContent="center" p={2}>
+                        <TotalConsultationsCount currentFilters={filterValues || {}} />
+                    </Box>
                 </StyledPaper>
             </Box>
         </Box>
@@ -216,7 +214,7 @@ const ConsultationListContent = (props) => {
 };
 
 // --- Main Component ---
-export const ConsultationList = (props) => (
+export const ConsultationList = (props: any) => (
     <List
       filters={consultationFilters}
       actions={<ListActions />}

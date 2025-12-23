@@ -4,6 +4,7 @@ import {
     Datagrid,
     TextField,
     BooleanField,
+    TextInput,
     useRecordContext,
 } from 'react-admin';
 import {
@@ -99,11 +100,16 @@ const OfferCategoryField = () => {
 const ActiveStatusField = ({ source }: { source: string }) => {
     const record = useRecordContext();
 
-    if (!record?.[source] && record[source] !== false) {
+    if (!record) {
         return <Typography variant="body2">-</Typography>;
     }
 
-    const isActive = record[source];
+    const value = record[source];
+    if (value === undefined || value === null) {
+        return <Typography variant="body2">-</Typography>;
+    }
+
+    const isActive = Boolean(value);
 
     return (
         <Chip
@@ -140,9 +146,9 @@ const BonusField = () => {
 
 // Filters for the offers list
 const offerFilters = [
-    <TextField source="offer_name" label="Search by Offer Name" alwaysOn />,
-    <TextField source="offer_type" label="Offer Type" />,
-    <TextField source="offer_category" label="Offer Category" />,
+    <TextInput source="offer_name" label="Search by Offer Name" alwaysOn />,
+    <TextInput source="offer_type" label="Offer Type" />,
+    <TextInput source="offer_category" label="Offer Category" />,
 ];
 
 // Main Offers List Component
@@ -170,11 +176,11 @@ export const OfferList = () => (
                 label="Offer Name"
                 sx={{ fontWeight: 'bold' }}
             />
-            <OfferTypeField label="Type" />
-            <OfferCategoryField label="Category" />
-            <BonusField label="Bonus" />
-            <TargetUserTypesField label="Target Users" />
-            <ActiveStatusField source="is_active" label="Status" />
+            <OfferTypeField />
+            <OfferCategoryField />
+            <BonusField />
+            <TargetUserTypesField />
+            <ActiveStatusField source="is_active" />
         </Datagrid>
     </List>
 );

@@ -18,7 +18,6 @@ import {
     CardContent,
     Typography,
     Box,
-    Grid,
     RadioGroup,
     FormControlLabel,
     Radio,
@@ -28,6 +27,7 @@ import {
     Alert,
     Chip,
 } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import {
     LocalOffer as OfferIcon,
     Percent as DiscountIcon,
@@ -53,7 +53,7 @@ const DiscountOfferForm = () => {
                         Basic Information
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextInput
                                 source="offer_name"
                                 label="Offer Name"
@@ -62,7 +62,7 @@ const DiscountOfferForm = () => {
                                 helperText="e.g., DIWALI_30"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="discount_percentage"
                                 label="Discount Percentage"
@@ -73,7 +73,7 @@ const DiscountOfferForm = () => {
                                 helperText="Percentage discount (1-100)"
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <TextInput
                                 source="description"
                                 label="Description"
@@ -94,7 +94,7 @@ const DiscountOfferForm = () => {
                         Targeting Configuration
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <SelectInput
                                 source="service_type"
                                 label="Service Type"
@@ -108,7 +108,7 @@ const DiscountOfferForm = () => {
                                 fullWidth
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <SelectInput
                                 source="all_consultant_applicable"
                                 label="All Consultants Applicable"
@@ -120,7 +120,7 @@ const DiscountOfferForm = () => {
                                 fullWidth
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <CheckboxGroupInput
                                 source="target_guide_tiers"
                                 label="Target Guide Tiers"
@@ -134,7 +134,7 @@ const DiscountOfferForm = () => {
                                 helperText="Select multiple tiers if applicable"
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <TextInput
                                 source="applicable_consultants"
                                 label="Applicable Consultants (Optional)"
@@ -142,7 +142,7 @@ const DiscountOfferForm = () => {
                                 helperText="Enter consultant IDs separated by commas (e.g., 101,102,103). Required only if 'All Consultants Applicable' is No."
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <CheckboxGroupInput
                                 source="target_user_types"
                                 label="Target User Types"
@@ -165,7 +165,7 @@ const DiscountOfferForm = () => {
                         Validity Period
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <DateInput
                                 source="valid_from"
                                 label="Valid From"
@@ -173,7 +173,7 @@ const DiscountOfferForm = () => {
                                 fullWidth
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <DateInput
                                 source="valid_to"
                                 label="Valid To"
@@ -181,7 +181,7 @@ const DiscountOfferForm = () => {
                                 fullWidth
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <BooleanInput
                                 source="is_active"
                                 label="Activate Offer Immediately"
@@ -214,7 +214,7 @@ const VoucherOfferForm = () => {
                         Basic Information
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextInput
                                 source="offer_name"
                                 label="Offer Name"
@@ -223,7 +223,7 @@ const VoucherOfferForm = () => {
                                 helperText="e.g., FREE_FIVE_MINUTES_CONSULTATION"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <SelectInput
                                 source="voucher_subtype"
                                 label="Voucher Type"
@@ -237,7 +237,7 @@ const VoucherOfferForm = () => {
                                 onChange={(e) => setSelectedSubtype(e.target.value)}
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <TextInput
                                 source="description"
                                 label="Description"
@@ -251,7 +251,7 @@ const VoucherOfferForm = () => {
 
                         {/* Conditional fields based on voucher subtype */}
                         {selectedSubtype === 'FREE_MINUTES' && (
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <NumberInput
                                     source="free_minutes"
                                     label="Free Minutes"
@@ -264,7 +264,7 @@ const VoucherOfferForm = () => {
                         )}
 
                         {selectedSubtype === 'FREE_CREDIT' && (
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <NumberInput
                                     source="credit_amount"
                                     label="Free Credits"
@@ -276,7 +276,7 @@ const VoucherOfferForm = () => {
                             </Grid>
                         )}
 
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="per_user_limit"
                                 label="Per User Limit"
@@ -296,7 +296,7 @@ const VoucherOfferForm = () => {
                         Recharge Conditions
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="min_recharge_amount"
                                 label="Minimum Recharge Amount"
@@ -306,7 +306,7 @@ const VoucherOfferForm = () => {
                                 helperText="Minimum recharge required to claim"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="max_recharge_amount"
                                 label="Maximum Recharge Amount"
@@ -315,7 +315,7 @@ const VoucherOfferForm = () => {
                                 helperText="Maximum recharge amount for eligibility"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="total_limit"
                                 label="Total Offer Limit"
@@ -324,7 +324,7 @@ const VoucherOfferForm = () => {
                                 helperText="Total number of vouchers available"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="validity_duration_hours"
                                 label="Validity Duration (Hours)"
@@ -333,7 +333,7 @@ const VoucherOfferForm = () => {
                                 helperText="How long the voucher is valid after claiming"
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <CheckboxGroupInput
                                 source="voucher_service_types"
                                 label="Applicable Service Types"
@@ -347,7 +347,7 @@ const VoucherOfferForm = () => {
                                 helperText="Services where voucher can be used"
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <CheckboxGroupInput
                                 source="target_user_types"
                                 label="Target User Types"
@@ -370,7 +370,7 @@ const VoucherOfferForm = () => {
                         Call to Action
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextInput
                                 source="cta_text"
                                 label="CTA Text"
@@ -378,7 +378,7 @@ const VoucherOfferForm = () => {
                                 helperText="Call-to-action button text"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextInput
                                 source="cta_url"
                                 label="CTA URL"
@@ -396,7 +396,7 @@ const VoucherOfferForm = () => {
                         Distribution Settings
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <SelectInput
                                 source="distribution_type"
                                 label="Distribution Type"
@@ -409,14 +409,14 @@ const VoucherOfferForm = () => {
                                 fullWidth
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <BooleanInput
                                 source="auto_distribution"
                                 label="Enable Auto Distribution"
                                 defaultValue={true}
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <SelectInput
                                 source="all_consultant_applicable"
                                 label="All Consultants Applicable"
@@ -428,7 +428,7 @@ const VoucherOfferForm = () => {
                                 fullWidth
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <TextInput
                                 source="applicable_consultants"
                                 label="Applicable Consultants (Optional)"
@@ -446,7 +446,7 @@ const VoucherOfferForm = () => {
                         Validity Period
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <DateInput
                                 source="valid_from"
                                 label="Valid From"
@@ -454,7 +454,7 @@ const VoucherOfferForm = () => {
                                 fullWidth
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <DateInput
                                 source="valid_to"
                                 label="Valid To"
@@ -462,7 +462,7 @@ const VoucherOfferForm = () => {
                                 fullWidth
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <BooleanInput
                                 source="is_active"
                                 label="Activate Offer Immediately"
@@ -493,7 +493,7 @@ const CashbackOfferForm = () => {
                         Basic Information
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextInput
                                 source="offer_name"
                                 label="Offer Name"
@@ -502,7 +502,7 @@ const CashbackOfferForm = () => {
                                 helperText="e.g., Weekend Cashback Special"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="bonus_percentage"
                                 label="Cashback Percentage"
@@ -514,7 +514,7 @@ const CashbackOfferForm = () => {
                                 helperText="Percentage cashback (e.g., 10.5 for 10.5%)"
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <TextInput
                                 source="description"
                                 label="Description"
@@ -535,7 +535,7 @@ const CashbackOfferForm = () => {
                         Recharge Conditions
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="min_recharge_amount"
                                 label="Minimum Recharge Amount"
@@ -545,7 +545,7 @@ const CashbackOfferForm = () => {
                                 helperText="Minimum recharge required for cashback"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="max_recharge_amount"
                                 label="Maximum Recharge Amount"
@@ -555,7 +555,7 @@ const CashbackOfferForm = () => {
                                 helperText="Maximum recharge amount eligible for cashback"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="usage_limit_per_user"
                                 label="Usage Limit Per User"
@@ -564,7 +564,7 @@ const CashbackOfferForm = () => {
                                 helperText="How many times a user can claim this cashback"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="bonus_fixed_amount"
                                 label="Fixed Bonus Amount"
@@ -583,7 +583,7 @@ const CashbackOfferForm = () => {
                         Targeting Configuration
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <CheckboxGroupInput
                                 source="target_user_types"
                                 label="Target User Types"
@@ -607,7 +607,7 @@ const CashbackOfferForm = () => {
                         Call to Action
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextInput
                                 source="cta_text"
                                 label="CTA Text"
@@ -615,7 +615,7 @@ const CashbackOfferForm = () => {
                                 helperText="Call-to-action button text"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextInput
                                 source="cta_url"
                                 label="CTA URL"
@@ -633,7 +633,7 @@ const CashbackOfferForm = () => {
                         Validity Period
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <DateInput
                                 source="valid_from"
                                 label="Valid From"
@@ -642,7 +642,7 @@ const CashbackOfferForm = () => {
                                 helperText="Select start date and time for offer validity"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <DateInput
                                 source="valid_to"
                                 label="Valid To"
@@ -651,7 +651,7 @@ const CashbackOfferForm = () => {
                                 helperText="Select end date and time for offer validity"
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <BooleanInput
                                 source="is_active"
                                 label="Activate Offer Immediately"
@@ -682,7 +682,7 @@ const ComboOfferForm = () => {
                         Basic Information
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextInput
                                 source="offer_name"
                                 label="Offer Name"
@@ -691,7 +691,7 @@ const ComboOfferForm = () => {
                                 helperText="e.g., Super Recharge Combo"
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <TextInput
                                 source="description"
                                 label="Description"
@@ -712,7 +712,7 @@ const ComboOfferForm = () => {
                         Cashback Configuration
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="cashback_percentage"
                                 label="Cashback Percentage"
@@ -724,7 +724,7 @@ const ComboOfferForm = () => {
                                 helperText="Percentage cashback (e.g., 15 for 15%)"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="max_cashback_amount"
                                 label="Maximum Cashback Amount"
@@ -734,7 +734,7 @@ const ComboOfferForm = () => {
                                 helperText="Maximum cashback amount that can be given"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="bonus_fixed_amount"
                                 label="Fixed Bonus Amount"
@@ -754,7 +754,7 @@ const ComboOfferForm = () => {
                         Free Minutes Configuration
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="voucher_minutes"
                                 label="Free Minutes"
@@ -764,7 +764,7 @@ const ComboOfferForm = () => {
                                 helperText="Number of free minutes to provide"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <SelectInput
                                 source="voucher_service_type"
                                 label="Voucher Service Type"
@@ -788,7 +788,7 @@ const ComboOfferForm = () => {
                         Recharge Conditions
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="min_recharge_amount"
                                 label="Minimum Recharge Amount"
@@ -798,7 +798,7 @@ const ComboOfferForm = () => {
                                 helperText="Minimum recharge required for combo offer"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="max_recharge_amount"
                                 label="Maximum Recharge Amount"
@@ -808,7 +808,7 @@ const ComboOfferForm = () => {
                                 helperText="Maximum recharge amount eligible for combo"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="usage_limit_per_user"
                                 label="Usage Limit Per User"
@@ -827,7 +827,7 @@ const ComboOfferForm = () => {
                         Targeting Configuration
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <CheckboxGroupInput
                                 source="target_user_types"
                                 label="Target User Types"
@@ -851,7 +851,7 @@ const ComboOfferForm = () => {
                         Call to Action
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextInput
                                 source="cta_text"
                                 label="CTA Text"
@@ -859,7 +859,7 @@ const ComboOfferForm = () => {
                                 helperText="Call-to-action button text"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextInput
                                 source="cta_url"
                                 label="CTA URL"
@@ -877,7 +877,7 @@ const ComboOfferForm = () => {
                         Validity Period
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <DateInput
                                 source="valid_from"
                                 label="Valid From"
@@ -886,7 +886,7 @@ const ComboOfferForm = () => {
                                 helperText="Select start date and time for offer validity"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <DateInput
                                 source="valid_to"
                                 label="Valid To"
@@ -895,7 +895,7 @@ const ComboOfferForm = () => {
                                 helperText="Select end date and time for offer validity"
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <BooleanInput
                                 source="is_active"
                                 label="Activate Offer Immediately"

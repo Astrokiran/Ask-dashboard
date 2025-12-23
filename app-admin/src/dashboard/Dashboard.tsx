@@ -239,8 +239,8 @@ const Dashboard: React.FC = () => {
                 // Calculate today's consultation status breakdown
                 const todayStatusBreakdown = calculateStatusBreakdown(todayConsultationsRes.data);
 
-                const successRate = totalConsultationsRes.total > 0
-                    ? ((overallCompletedRes.total / totalConsultationsRes.total) * 100).toFixed(1)
+                const successRate = (totalConsultationsRes.total ?? 0) > 0
+                    ? (((overallCompletedRes.total ?? 0) / (totalConsultationsRes.total ?? 1)) * 100).toFixed(1)
                     : '0.0';
 
                 setStats({

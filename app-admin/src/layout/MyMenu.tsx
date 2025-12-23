@@ -16,18 +16,46 @@ import {
 import { Box, Collapse, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 
-const SubMenu = ({ handleToggle, isOpen, name, icon, children }) => {
-    const [sidebarIsOpen] = useSidebarState();
+const SubMenu = ({
+    handleToggle,
+    isOpen,
+    name,
+    icon,
+    children,
+}: {
+    handleToggle: () => void;
+    isOpen: boolean;
+    name: string;
+    icon?: React.ReactNode;
+    children?: React.ReactNode;
+}) => {    const [sidebarIsOpen] = useSidebarState();
 
     return (
         <>
-            <MenuItemLink
-                onClick={handleToggle}
-                to="#" // This prevents navigation when clicking the main menu item
-                primaryText={name}
-                leftIcon={icon}
-                rightIcon={<ExpandMore sx={{ transform: isOpen ? 'rotate(-180deg)' : 'none' }} />} // Arrow icon
+           <MenuItemLink
+    onClick={handleToggle}
+    to="#"
+    leftIcon={icon}
+    primaryText={
+        <Box
+            sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                width: '100%',
+            }}
+        >
+            <span>{name}</span>
+            <ExpandMore
+                sx={{
+                    transform: isOpen ? 'rotate(-180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease',
+                }}
             />
+        </Box>
+    }
+/>
+
             <Collapse in={isOpen} timeout="auto" unmountOnExit>
                 <Box
                     component="div"

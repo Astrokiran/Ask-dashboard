@@ -18,7 +18,6 @@ import {
     Card,
     CardContent,
     Typography,
-    Grid,
     Box,
     Divider,
     Alert,
@@ -28,6 +27,7 @@ import {
     IconButton,
     Tooltip,
 } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import {
     Edit as EditIcon,
     Schedule as ScheduleIcon,
@@ -145,7 +145,7 @@ const TargetUserTypesDisplay = () => {
 // Reusable info item component for better consistency
 const InfoItem = ({ label, value, icon, color = 'text.primary' }: {
     label: string;
-    value: string | number | null | undefined;
+    value: string | number | null | undefined | React.ReactNode;
     icon?: React.ReactNode;
     color?: string;
 }) => {
@@ -205,7 +205,7 @@ const BonusDisplay = () => {
     return (
         <Grid container spacing={2}>
             {record?.bonus_percentage && record.bonus_percentage !== '0' && (
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                     <Typography variant="body2" color="text.secondary">
                         Percentage Bonus
                     </Typography>
@@ -215,7 +215,7 @@ const BonusDisplay = () => {
                 </Grid>
             )}
             {record?.bonus_fixed_amount && record.bonus_fixed_amount !== '0' && (
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                     <Typography variant="body2" color="text.secondary">
                         Fixed Bonus
                     </Typography>
@@ -234,7 +234,7 @@ const RechargeLimitsDisplay = () => {
 
     return (
         <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
                 <Typography variant="body2" color="text.secondary">
                     Minimum Recharge
                 </Typography>
@@ -243,7 +243,7 @@ const RechargeLimitsDisplay = () => {
                     {record?.min_recharge_amount && ' ₹'}
                 </Typography>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
                 <Typography variant="body2" color="text.secondary">
                     Maximum Recharge
                 </Typography>
@@ -333,7 +333,7 @@ const CTADisplay = () => {
     return (
         <Grid container spacing={2}>
             {record?.cta_text && (
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                     <Typography variant="body2" color="text.secondary">
                         CTA Text
                     </Typography>
@@ -343,7 +343,7 @@ const CTADisplay = () => {
                 </Grid>
             )}
             {record?.cta_url && (
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                     <Typography variant="body2" color="text.secondary">
                         CTA URL
                     </Typography>
@@ -367,14 +367,14 @@ export const OfferShow = () => {
                     icon={<InfoIcon />}
                 >
                     <Grid container spacing={3}>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <InfoItem
                                 label="Offer Name"
                                 value={<TextField source="offer_name" />}
                                 icon={<OfferIcon />}
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <InfoItem
                                 label="Offer Type"
                                 value={
@@ -387,7 +387,7 @@ export const OfferShow = () => {
                                 icon={<InfoIcon />}
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <InfoItem
                                 label="Offer Category"
                                 value={
@@ -400,7 +400,7 @@ export const OfferShow = () => {
                                 icon={<LocalOfferIcon />}
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <InfoItem
                                 label="Status"
                                 value={
@@ -419,21 +419,21 @@ export const OfferShow = () => {
                                 icon={<InfoIcon />}
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <InfoItem
                                 label="Trigger Type"
                                 value={<TextField source="trigger_type" />}
                                 icon={<TrendingUpIcon />}
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <InfoItem
                                 label="Voucher Subtype"
                                 value={<TextField source="voucher_subtype" />}
                                 icon={<LocalOfferIcon />}
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <InfoItem
                                 label="Usage Limit Per User"
                                 value={
@@ -445,7 +445,7 @@ export const OfferShow = () => {
                                 icon={<PersonIcon />}
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <Box sx={{ mt: 2 }}>
                                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
                                     Description
@@ -468,13 +468,13 @@ export const OfferShow = () => {
 
                 <OfferDetailsCard title="Targeting">
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <Typography variant="body2" color="text.secondary" gutterBottom>
                                 Target User Types
                             </Typography>
                             <TargetUserTypesDisplay />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <Typography variant="body2" color="text.secondary" gutterBottom>
                                 Target Guide Tiers
                             </Typography>
@@ -488,21 +488,21 @@ export const OfferShow = () => {
                     icon={<ScheduleIcon />}
                 >
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <InfoItem
                                 label="Valid From"
                                 value={<DateField source="valid_from" showTime />}
                                 icon={<ScheduleIcon />}
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <InfoItem
                                 label="Valid To"
                                 value={<DateField source="valid_to" showTime />}
                                 icon={<ScheduleIcon />}
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <Box sx={{ mt: 2 }}>
                                 <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 'bold' }}>
                                     Custom Time Constraints
@@ -527,7 +527,7 @@ export const OfferShow = () => {
                         Timestamps
                     </Typography>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                             <InfoItem
                                 label="Created At"
                                 value={<DateField source="created_at" showTime />}
@@ -535,7 +535,7 @@ export const OfferShow = () => {
                                 color="success.main"
                             />
                         </Grid>
-                        <Grid item xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                             <InfoItem
                                 label="Updated At"
                                 value={<DateField source="updated_at" showTime />}
@@ -543,7 +543,7 @@ export const OfferShow = () => {
                                 color="info.main"
                             />
                         </Grid>
-                        <Grid item xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                             <InfoItem
                                 label="Created By"
                                 value={<NumberField source="created_by" />}
@@ -551,7 +551,7 @@ export const OfferShow = () => {
                                 color="text.secondary"
                             />
                         </Grid>
-                        <Grid item xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                             <InfoItem
                                 label="Deleted At"
                                 value={<DateField source="DeletedAt" showTime />}

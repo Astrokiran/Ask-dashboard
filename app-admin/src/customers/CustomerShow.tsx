@@ -856,9 +856,9 @@ const CustomerOrders = ({ customerId }: { customerId: number }) => {
                             {stats.pending > 0 && (
                                 <div
                                     className="bg-yellow-500 h-full flex items-center justify-center text-white text-xs font-medium"
-                                    style={{ width: `${(100 - parseFloat(stats.completedPercentage) - parseFloat(stats.cancelledPercentage)).toFixed(1)}%` }}
+                                    style={{ width: `${(100 - parseFloat(String(stats.completedPercentage)) - parseFloat(String(stats.cancelledPercentage))).toFixed(1)}%` }}
                                 >
-                                    {((100 - parseFloat(stats.completedPercentage) - parseFloat(stats.cancelledPercentage))).toFixed(1)}%
+                                    {(100 - parseFloat(String(stats.completedPercentage)) - parseFloat(String(stats.cancelledPercentage))).toFixed(1)}%
                                 </div>
                             )}
                         </div>

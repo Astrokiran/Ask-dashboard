@@ -6,6 +6,7 @@ import {
     NumberInput,
     BooleanInput,
     SelectInput,
+    CheckboxGroupInput,
     DateInput,
     required,
     useNotify,
@@ -16,12 +17,12 @@ import {
     Card,
     CardContent,
     Typography,
-    Grid,
     Box,
     Divider,
     Alert,
     Chip,
 } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import {
     Edit as EditIcon,
     LocalOffer as OfferIcon,
@@ -105,14 +106,15 @@ export const OfferEdit = () => {
 
             // Remove undefined fields
             Object.keys(payload).forEach(key => {
-                if (payload[key] === undefined) {
-                    delete payload[key];
+                if (payload[key as keyof typeof payload] === undefined) {
+                    delete payload[key as keyof typeof payload];
                 }
             });
 
             await dataProvider.update('offers', {
                 id: offerId,
                 data: payload,
+                previousData: values,
             });
 
             notify('Offer updated successfully!', { type: 'success' });
@@ -142,7 +144,7 @@ export const OfferEdit = () => {
                             Basic Information
                         </Typography>
                         <Grid container spacing={3}>
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <TextInput
                                     source="offer_name"
                                     label="Offer Name"
@@ -151,7 +153,7 @@ export const OfferEdit = () => {
                                     helperText="e.g., WEEKEND_SPECIAL, FLASH_SALE"
                                 />
                             </Grid>
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <TextInput
                                     source="target_user_type"
                                     label="Target User Type"
@@ -169,7 +171,7 @@ export const OfferEdit = () => {
                             Bonus Configuration
                         </Typography>
                         <Grid container spacing={3}>
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <NumberInput
                                     source="bonus_percentage"
                                     label="Bonus Percentage"
@@ -180,7 +182,7 @@ export const OfferEdit = () => {
                                     helperText="Percentage bonus (e.g., 15.5 for 15.5%)"
                                 />
                             </Grid>
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <NumberInput
                                     source="bonus_fixed_amount"
                                     label="Bonus Fixed Amount"
@@ -199,7 +201,7 @@ export const OfferEdit = () => {
                             Recharge Conditions
                         </Typography>
                         <Grid container spacing={3}>
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <NumberInput
                                     source="min_recharge_amount"
                                     label="Minimum Recharge Amount"
@@ -209,7 +211,7 @@ export const OfferEdit = () => {
                                     helperText="Minimum recharge amount required"
                                 />
                             </Grid>
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <NumberInput
                                     source="max_recharge_amount"
                                     label="Maximum Recharge Amount"
@@ -229,7 +231,7 @@ export const OfferEdit = () => {
                             Service Configuration
                         </Typography>
                         <Grid container spacing={3}>
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <SelectInput
                                     source="service_type"
                                     label="Service Type"
@@ -238,7 +240,7 @@ export const OfferEdit = () => {
                                     helperText="Applicable service type"
                                 />
                             </Grid>
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <NumberInput
                                     source="usage_limit_per_user"
                                     label="Usage Limit Per User"
@@ -257,13 +259,12 @@ export const OfferEdit = () => {
                             Consultation Modes
                         </Typography>
                         <Grid container spacing={3}>
-                            <Grid item xs={12}>
-                                <SelectInput
+                            <Grid size={{ xs: 12 }}>
+                                <CheckboxGroupInput
                                     source="consultation_modes"
                                     label="Allowed Consultation Modes"
                                     choices={CONSULTATION_MODES}
                                     fullWidth
-                                    multiple
                                     helperText="Select multiple consultation modes if applicable"
                                 />
                             </Grid>
@@ -277,7 +278,7 @@ export const OfferEdit = () => {
                             Time Constraints (JSON)
                         </Typography>
                         <Grid container spacing={3}>
-                            <Grid item xs={12}>
+                            <Grid size={{ xs: 12 }}>
                                 <TextInput
                                     source="time_constraints"
                                     label="Time Constraints"
@@ -297,7 +298,7 @@ export const OfferEdit = () => {
                             Validity Period
                         </Typography>
                         <Grid container spacing={3}>
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <DateInput
                                     source="valid_from"
                                     label="Valid From"
@@ -305,7 +306,7 @@ export const OfferEdit = () => {
                                     helperText="Start date and time (RFC3339 format)"
                                 />
                             </Grid>
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <DateInput
                                     source="valid_to"
                                     label="Valid To"
@@ -313,7 +314,7 @@ export const OfferEdit = () => {
                                     helperText="End date and time (RFC3339 format)"
                                 />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid size={{ xs: 12 }}>
                                 <BooleanInput
                                     source="is_active"
                                     label="Offer Active"

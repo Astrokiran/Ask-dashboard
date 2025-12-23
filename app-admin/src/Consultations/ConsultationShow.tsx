@@ -14,12 +14,12 @@ import {
     Box,
     Card,
     CardContent,
-    Grid,
     Tooltip,
     Divider,
     Avatar,
     Stack,
 } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import {
     Timeline,
     TimelineItem,
@@ -169,8 +169,8 @@ export const ConsultationShow = () => (
                             </Avatar>
                             <Typography variant="h6">Consultation Details</Typography>
                         </SectionHeader>
-                        <Grid container spacing={2}>
-                            <Grid item xs={12} sm={6}>
+                        <Box display="flex" flexWrap="wrap" gap={2}>
+                            <Box flex="1" minWidth={{ xs: '100%', sm: 'calc(50% - 8px)' }}>
                                 <FunctionField
                                     label="Consultation ID"
                                     render={(record: any) => (
@@ -184,8 +184,8 @@ export const ConsultationShow = () => (
                                         </Box>
                                     )}
                                 />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
+                            </Box>
+                            <Box flex="1" minWidth={{ xs: '100%', sm: 'calc(50% - 8px)' }}>
                                 <FunctionField
                                     label="Status"
                                     render={(record: any) => (
@@ -197,8 +197,8 @@ export const ConsultationShow = () => (
                                         </Box>
                                     )}
                                 />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
+                            </Box>
+                            <Box flex="1" minWidth={{ xs: '100%', sm: 'calc(50% - 8px)' }}>
                                 <FunctionField
                                     label="Consultation Mode"
                                     render={(record: any) => (
@@ -212,8 +212,8 @@ export const ConsultationShow = () => (
                                         </Box>
                                     )}
                                 />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
+                            </Box>
+                            <Box flex="1" minWidth={{ xs: '100%', sm: 'calc(50% - 8px)' }}>
                                 <FunctionField
                                     label="Category"
                                     render={(record: any) => (
@@ -227,8 +227,8 @@ export const ConsultationShow = () => (
                                         </Box>
                                     )}
                                 />
-                            </Grid>
-                        </Grid>
+                            </Box>
+                        </Box>
                     </CardContent>
                 </StyledCard>
 
@@ -247,8 +247,8 @@ export const ConsultationShow = () => (
                             <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'primary.main', mb: 2 }}>
                                 🧑‍💼 Customer Information
                             </Typography>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} sm={6}>
+                            <Box display="flex" flexWrap="wrap" gap={2}>
+                                <Box flex="1" minWidth={{ xs: '100%', sm: 'calc(50% - 8px)' }}>
                                     <FunctionField
                                         label="Customer Name"
                                         render={(record: any) => (
@@ -262,8 +262,8 @@ export const ConsultationShow = () => (
                                             </Box>
                                         )}
                                     />
-                                </Grid>
-                                <Grid item xs={12} sm={6}>
+                                </Box>
+                                <Box flex="1" minWidth={{ xs: '100%', sm: 'calc(50% - 8px)' }}>
                                     <FunctionField
                                         label="Customer ID"
                                         render={(record: any) => (
@@ -275,8 +275,8 @@ export const ConsultationShow = () => (
                                             </Box>
                                         )}
                                     />
-                                </Grid>
-                            </Grid>
+                                </Box>
+                            </Box>
                         </Box>
 
                         {/* Guide Details */}
@@ -284,8 +284,8 @@ export const ConsultationShow = () => (
                             <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'secondary.main', mb: 2 }}>
                                 🧑‍🏫 Guide Information
                             </Typography>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} sm={6}>
+                            <Box display="flex" flexWrap="wrap" gap={2}>
+                                <Box flex="1" minWidth={{ xs: '100%', sm: 'calc(50% - 8px)' }}>
                                     <FunctionField
                                         label="Guide Name"
                                         render={(record: any) => (
@@ -299,8 +299,8 @@ export const ConsultationShow = () => (
                                             </Box>
                                         )}
                                     />
-                                </Grid>
-                                <Grid item xs={12} sm={6}>
+                                </Box>
+                                <Box flex="1" minWidth={{ xs: '100%', sm: 'calc(50% - 8px)' }}>
                                     <FunctionField
                                         label="Guide ID"
                                         render={(record: any) => (
@@ -312,8 +312,8 @@ export const ConsultationShow = () => (
                                             </Box>
                                         )}
                                     />
-                                </Grid>
-                            </Grid>
+                                </Box>
+                            </Box>
                         </Box>
 
                         {/* Profile Details */}
@@ -321,8 +321,8 @@ export const ConsultationShow = () => (
                             <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'info.main', mb: 2 }}>
                                 📋 Profile Information
                             </Typography>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} sm={6}>
+                            <Box display="flex" flexWrap="wrap" gap={2}>
+                                <Box flex="1" minWidth={{ xs: '100%', sm: 'calc(50% - 8px)' }}>
                                     <FunctionField
                                         label="Profile ID"
                                         render={(record: any) => (
@@ -336,11 +336,8 @@ export const ConsultationShow = () => (
                                             </Box>
                                         )}
                                     />
-                                </Grid>
-                                {/* <Grid item xs={12} sm={6}>
-                                    <TextField source="requested_by" label="Requested By" />
-                                </Grid> */}
-                            </Grid>
+                                </Box>
+                            </Box>
                         </Box>
                     </CardContent>
                 </StyledCard>
@@ -375,9 +372,9 @@ export const ConsultationShow = () => (
                             </Avatar>
                             <Typography variant="h6">Completion Details</Typography>
                         </SectionHeader>
-                        <Grid container spacing={3}>
+                        <Box display="flex" flexWrap="wrap" gap={3}>
                             {/* Base Rate Card */}
-                            <Grid item xs={12} sm={6} md={4}>
+                            <Box flex="1" minWidth={{ xs: '100%', md: 'calc(33.333% - 12px)' }}>
                                 <Box
                                     sx={{
                                         p: 3,
@@ -405,10 +402,10 @@ export const ConsultationShow = () => (
                                         )}
                                     />
                                 </Box>
-                            </Grid>
+                            </Box>
 
                             {/* Duration Card */}
-                            <Grid item xs={12} sm={6} md={4}>
+                            <Box flex="1" minWidth={{ xs: '100%', md: 'calc(33.333% - 12px)' }}>
                                 <FunctionField
                                     render={(record: any) => {
                                         let duration = 0;
@@ -451,10 +448,10 @@ export const ConsultationShow = () => (
                                         );
                                     }}
                                 />
-                            </Grid>
+                            </Box>
 
                             {/* Total Earnings Card */}
-                            <Grid item xs={12} sm={6} md={4}>
+                            <Box flex="1" minWidth={{ xs: '100%', md: 'calc(33.333% - 12px)' }}>
                                 <FunctionField
                                     render={(record: any) => {
                                         let totalEarnings = 0;
@@ -490,16 +487,16 @@ export const ConsultationShow = () => (
                                         );
                                     }}
                                 />
-                            </Grid>
+                            </Box>
 
                             {/* Additional Details */}
-                            {/* <Grid item xs={12} sm={6}>
+                            {/* <Box flex="1" minWidth={{ xs: '100%', md: 'calc(50% - 8px)' }}>
                                 <TextField source="completed_by" label="Completed By" />
-                            </Grid> */}
-                            {/* <Grid item xs={12} sm={6}>
+                            </Box> */}
+                            {/* <Box flex="1" minWidth={{ xs: '100%', md: 'calc(50% - 8px)' }}>
                                 <BooleanField source="is_quick_connect_request" label="Quick Connect Request" />
-                            </Grid> */}
-                        </Grid>
+                            </Box> */}
+                        </Box>
                     </CardContent>
                 </StyledCard>
 
@@ -513,7 +510,7 @@ export const ConsultationShow = () => (
                             <Typography variant="h6">Financial Information</Typography>
                         </SectionHeader>
                         <Grid container spacing={2}>
-                            <Grid item xs={12} sm={4}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
                                 <NumberField
                                     source="order_id"
                                     label="Order ID"
@@ -523,7 +520,7 @@ export const ConsultationShow = () => (
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={4}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
                                 <NumberField
                                     source="wallet_user_id"
                                     label="Wallet User ID"
@@ -533,7 +530,7 @@ export const ConsultationShow = () => (
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={4}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
                                 <TextField source="category" label="Category" />
                             </Grid>
                         </Grid>
@@ -549,11 +546,11 @@ export const ConsultationShow = () => (
                             </Avatar>
                             <Typography variant="h6">Rejection Details</Typography>
                         </SectionHeader>
-                        <Grid container spacing={2}>
-                            <Grid item xs={12} sm={6}>
+                        <Box display="flex" flexWrap="wrap" gap={2}>
+                            <Box flex="1" minWidth={{ xs: '100%', sm: 'calc(50% - 8px)' }}>
                                 <TextField source="rejected_by" label="Rejected By" />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
+                            </Box>
+                            <Box flex="1" minWidth={{ xs: '100%', sm: 'calc(50% - 8px)' }}>
                                 <FunctionField
                                     label="Rejection Reason"
                                     render={(record: any) =>
@@ -568,8 +565,8 @@ export const ConsultationShow = () => (
                                         )
                                     }
                                 />
-                            </Grid>
-                        </Grid>
+                            </Box>
+                        </Box>
                     </CardContent>
                 </StyledCard>
 
@@ -583,13 +580,13 @@ export const ConsultationShow = () => (
                             <Typography variant="h6">System Details</Typography>
                         </SectionHeader>
                         <Grid container spacing={2}>
-                            <Grid item xs={12} sm={4}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
                                 <DateField source="created_at" label="Created At" showTime />
                             </Grid>
-                            <Grid item xs={12} sm={4}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
                                 <DateField source="updated_at" label="Updated At" showTime />
                             </Grid>
-                            <Grid item xs={12} sm={4}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
                                 <TextField source="id" label="Consultation ID" />
                             </Grid>
                         </Grid>

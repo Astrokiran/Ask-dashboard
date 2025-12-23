@@ -14,7 +14,7 @@ import {
     Labeled,
     useShowController,
 } from 'react-admin';
-import { Card, CardContent, Box, Typography, Grid, Paper, styled } from '@mui/material';
+import { Card, CardContent, Box, Typography, Paper, styled } from '@mui/material';
 
 // Order status configurations
 const ORDER_STATUSES = {
@@ -29,13 +29,14 @@ const ORDER_STATUSES = {
 };
 
 // Custom Status Field Component
-const OrderStatusField = ({ source }) => {
+const OrderStatusField = () => {
     const record = useRecordContext();
     if (!record?.status) return null;
 
-    const statusConfig = ORDER_STATUSES[record.status.toUpperCase()];
+    const statusKey = String(record.status).toUpperCase() as keyof typeof ORDER_STATUSES;
+    const statusConfig = ORDER_STATUSES[statusKey];
     const statusColor = statusConfig?.color || 'default';
-    const statusLabel = statusConfig?.label || record.status;
+    const statusLabel = statusConfig?.label || String(record.status);
 
     return (
         <Box
@@ -75,7 +76,7 @@ const SectionTitle = styled(Typography)(({ theme }) => ({
 }));
 
 // Currency formatter component
-const CurrencyField = ({ source, label }) => {
+const CurrencyField = ({ source, label }: { source: string; label: string }) => {
     const record = useRecordContext();
     const value = record?.[source];
 
@@ -94,7 +95,7 @@ const CurrencyField = ({ source, label }) => {
 };
 
 // Duration formatter component
-const DurationField = ({ source, label }) => {
+const DurationField = ({ source, label }: { source: string; label: string }) => {
     const record = useRecordContext();
     const minutes = record?.[source];
 
@@ -119,9 +120,9 @@ const ConsultationOrderShow = () => {
     return (
         <Show actions={<ConsultationOrderShowActions />}>
             <SimpleShowLayout>
-                <Grid container spacing={3}>
+                <Box display="flex" flexWrap="wrap" gap={3}>
                     {/* Order Information */}
-                    <Grid item xs={12} md={6}>
+                    <Box flex="1 1 400px" minWidth="300px">
                         <StyledPaper>
                             <SectionTitle variant="h6">Order Information</SectionTitle>
                             <Box display="flex" flexDirection="column" gap={2}>
@@ -141,7 +142,7 @@ const ConsultationOrderShow = () => {
                                     <Typography variant="body2" sx={{ mb: 1 }}>
                                         <strong>Status:</strong>
                                     </Typography>
-                                    <OrderStatusField source="status" />
+                                    <OrderStatusField />
                                 </Box>
                                 <Typography variant="body2">
                                     <strong>Created At:</strong> {record?.created_at ? new Date(record.created_at).toLocaleString() : 'N/A'}
@@ -151,10 +152,10 @@ const ConsultationOrderShow = () => {
                                 </Typography>
                             </Box>
                         </StyledPaper>
-                    </Grid>
+                    </Box>
 
                     {/* Financial Information */}
-                    <Grid item xs={12} md={6}>
+                    <Box flex="1 1 400px" minWidth="300px">
                         <StyledPaper>
                             <SectionTitle variant="h6">Financial Information</SectionTitle>
                             <Box display="flex" flexDirection="column" gap={2}>
@@ -179,10 +180,10 @@ const ConsultationOrderShow = () => {
                                 </Typography>
                             </Box>
                         </StyledPaper>
-                    </Grid>
+                    </Box>
 
                     {/* Duration Information */}
-                    <Grid item xs={12} md={6}>
+                    <Box flex="1 1 400px" minWidth="300px">
                         <StyledPaper>
                             <SectionTitle variant="h6">Duration Information</SectionTitle>
                             <Box display="flex" flexDirection="column" gap={2}>
@@ -196,8 +197,8 @@ const ConsultationOrderShow = () => {
                                 </Typography>
                             </Box>
                         </StyledPaper>
-                    </Grid>
-                </Grid>
+                    </Box>
+                </Box>
             </SimpleShowLayout>
         </Show>
     );

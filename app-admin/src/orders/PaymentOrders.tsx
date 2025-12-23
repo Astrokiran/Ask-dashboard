@@ -17,8 +17,7 @@ import {
     FunctionField,
     NumberField
 } from 'react-admin';
-import { Card, CardContent, Box, Typography, Paper, styled, Grid } from '@mui/material';
-import { DateProvider } from 'react-admin';
+import { Card, CardContent, Box, Typography, Paper, styled } from '@mui/material';
 import { format } from 'date-fns';
 
 // Custom styled components for better appearance
@@ -43,12 +42,13 @@ const PAYMENT_ORDER_STATUSES = {
 };
 
 // Custom Status Field Component
-const PaymentOrderStatusField = ({ source }) => {
+const PaymentOrderStatusField = ({ source }: { source: string }) => {
     const record = useRecordContext();
     if (!record?.[source]) return <span>-</span>;
 
     const status = record[source];
-    const statusConfig = PAYMENT_ORDER_STATUSES[status.toUpperCase()];
+    const statusKey = String(status).toUpperCase() as keyof typeof PAYMENT_ORDER_STATUSES;
+    const statusConfig = PAYMENT_ORDER_STATUSES[statusKey];
 
     return (
         <Box
@@ -155,7 +155,7 @@ const SectionTitle = styled(Typography)(({ theme }) => ({
 }));
 
 // Main Component
-const PaymentOrderListContent = (props) => {
+const PaymentOrderListContent = (props: any) => {
     const { data, filterValues } = useListContext();
 
     // Filter out mock data
@@ -195,11 +195,7 @@ const PaymentOrderListContent = (props) => {
                     label="User ID"
                     sortable={false}
                 />
-                <PaymentOrderStatusField
-                    source="status"
-                    label="Status"
-                    sortable={false}
-                />
+                <PaymentOrderStatusField source="status" />
                 <FunctionField
                     label="Amount"
                     render={(record) => {
@@ -241,9 +237,9 @@ const PaymentOrderListContent = (props) => {
                         <SectionTitle>Payment Order Summary</SectionTitle>
 
                         <Box mb={3}>
-                            <Grid container spacing={2}>
+                            <Box display="flex" flexWrap="wrap" gap={2}>
                                 {/* Total Orders */}
-                                <Grid item xs={6} sm={3}>
+                                <Box flex="1 1 200px" minWidth="200px">
                                     <Box textAlign="center" p={2} className="bg-white rounded border">
                                         <Typography variant="h4" fontWeight="bold" color="textPrimary">
                                             {stats.total}
@@ -252,10 +248,10 @@ const PaymentOrderListContent = (props) => {
                                             Total Orders
                                         </Typography>
                                     </Box>
-                                </Grid>
+                                </Box>
 
                                 {/* Successful Orders */}
-                                <Grid item xs={6} sm={3}>
+                                <Box flex="1 1 200px" minWidth="200px">
                                     <Box textAlign="center" p={2} className="bg-white rounded border">
                                         <Typography variant="h4" fontWeight="bold" color="success.main">
                                             {stats.successful}
@@ -264,10 +260,10 @@ const PaymentOrderListContent = (props) => {
                                             Successful ({stats.successfulPercentage}%)
                                         </Typography>
                                     </Box>
-                                </Grid>
+                                </Box>
 
                                 {/* Failed Orders */}
-                                <Grid item xs={6} sm={3}>
+                                <Box flex="1 1 200px" minWidth="200px">
                                     <Box textAlign="center" p={2} className="bg-white rounded border">
                                         <Typography variant="h4" fontWeight="bold" color="error.main">
                                             {stats.failed}
@@ -276,10 +272,10 @@ const PaymentOrderListContent = (props) => {
                                             Failed ({stats.failedPercentage}%)
                                         </Typography>
                                     </Box>
-                                </Grid>
+                                </Box>
 
                                 {/* Other Status Orders */}
-                                <Grid item xs={6} sm={3}>
+                                <Box flex="1 1 200px" minWidth="200px">
                                     <Box textAlign="center" p={2} className="bg-white rounded border">
                                         <Typography variant="h4" fontWeight="bold" color="warning.main">
                                             {stats.pending}
@@ -288,14 +284,14 @@ const PaymentOrderListContent = (props) => {
                                             Other ({stats.pendingPercentage}%)
                                         </Typography>
                                     </Box>
-                                </Grid>
-                            </Grid>
+                                </Box>
+                            </Box>
                         </Box>
 
                         {/* Amount Summary */}
                         <Box mb={3}>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} sm={4}>
+                            <Box display="flex" flexWrap="wrap" gap={2}>
+                                <Box flex="1 1 250px" minWidth="250px">
                                     <Box textAlign="center" p={2} className="bg-white rounded border">
                                         <Typography variant="h5" fontWeight="bold" color="primary.main">
                                             ₹{stats.totalAmount.toFixed(2)}
@@ -304,9 +300,9 @@ const PaymentOrderListContent = (props) => {
                                             Total Amount
                                         </Typography>
                                     </Box>
-                                </Grid>
+                                </Box>
 
-                                <Grid item xs={12} sm={4}>
+                                <Box flex="1 1 250px" minWidth="250px">
                                     <Box textAlign="center" p={2} className="bg-white rounded border">
                                         <Typography variant="h5" fontWeight="bold" color="success.main">
                                             ₹{stats.successfulAmount.toFixed(2)}
@@ -315,9 +311,9 @@ const PaymentOrderListContent = (props) => {
                                             Successful Amount
                                         </Typography>
                                     </Box>
-                                </Grid>
+                                </Box>
 
-                                <Grid item xs={12} sm={4}>
+                                <Box flex="1 1 250px" minWidth="250px">
                                     <Box textAlign="center" p={2} className="bg-white rounded border">
                                         <Typography variant="h5" fontWeight="bold" color="info.main">
                                             {stats.walletCreditedCount}
@@ -326,8 +322,8 @@ const PaymentOrderListContent = (props) => {
                                             Wallet Credited
                                         </Typography>
                                     </Box>
-                                </Grid>
-                            </Grid>
+                                </Box>
+                            </Box>
                         </Box>
 
                         {/* Visual Status Bar */}
@@ -419,7 +415,7 @@ const PaymentOrderListContent = (props) => {
 };
 
 // Export the component with filters and actions
-export const PaymentOrderList = (props) => {
+export const PaymentOrderList = (props: any) => {
     return (
         <List
             {...props}

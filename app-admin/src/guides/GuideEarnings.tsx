@@ -253,16 +253,14 @@ const GuideEarnings: React.FC = () => {
                             ) : error ? (
                                 <Alert severity="error">{error}</Alert>
                             ) : walletBalance ? (
-                                <Grid container spacing={2}>
-                                    <Grid item xs={12} md={6}>
-                                        <Typography variant="h3" color="primary">
-                                             ₹{parseFloat(walletBalance.total_balance).toLocaleString()}
-                                        </Typography>
-                                        <Typography variant="body2" color="textSecondary">
-                                            Available balance (Consultant ID: {walletBalance.consultant_id})
-                                        </Typography>
-                                    </Grid>
-                                </Grid>
+                                <Box display="flex" justifyContent="center" flexDirection="column" alignItems="center">
+                                    <Typography variant="h3" color="primary">
+                                         ₹{parseFloat(walletBalance.total_balance).toLocaleString()}
+                                    </Typography>
+                                    <Typography variant="body2" color="textSecondary">
+                                        Available balance (Consultant ID: {walletBalance.consultant_id})
+                                    </Typography>
+                                </Box>
                             ) : (
                                 <Typography>No balance data available</Typography>
                             )}
@@ -312,22 +310,20 @@ const GuideEarnings: React.FC = () => {
                             ) : error ? (
                                 <Alert severity="error">{error}</Alert>
                             ) : earnings ? (
-                                <Grid container spacing={2}>
-                                    <Grid item xs={12} md={6}>
-                                        <Typography variant="h3" color="primary">
-                                             ₹{parseFloat(earnings.total_earnings).toLocaleString()}
-                                        </Typography>
-                                        <Typography variant="body2" color="textSecondary">
-                                            Total Earnings (Consultant ID: {earnings.consultant_id})
-                                            {startDate && endDate && (
-                                                ` (${startDate} to ${endDate})`
-                                            )}
-                                            {!startDate && !endDate && (
-                                                ` (All time)`
-                                            )}
-                                        </Typography>
-                                    </Grid>
-                                </Grid>
+                                <Box display="flex" justifyContent="center" flexDirection="column" alignItems="center">
+                                    <Typography variant="h3" color="primary">
+                                         ₹{parseFloat(earnings.total_earnings).toLocaleString()}
+                                    </Typography>
+                                    <Typography variant="body2" color="textSecondary">
+                                        Total Earnings (Consultant ID: {earnings.consultant_id})
+                                        {startDate && endDate && (
+                                            ` (${startDate} to ${endDate})`
+                                        )}
+                                        {!startDate && !endDate && (
+                                            ` (All time)`
+                                        )}
+                                    </Typography>
+                                </Box>
                             ) : (
                                 <Typography>No earnings data available</Typography>
                             )}

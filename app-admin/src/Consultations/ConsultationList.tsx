@@ -96,6 +96,12 @@ const TotalConsultationsCount = ({ currentFilters }: { currentFilters: any }) =>
 
                     console.log('Current filters received:', currentFilters);
 
+                // Add query filter (search by name) if present
+                if (currentFilters.q) {
+                    filterParams.q = currentFilters.q;
+                    console.log('Adding query filter:', currentFilters.q);
+                }
+
                 // Add status filter if selected
                 if (currentFilters.status) {
                     filterParams.status = currentFilters.status;
@@ -161,7 +167,8 @@ const TotalConsultationsCount = ({ currentFilters }: { currentFilters: any }) =>
                 Total Consultations (All Filters Applied)
             </Typography>
             <Typography variant="caption" color="textSecondary" display="block">
-                {currentFilters.status && `Status: ${currentFilters.status.toUpperCase()}`}
+                {currentFilters.q && `Search: ${currentFilters.q}`}
+                {currentFilters.status && ` | Status: ${currentFilters.status.toUpperCase()}`}
                 {currentFilters.date_from && currentFilters.date_to && ` | Date: ${currentFilters.date_from} to ${currentFilters.date_to}`}
                 {currentFilters.guide_id && ` | Guide ID: ${currentFilters.guide_id}`}
                 {currentFilters.customer_id && ` | Customer ID: ${currentFilters.customer_id}`}

@@ -256,7 +256,7 @@ const GuideEarnings: React.FC = () => {
                                 <Grid container spacing={2}>
                                     <Grid item xs={12} md={6}>
                                         <Typography variant="h3" color="primary">
-                                            ${parseFloat(walletBalance.total_balance).toLocaleString()}
+                                             ₹{parseFloat(walletBalance.total_balance).toLocaleString()}
                                         </Typography>
                                         <Typography variant="body2" color="textSecondary">
                                             Available balance (Consultant ID: {walletBalance.consultant_id})
@@ -315,7 +315,7 @@ const GuideEarnings: React.FC = () => {
                                 <Grid container spacing={2}>
                                     <Grid item xs={12} md={6}>
                                         <Typography variant="h3" color="primary">
-                                            ${parseFloat(earnings.total_earnings).toLocaleString()}
+                                             ₹{parseFloat(earnings.total_earnings).toLocaleString()}
                                         </Typography>
                                         <Typography variant="body2" color="textSecondary">
                                             Total Earnings (Consultant ID: {earnings.consultant_id})
@@ -338,4 +338,4 @@ const GuideEarnings: React.FC = () => {
   );
 };
 
-export default GuideEarnings;
+export default GuideEarnings;       

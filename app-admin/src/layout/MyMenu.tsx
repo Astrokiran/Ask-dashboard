@@ -9,6 +9,9 @@ import {
     UserCircle,
     ShoppingCart,
     FileText,
+    Gift,
+    Wallet,
+    History,
 } from 'lucide-react';
 import { Box, Collapse, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
@@ -41,10 +44,20 @@ const SubMenu = ({ handleToggle, isOpen, name, icon, children }) => {
 
 
 export const MyMenu = () => {
-    const [openSubMenu, setOpenSubMenu] = useState(false);
+    const [openOrdersMenu, setOpenOrdersMenu] = useState(false);
+    const [openGuidesMenu, setOpenGuidesMenu] = useState(false);
+    const [openGuideFinancialsMenu, setOpenGuideFinancialsMenu] = useState(false);
 
-    const handleToggle = () => {
-        setOpenSubMenu(!openSubMenu);
+    const handleOrdersToggle = () => {
+        setOpenOrdersMenu(!openOrdersMenu);
+    };
+
+    const handleGuidesToggle = () => {
+        setOpenGuidesMenu(!openGuidesMenu);
+    };
+
+    const handleGuideFinancialsToggle = () => {
+        setOpenGuideFinancialsMenu(!openGuideFinancialsMenu);
     };
 
     return (
@@ -52,18 +65,39 @@ export const MyMenu = () => {
             <Menu.DashboardItem />
             <Menu.Item to="/admin-users" primaryText="Admin Users" leftIcon={<UserCircle />} />
             <Menu.Item to="/customers" primaryText="Customers" leftIcon={<Users />} />
-            <Menu.Item to="/orders" primaryText="Orders" leftIcon={<ShoppingCart />} />
             <Menu.Item to="/consultations" primaryText="Consultations" leftIcon={<ClipboardList />} />
-            
+            {/* <Menu.Item to="/offers" primaryText="Offers" leftIcon={<Gift />} /> */} 
+            {/* Orders Submenu */}
+            <SubMenu
+                handleToggle={handleOrdersToggle}
+                isOpen={openOrdersMenu}
+                name="Orders"
+                icon={<ShoppingCart />}
+            >
+                <Menu.Item to="/payment-orders" primaryText="Payment Orders" leftIcon={<ShoppingCart />} />
+                <Menu.Item to="/consultation-orders" primaryText="Consultation Orders" leftIcon={<FileText />} />
+            </SubMenu>
+
             {/* Guides Submenu */}
             <SubMenu
-                handleToggle={handleToggle}
-                isOpen={openSubMenu}
+                handleToggle={handleGuidesToggle}
+                isOpen={openGuidesMenu}
                 name="Guides"
                 icon={<BookOpen />}
             >
                 <Menu.Item to="/guides" primaryText="All Guides" leftIcon={<BookOpen />} />
                 <Menu.Item to="/pending-verifications" primaryText="Guide Onboardings" leftIcon={<FileText />} />
+            </SubMenu>
+
+            {/* Guide Financials Submenu */}
+            <SubMenu
+                handleToggle={handleGuideFinancialsToggle}
+                isOpen={openGuideFinancialsMenu}
+                name="Guide Financials"
+                icon={<Wallet />}
+            >
+                <Menu.Item to="/guide-earnings" primaryText="Earnings & Wallet" leftIcon={<Wallet />} />
+                <Menu.Item to="/guide-orders" primaryText="Completed Orders" leftIcon={<History />} />
             </SubMenu>
         </Menu>
     );

@@ -9,7 +9,7 @@ import { Label } from '../components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from '../components/ui/dialog';
 import { CircularProgress } from '@mui/material';
 
-const API_URL = 'https://askapp.astrokiran.com/api/pixel-admin' ;
+const API_URL = process.env.REACT_APP_API_URL;
 
 interface AddBankAccountFormProps {
     guideId: string;

@@ -101,7 +101,7 @@ const GuideListView = () => {
                         <TableHead>ID</TableHead>
                         <TableHead>Profile</TableHead>
                         <TableHead>Name</TableHead>
-                        <TableHead>Phone Number</TableHead>
+                        <TableHead>Tier</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Skills</TableHead>
                         <TableHead>Total Consultations</TableHead>
@@ -130,7 +130,7 @@ const GuideListView = () => {
                                     <Link to={`/guides/${guide.id}/show`}>{guide.full_name}</Link>
                                 </Button>
                             </TableCell>
-                            <TableCell>{guide.phone_number}</TableCell>
+                            <TableCell>{guide.tier}</TableCell>
                             <TableCell>
                             <Badge variant={guide.status === 'online' ? 'default' : 'secondary'}>
                                 {guide.status}

@@ -6,11 +6,11 @@
 
 set -e
 
-GUIDE_BASE="https://askapp.astrokiran.com/api/v1"
+GUIDE_BASE="https://devazstg.astrokiran.com/auth/api/v1"
 AREA_CODE="+91"
 
 # Set the guide phone number and user details
-GUIDE_PHONE="8178211511"
+GUIDE_PHONE="9140418294"
 USER_TYPE="guide"
 PURPOSE="login"
 
@@ -30,7 +30,7 @@ echo "Profile picture path: $PROFILE_PICTURE_PATH"
 
 # 1. Generate OTP for guide
 echo "Generating OTP for guide..."
-GEN_RESPONSE=$(curl -s -X POST "https://askapp.astrokiran.com/api/v1/auth/otp/generate" \
+GEN_RESPONSE=$(curl -s -X POST "https://devazstg.astrokiran.com/auth/api/v1/auth/otp/generate" \
   -H "Content-Type: application/json" \
   -d "{\"area_code\":\"${AREA_CODE}\",\"phone_number\":\"${GUIDE_PHONE_ARG}\",\"user_type\":\"${USER_TYPE}\",\"purpose\":\"${PURPOSE}\"}")
 
@@ -84,7 +84,7 @@ VALIDATE_PAYLOAD=$(cat <<EOF
 EOF
 )
 
-VALIDATE_RESPONSE=$(curl -s -X POST "https://askapp.astrokiran.com/api/v1/auth/otp/validate" \
+VALIDATE_RESPONSE=$(curl -s -X POST "https://devazstg.astrokiran.com/auth/api/v1/auth/otp/validate" \
   -H "Content-Type: application/json" \
   -d "$VALIDATE_PAYLOAD")
 

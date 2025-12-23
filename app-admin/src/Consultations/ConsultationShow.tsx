@@ -6,6 +6,7 @@ import {
     BooleanField,
     NumberField,
     FunctionField,
+    useRedirect,
 } from 'react-admin';
 import {
     Chip,
@@ -63,9 +64,12 @@ const StatusField = ({ record }: { record?: any }) => {
         completed: { bgcolor: 'rgba(56, 142, 60, 0.15)', color: '#388e3c' },
         cancelled: { bgcolor: 'rgba(109, 109, 109, 0.15)', color: '#6d6d6d' },
         failed: { bgcolor: 'rgba(211, 47, 47, 0.15)', color: '#d32f2f' },
+        customer_join_timeout: { bgcolor: 'rgba(183, 28, 28, 0.15)', color: '#b71c1c' },
+        rejected: { bgcolor: 'rgba(123, 31, 162, 0.15)', color: '#7b1fa2' },
+        expired: { bgcolor: 'rgba(251, 140, 0, 0.15)', color: '#fb8c00' },
     };
     return (
-        <Tooltip title={`Consultation is ${status}`}>
+        <Tooltip title={`Consultation is ${status.replace(/_/g, ' ')}`}>
             <Chip
                 label={status.replace(/_/g, ' ').toUpperCase()}
                 sx={{
@@ -107,6 +111,51 @@ const TimelineEvent = ({ label, date }: { label: string; date: string | null }) 
     );
 };
 
+// Clickable Customer ID Component
+const ClickableCustomerId = ({ customerId }: { customerId: number }) => {
+    const redirect = useRedirect();
+    return (
+        <Typography
+            component="span"
+            sx={{
+                color: 'primary.main',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                '&:hover': {
+                    textDecoration: 'none',
+                    color: 'primary.dark',
+                },
+            }}
+            onClick={() => redirect('show', 'customers', customerId)}
+        >
+            {customerId}
+        </Typography>
+    );
+};
+
+// Clickable Guide ID Component
+const ClickableGuideId = ({ guideId }: { guideId: number }) => {
+    const redirect = useRedirect();
+
+    return (
+        <Typography
+            component="span"
+            sx={{
+                color: 'primary.main',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                '&:hover': {
+                    textDecoration: 'none',
+                    color: 'primary.dark',
+                },
+            }}
+            onClick={() => redirect('show', 'guides', guideId)}
+        >
+            {guideId}
+        </Typography>
+    );
+};
+
 export const ConsultationShow = () => (
     <Show title="Consultation Details">
         <SimpleShowLayout>
@@ -122,19 +171,62 @@ export const ConsultationShow = () => (
                         </SectionHeader>
                         <Grid container spacing={2}>
                             <Grid item xs={12} sm={6}>
-                                <TextField source="id" label="Consultation ID" />
+                                <FunctionField
+                                    label="Consultation ID"
+                                    render={(record: any) => (
+                                        <Box>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
+                                                Consultation ID
+                                            </Typography>
+                                            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                                {record.id || 'N/A'}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                />
                             </Grid>
                             <Grid item xs={12} sm={6}>
                                 <FunctionField
                                     label="Status"
-                                    render={(record: any) => <StatusField record={record} />}
+                                    render={(record: any) => (
+                                        <Box>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
+                                                Status
+                                            </Typography>
+                                            <StatusField record={record} />
+                                        </Box>
+                                    )}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
-                                <TextField source="mode" label="Consultation Mode" />
+                                <FunctionField
+                                    label="Consultation Mode"
+                                    render={(record: any) => (
+                                        <Box>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
+                                                Consultation Mode
+                                            </Typography>
+                                            <Typography variant="body1" sx={{ fontWeight: 500, textTransform: 'capitalize' }}>
+                                                {record.mode || 'N/A'}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                />
                             </Grid>
                             <Grid item xs={12} sm={6}>
-                                <TextField source="category" label="Category" />
+                                <FunctionField
+                                    label="Category"
+                                    render={(record: any) => (
+                                        <Box>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
+                                                Category
+                                            </Typography>
+                                            <Typography variant="body1" sx={{ fontWeight: 500, textTransform: 'capitalize' }}>
+                                                {record.category || 'N/A'}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                />
                             </Grid>
                         </Grid>
                     </CardContent>
@@ -149,20 +241,107 @@ export const ConsultationShow = () => (
                             </Avatar>
                             <Typography variant="h6">User Details</Typography>
                         </SectionHeader>
-                        <Grid container spacing={2}>
-                            <Grid item xs={12} sm={6}>
-                                <TextField source="customer_name" label="Customer Name" />
+
+                        {/* Customer Details */}
+                        <Box sx={{ mb: 3 }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'primary.main', mb: 2 }}>
+                                🧑‍💼 Customer Information
+                            </Typography>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12} sm={6}>
+                                    <FunctionField
+                                        label="Customer Name"
+                                        render={(record: any) => (
+                                            <Box>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
+                                                    Customer Name
+                                                </Typography>
+                                                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                                    {record.customer_name || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <FunctionField
+                                        label="Customer ID"
+                                        render={(record: any) => (
+                                            <Box>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
+                                                    Customer ID
+                                                </Typography>
+                                                <ClickableCustomerId customerId={record.customer_id} />
+                                            </Box>
+                                        )}
+                                    />
+                                </Grid>
                             </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <NumberField source="customer_id" label="Customer ID" />
+                        </Box>
+
+                        {/* Guide Details */}
+                        <Box sx={{ mb: 3 }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'secondary.main', mb: 2 }}>
+                                🧑‍🏫 Guide Information
+                            </Typography>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12} sm={6}>
+                                    <FunctionField
+                                        label="Guide Name"
+                                        render={(record: any) => (
+                                            <Box>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
+                                                    Guide Name
+                                                </Typography>
+                                                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                                    {record.guide_name || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <FunctionField
+                                        label="Guide ID"
+                                        render={(record: any) => (
+                                            <Box>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
+                                                    Guide ID
+                                                </Typography>
+                                                <ClickableGuideId guideId={record.guide_id} />
+                                            </Box>
+                                        )}
+                                    />
+                                </Grid>
                             </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <TextField source="guide_name" label="Guide Name" />
+                        </Box>
+
+                        {/* Profile Details */}
+                        <Box>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'info.main', mb: 2 }}>
+                                📋 Profile Information
+                            </Typography>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12} sm={6}>
+                                    <FunctionField
+                                        label="Profile ID"
+                                        render={(record: any) => (
+                                            <Box>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
+                                                    Profile ID
+                                                </Typography>
+                                                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                                    {record.profile_id || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                    />
+                                </Grid>
+                                {/* <Grid item xs={12} sm={6}>
+                                    <TextField source="requested_by" label="Requested By" />
+                                </Grid> */}
                             </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <NumberField source="guide_id" label="Guide ID" />
-                            </Grid>
-                        </Grid>
+                        </Box>
                     </CardContent>
                 </StyledCard>
 
@@ -180,57 +359,208 @@ export const ConsultationShow = () => (
                             <FunctionField render={(r: any) => <TimelineEvent label="Accepted At" date={r.accepted_at} />} />
                             <FunctionField render={(r: any) => <TimelineEvent label="Customer Joined At" date={r.user_joined_at} />} />
                             <FunctionField render={(r: any) => <TimelineEvent label="Completed At" date={r.completed_at} />} />
+                            <FunctionField render={(r: any) => <TimelineEvent label="Cancelled At" date={r.cancelled_at} />} />
+                            <FunctionField render={(r: any) => <TimelineEvent label="Rejected At" date={r.rejected_at} />} />
                             <FunctionField render={(r: any) => <TimelineEvent label="Expires At" date={r.expires_at} />} />
                         </Timeline>
                     </CardContent>
                 </StyledCard>
 
-                {/* Financials */}
+                {/* Completion Details */}
+                <StyledCard>
+                    <CardContent>
+                        <SectionHeader>
+                            <Avatar sx={{ bgcolor: 'info.main' }}>
+                                <InfoIcon fontSize="small" />
+                            </Avatar>
+                            <Typography variant="h6">Completion Details</Typography>
+                        </SectionHeader>
+                        <Grid container spacing={3}>
+                            {/* Base Rate Card */}
+                            <Grid item xs={12} sm={6} md={4}>
+                                <Box
+                                    sx={{
+                                        p: 3,
+                                        border: '2px solid #e3f2fd',
+                                        borderRadius: 3,
+                                        bgcolor: '#f8f9fa',
+                                        textAlign: 'center',
+                                        transition: 'all 0.3s ease',
+                                        '&:hover': {
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                            transform: 'translateY(-2px)'
+                                        }
+                                    }}
+                                >
+                                    <FunctionField
+                                        render={(record: any) => (
+                                            <>
+                                                <Typography variant="h4" color="primary.main" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                                    {record?.base_rate_per_minute || '0'}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Base Rate per Minute
+                                                </Typography>
+                                            </>
+                                        )}
+                                    />
+                                </Box>
+                            </Grid>
+
+                            {/* Duration Card */}
+                            <Grid item xs={12} sm={6} md={4}>
+                                <FunctionField
+                                    render={(record: any) => {
+                                        let duration = 0;
+                                        let durationText = 'Not Started';
+
+                                        if (record.completed_at && record.accepted_at) {
+                                            const start = new Date(record.accepted_at);
+                                            const end = new Date(record.completed_at);
+                                            duration = Math.round((end.getTime() - start.getTime()) / 1000 / 60);
+                                            durationText = `${duration} min ${Math.round((duration % 1) * 60)} sec`;
+                                        } else if (record.accepted_at) {
+                                            const start = new Date(record.accepted_at);
+                                            const now = new Date();
+                                            duration = Math.round((now.getTime() - start.getTime()) / 1000 / 60);
+                                            durationText = `${duration} min (ongoing)`;
+                                        }
+
+                                        return (
+                                            <Box
+                                                sx={{
+                                                    p: 3,
+                                                    border: '2px solid #e8f5e8',
+                                                    borderRadius: 3,
+                                                    bgcolor: '#f1f8f1',
+                                                    textAlign: 'center',
+                                                    transition: 'all 0.3s ease',
+                                                    '&:hover': {
+                                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                                        transform: 'translateY(-2px)'
+                                                    }
+                                                }}
+                                            >
+                                                <Typography variant="h4" color="success.main" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                                    {durationText.split(' ')[0]}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Duration {durationText.includes('ongoing') ? '(Ongoing)' : 'Completed'}
+                                                </Typography>
+                                            </Box>
+                                        );
+                                    }}
+                                />
+                            </Grid>
+
+                            {/* Total Earnings Card */}
+                            <Grid item xs={12} sm={6} md={4}>
+                                <FunctionField
+                                    render={(record: any) => {
+                                        let totalEarnings = 0;
+                                        if (record.completed_at && record.accepted_at) {
+                                            const start = new Date(record.accepted_at);
+                                            const end = new Date(record.completed_at);
+                                            const duration = Math.round((end.getTime() - start.getTime()) / 1000 / 60);
+                                            totalEarnings = duration * (record.base_rate_per_minute || 0);
+                                        }
+
+                                        return (
+                                            <Box
+                                                sx={{
+                                                    p: 3,
+                                                    border: '2px solid #fff3e0',
+                                                    borderRadius: 3,
+                                                    bgcolor: '#fffbf0',
+                                                    textAlign: 'center',
+                                                    transition: 'all 0.3s ease',
+                                                    '&:hover': {
+                                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                                        transform: 'translateY(-2px)'
+                                                    }
+                                                }}
+                                            >
+                                                <Typography variant="h4" color="warning.main" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                                    {totalEarnings.toFixed(2)}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Total Earnings
+                                                </Typography>
+                                            </Box>
+                                        );
+                                    }}
+                                />
+                            </Grid>
+
+                            {/* Additional Details */}
+                            {/* <Grid item xs={12} sm={6}>
+                                <TextField source="completed_by" label="Completed By" />
+                            </Grid> */}
+                            {/* <Grid item xs={12} sm={6}>
+                                <BooleanField source="is_quick_connect_request" label="Quick Connect Request" />
+                            </Grid> */}
+                        </Grid>
+                    </CardContent>
+                </StyledCard>
+
+                {/* Financials
                 <StyledCard>
                     <CardContent>
                         <SectionHeader>
                             <Avatar sx={{ bgcolor: 'success.main' }}>
                                 <MoneyIcon fontSize="small" />
                             </Avatar>
-                            <Typography variant="h6">Financials</Typography>
+                            <Typography variant="h6">Financial Information</Typography>
                         </SectionHeader>
                         <Grid container spacing={2}>
                             <Grid item xs={12} sm={4}>
                                 <NumberField
-                                    source="base_rate_per_minute"
-                                    label="Base Rate/Min"
-                                    options={{ style: 'currency', currency: 'USD' }}
+                                    source="order_id"
+                                    label="Order ID"
+                                    sx={{
+                                        '& .RaTextField-label': { fontWeight: 600 },
+                                        '& .RaTextField-value': { fontSize: '1.1rem', fontWeight: 'bold' }
+                                    }}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={4}>
-                                <NumberField source="order_id" label="Order ID" />
+                                <NumberField
+                                    source="wallet_user_id"
+                                    label="Wallet User ID"
+                                    sx={{
+                                        '& .RaTextField-label': { fontWeight: 600 },
+                                        '& .RaTextField-value': { fontSize: '1.1rem', fontWeight: 'bold' }
+                                    }}
+                                />
                             </Grid>
                             <Grid item xs={12} sm={4}>
-                                <NumberField source="wallet_user_id" label="Wallet User ID" />
+                                <TextField source="category" label="Category" />
                             </Grid>
                         </Grid>
                     </CardContent>
-                </StyledCard>
+                </StyledCard> */}
 
-                {/* Other Details */}
+                {/* Rejection Details */}
                 <StyledCard>
                     <CardContent>
                         <SectionHeader>
-                            <Avatar sx={{ bgcolor: 'warning.main' }}>
-                                <SettingsIcon fontSize="small" />
+                            <Avatar sx={{ bgcolor: 'error.main' }}>
+                                <InfoIcon fontSize="small" />
                             </Avatar>
-                            <Typography variant="h6">Other Details</Typography>
+                            <Typography variant="h6">Rejection Details</Typography>
                         </SectionHeader>
                         <Grid container spacing={2}>
                             <Grid item xs={12} sm={6}>
-                                <BooleanField source="is_quick_connect_request" label="Quick Connect Request" />
+                                <TextField source="rejected_by" label="Rejected By" />
                             </Grid>
                             <Grid item xs={12} sm={6}>
                                 <FunctionField
                                     label="Rejection Reason"
                                     render={(record: any) =>
                                         record.rejection_reason ? (
-                                            <TextField source="rejection_reason" />
+                                            <Typography variant="body2" color="error.main">
+                                                {record.rejection_reason}
+                                            </Typography>
                                         ) : (
                                             <Typography variant="body2" color="text.secondary">
                                                 No rejection reason provided
@@ -242,7 +572,31 @@ export const ConsultationShow = () => (
                         </Grid>
                     </CardContent>
                 </StyledCard>
-            </Box>
+
+                {/* System Details */}
+                {/* <StyledCard>
+                    <CardContent>
+                        <SectionHeader>
+                            <Avatar sx={{ bgcolor: 'warning.main' }}>
+                                <SettingsIcon fontSize="small" />
+                            </Avatar>
+                            <Typography variant="h6">System Details</Typography>
+                        </SectionHeader>
+                        <Grid container spacing={2}>
+                            <Grid item xs={12} sm={4}>
+                                <DateField source="created_at" label="Created At" showTime />
+                            </Grid>
+                            <Grid item xs={12} sm={4}>
+                                <DateField source="updated_at" label="Updated At" showTime />
+                            </Grid>
+                            <Grid item xs={12} sm={4}>
+                                <TextField source="id" label="Consultation ID" />
+                            </Grid>
+                        </Grid>
+                    </CardContent>
+                </StyledCard> */}
+
+              </Box>
         </SimpleShowLayout>
     </Show>
 );

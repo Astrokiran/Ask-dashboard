@@ -13,7 +13,7 @@ import { CircularProgress, Box } from '@mui/material';
 import { AddBankAccountForm } from './AddBankAccountForm';
 
 
-const API_URL = 'https://askapp.astrokiran.com/api/pixel-admin';
+const API_URL = process.env.REACT_APP_API_URL;
 
 
 export const GuideBankAccountsPage = () => {

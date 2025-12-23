@@ -18,7 +18,7 @@ import { useState, FormEvent, useEffect } from 'react';
 import { httpClient } from '../dataProvider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 
-const API_URL = 'https://askapp.astrokiran.com/api/pixel-admin';
+const API_URL = process.env.REACT_APP_API_URL;
 
 // Service Order Form
 const ServiceOrderCreateForm = ({ onSave, saving }: { onSave: (data: any) => void; saving: boolean }) => {
@@ -163,7 +163,7 @@ const ListActions = () => {
     const handleSaveServiceOrder = (data: any) => {
         const { customerId, ...payload } = data;
         setIsSaving(true);
-        httpClient(`${API_URL}/api/v1/customers/${customerId}/orders/`, {
+        httpClient(`${API_URL}/api/v1/customers/${customerId}/orders`, {
             method: 'POST',
             body: JSON.stringify(payload),
         })
@@ -179,7 +179,7 @@ const ListActions = () => {
     const handleSavePaymentOrder = (data: any) => {
         const { customerId, ...payload } = data;
         setIsSaving(true);
-        httpClient(`${API_URL}/api/v1/customers/${customerId}/wallet/payment-orders/`, {
+        httpClient(`${API_URL}/api/v1/customers/${customerId}/wallet/payment-orders`, {
             method: 'POST',
             body: JSON.stringify(payload),
         })

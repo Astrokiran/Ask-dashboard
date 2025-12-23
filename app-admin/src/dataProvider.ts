@@ -3,9 +3,11 @@ import { guides } from './guideMockData';
 import queryString from 'query-string';
 
 
-const API_URL = 'https://askapp.astrokiran.com/api/pixel-admin'; 
+// Use the working environment variables from your original .env
+const API_URL = process.env.REACT_APP_API_URL;
 console.log('API_URL:', API_URL); // Log the API URL to verify it's being read correctly
-const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_URL; // Base URL for your API
+const AUTH_API_URL = process.env.REACT_APP_AUTH_URL; // Base URL for your API
+const OFFERS_BASE_URL = process.env.REACT_APP_OFFERS_BASE_URL;
 
 const refreshToken = async () => {
     const refreshToken = localStorage.getItem('refresh_token');
@@ -121,15 +123,33 @@ const transformCustomer = (customer: any) => {
     if (!customer) return null;
 
     // Find the primary profile to get the customer's main name
-    const primaryProfile = customer.profile?.profiles?.find((p: any) => p.is_primary);
-    
+    // Handle both possible API response structures
+    let primaryProfile = null;
+
+    if (customer.profile?.profiles && Array.isArray(customer.profile.profiles)) {
+      primaryProfile = customer.profile.profiles.find((p: any) => p.is_primary);
+    } else if (customer.profile && Array.isArray(customer.profile)) {
+      primaryProfile = customer.profile.find((p: any) => p.is_primary);
+    }
+
+    // If no primary found, try to use the first profile
+    if (!primaryProfile) {
+      if (customer.profile?.profiles && Array.isArray(customer.profile.profiles) && customer.profile.profiles.length > 0) {
+        primaryProfile = customer.profile.profiles[0];
+      } else if (customer.profile && Array.isArray(customer.profile) && customer.profile.length > 0) {
+        primaryProfile = customer.profile[0];
+      }
+    }
+
+    console.log('Transforming customer:', customer.id, 'Primary profile:', primaryProfile);
+
     return {
       ...customer, // Keep all original data for the show view
       id: customer.id, // Ensure react-admin has the id
       // Set a top-level 'name' for easy display in lists
       name: primaryProfile?.full_name || `Customer #${customer.id}`,
       // Create a formatted phone number
-      phone: `${customer.country_code} ${customer.phone_number}`,
+      phone: `${customer.country_code || ''} ${customer.phone_number || ''}`.trim(),
     };
 };
 
@@ -151,6 +171,7 @@ const transformGuide = (guide: any) => {
         video_channel_name: guide.VideoChannelName || guide.video_channel_name,
         years_of_experience: guide.YearsOfExperience || guide.years_of_experience,
         is_busy: guide.is_busy,
+        tier: guide.tier,
         is_celebrity: guide.is_celebrity,
         bio: guide.bio || guide.Bio || '',
         skills: guide.skills,
@@ -271,41 +292,90 @@ export const dataProvider: DataProvider = {
         
             if (resource === 'customers') {
                 const { page, perPage } = params.pagination || { page: 1, perPage: 25 };
-                const { q: searchTerm } = params.filter;
+                const { customer_id, phone_number, profile_name } = params.filter;
 
-                // Build query parameters
+                console.log('Customer filters - customer_id:', customer_id, 'phone_number:', phone_number, 'profile_name:', profile_name);
+
+                // Handle exact customer ID search using dedicated endpoint
+                if (customer_id) {
+                    console.log('Using dedicated customer endpoint for ID:', customer_id);
+
+                    try {
+                        const { json } = await httpClient(`${API_URL}/api/v1/customers/${customer_id}`);
+                        console.log('Customer by ID response:', json);
+
+                        const transformedCustomer = transformCustomer(json);
+                        console.log('Transformed customer:', transformedCustomer);
+
+                        return {
+                            data: transformedCustomer ? [transformedCustomer] : [],
+                            total: 1,
+                        };
+                    } catch (error) {
+                        console.log('Customer not found with ID:', customer_id);
+                        return {
+                            data: [],
+                            total: 0,
+                        };
+                    }
+                }
+
+                // Handle phone number and profile name search using list endpoint
                 const queryParams = new URLSearchParams({
                     page: page.toString(),
                     per_page: perPage.toString(),
                 });
 
-                // Add search parameter if provided
-                if (searchTerm) {
-                    queryParams.append('search', searchTerm);
+                // Add phone number filter
+                if (phone_number) {
+                    queryParams.append('phone_number', phone_number.trim());
+                    console.log('Searching by phone_number:', phone_number.trim());
+                }
+
+                // Add profile name filter
+                if (profile_name) {
+                    queryParams.append('profile_name', profile_name.trim());
+                    console.log('Searching by profile_name:', profile_name.trim());
                 }
 
                 const url = `${API_URL}/api/v1/customers/?${queryParams.toString()}`;
+                console.log('Customer search - URL:', url);
+
                 const { json } = await httpClient(url);
+                console.log('Customer search - Response:', json);
 
                 // Handle the response
-                const customers = json.customers || [];
-                const processedCustomers = customers.map(transformCustomer);
+                let customers = json.customers || [];
+                console.log('Server returned customers count:', customers.length);
 
-                // Calculate total from pagination info
+                const processedCustomers = customers.map(transformCustomer).filter(Boolean);
+                console.log('Processed customers count:', processedCustomers.length);
+
+                // Use the total from API response - it's now accurate!
                 let total = json.total || 0;
 
-                // Backend bug workaround: Calculate from pagination metadata
-                if (total === 0) {
-                    // If we received a full page, assume there might be more
-                    if (processedCustomers.length === perPage) {
-                        // Estimate: at least one more page exists
-                        // This will make pagination show "Next" button
-                        total = page * perPage + 1;
-                    } else if (processedCustomers.length > 0) {
-                        // Last page: exact total calculation
-                        total = (page - 1) * perPage + processedCustomers.length;
-                    }
+                console.log('Customer total calculation:', {
+                    api_total: json.total,
+                    final_total: total,
+                    page,
+                    perPage,
+                    processed_customers_count: processedCustomers.length,
+                    has_filters: !!(customer_id || phone_number || profile_name)
+                });
+
+                // Only use estimation if API total is genuinely 0 (fallback)
+                if (total === 0 && customers.length > 0 && !customer_id && !phone_number && !profile_name) {
+                    console.log('API returned total=0, using customer count as fallback');
+                    total = customers.length;
                 }
+
+                console.log('Customers total calculation:', {
+                    final_total: total,
+                    page,
+                    perPage,
+                    processed_customers_count: processedCustomers.length,
+                    has_filters: !!(customer_id || phone_number || profile_name)
+                });
 
                 return {
                     data: processedCustomers,
@@ -313,35 +383,114 @@ export const dataProvider: DataProvider = {
                 };
         }
         if (resource === 'consultations') {
-            const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
+            const { page, perPage } = params.pagination || { page: 1, perPage: 25 };
             // Destructure the filters for cleaner access
-            const { q, status, guide_id, customer_id,id } = params.filter;
+            const { q, status, guide_id, customer_id, id, date_from, date_to } = params.filter;
 
-            const query = {
-                page: page,
-                pageSize: perPage,
-                // Add the filters to the query object.
-                // queryString will ignore any that are null or undefined.
-                query: q, 
-                status: status,
-                guide_id: guide_id,
-                customer_id: customer_id,
-                id: id,
-            };
+            console.log('Consultations filters received:', params.filter);
 
-            // --- THIS IS THE FIX ---
-            // Use queryString.stringify to correctly append the filters to the URL
-            const url = `${API_URL}/api/v1/consultations/?${queryString.stringify(query)}`;
+            // Handle exact consultation ID search using dedicated endpoint
+            if (id) {
+                console.log('Using dedicated consultation endpoint for ID:', id);
+
+                try {
+                    const { json } = await httpClient(`${API_URL}/api/v1/consultations/${id}`);
+                    console.log('Consultation by ID response:', json);
+
+                    // Transform the response to match the list format
+                    const consultationData = json.data || json; // Handle both response formats
+                    console.log('Transformed consultation data:', consultationData);
+
+                    return {
+                        data: [consultationData],
+                        total: 1,
+                    };
+                } catch (error) {
+                    console.log('Consultation not found with ID:', id);
+                    return {
+                        data: [],
+                        total: 0,
+                    };
+                }
+            }
+
+            // Handle other filters using list endpoint
+            const queryParams = new URLSearchParams();
+
+            // Pagination
+            queryParams.append('page', page.toString());
+            queryParams.append('pageSize', perPage.toString());
+
+            // Add filters with correct parameter names
+            if (q) {
+                queryParams.append('query', q); // Correct parameter name for search
+            }
+
+            if (status) {
+                queryParams.append('status', status.toUpperCase()); // Convert to uppercase as shown in examples
+            }
+
+            if (guide_id) {
+                queryParams.append('guide_id', guide_id);
+            }
+
+            if (customer_id) {
+                queryParams.append('customer_id', customer_id);
+            }
+
+            // Add date filters with correct parameter names
+            if (date_from) {
+                queryParams.append('start_date', date_from);
+            }
+
+            if (date_to) {
+                queryParams.append('end_date', date_to);
+            }
+
+            // Use the correct admin API endpoint
+            const url = `${API_URL}/api/v1/consultations/?${queryParams.toString()}`;
+            console.log('Consultations URL with filters:', url);
 
             const { json } = await httpClient(url);
+            console.log('Consultations response:', json);
 
-            console.log('Consultations API Response:', json);
-            console.log('Consultations Data:', json.data);
-            console.log('Consultations Pagination:', json.data?.pagination);
+            // Handle the API response structure
+            let consultations = [];
+            let total = 0;
+
+            // Check different possible response structures
+            if (json.data && Array.isArray(json.data)) {
+                // Direct array response
+                consultations = json.data;
+                total = json.pagination?.total || json.total || consultations.length;
+            } else if (json.data && json.data.data && Array.isArray(json.data.data)) {
+                // Nested response with data.data
+                consultations = json.data.data;
+                total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || consultations.length;
+            } else if (json.data && json.data.items && Array.isArray(json.data.items)) {
+                // Response with items array
+                consultations = json.data.items;
+                total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || consultations.length;
+            } else if (Array.isArray(json)) {
+                // Direct array response
+                consultations = json;
+                total = json.pagination?.total || json.total || consultations.length;
+            } else {
+                console.warn('Unexpected API response structure:', json);
+                consultations = [];
+                total = 0;
+            }
+
+            console.log('Processed consultations:', {
+                total: consultations.length,
+                totalRecords: total,
+                currentPage: page,
+                perPage
+            });
 
             return {
-                data: json.data.data,
-                total: json.data.pagination.totalItems || json.data.pagination.total_items || 0,
+                data: consultations,
+                total: total,
             };
         }
 
@@ -355,16 +504,232 @@ export const dataProvider: DataProvider = {
                 return { data: [], total: 0 };
             }
 
-            const url = `${API_URL}/api/v1/customers/${customerId}/orders/`;
+            const url = `${API_URL}/api/v1/customers/${customerId}/orders`;
             const { json } = await httpClient(url);
-            
+
             // The API response for orders is nested under 'items'
             const orders = json.items || [];
-            
+
             return {
                 data: orders.map((order: any) => ({ ...order, id: order.order_id })),
                 total: json.pagination?.total_items || 0,
             };
+        }
+
+        if (resource === 'consultation-orders') {
+            const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
+            const { customer_id, status, service_type } = params.filter;
+
+            // Return mock data when no customer_id is provided to allow filter form to show
+            if (!customer_id) {
+                return {
+                    data: [
+                        {
+                            id: 'mock',
+                            customer_id: '',
+                            status: 'pending_payment',
+                            service_type: 'Astrology',
+                            created_at: new Date().toISOString(),
+                            amount: 0,
+                            is_mock: true
+                        }
+                    ],
+                    total: 1,
+                };
+            }
+
+            // Use the existing orders endpoint but filter for consultation/service orders
+            const url = `${API_URL}/api/v1/customers/${customer_id}/orders`;
+            const { json } = await httpClient(url);
+
+            // Filter the orders to get only consultation/service orders
+            let orders = json.items || [];
+
+            // Apply additional filters
+            if (status) {
+                orders = orders.filter((order: any) =>
+                    order.status?.toLowerCase() === status.toLowerCase()
+                );
+            }
+
+            if (service_type) {
+                orders = orders.filter((order: any) =>
+                    order.service_type?.toLowerCase() === service_type.toLowerCase()
+                );
+            }
+
+            // Transform the data for react-admin
+            const transformedOrders = orders.map((order: any) => ({
+                ...order,
+                id: order.order_id,
+                customer_id: customer_id, // Add customer_id for easier reference
+            }));
+
+            // Store the current customer_id in localStorage for the show page
+            if (customer_id) {
+                localStorage.setItem('current_customer_id', customer_id.toString());
+            }
+
+            // Apply pagination to the filtered results
+            const total = transformedOrders.length;
+            const startIndex = (page - 1) * perPage;
+            const endIndex = startIndex + perPage;
+            const paginatedOrders = transformedOrders.slice(startIndex, endIndex);
+
+            return {
+                data: paginatedOrders,
+                total: total,
+            };
+        }
+
+        if (resource === 'payment-orders') {
+            const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
+            const { customer_id, status, payment_method } = params.filter;
+
+            // Return mock data when no customer_id is provided to allow filter form to show
+            if (!customer_id) {
+                return {
+                    data: [
+                        {
+                            id: 'mock',
+                            customer_id: '',
+                            status: 'PENDING',
+                            payment_method: 'UPI',
+                            amount: 0,
+                            created_at: new Date().toISOString(),
+                            is_mock: true
+                        }
+                    ],
+                    total: 1,
+                };
+            }
+
+            // Use the wallet payment orders endpoint
+            const url = `${API_URL}/api/v1/customers/${customer_id}/wallet/payment-orders`;
+            const { json } = await httpClient(url);
+
+            // Filter the payment orders based on additional filters
+            let paymentOrders = json.items || [];
+
+            // Apply additional filters
+            if (status) {
+                paymentOrders = paymentOrders.filter((order: any) =>
+                    order.status?.toLowerCase() === status.toLowerCase()
+                );
+            }
+
+            if (payment_method) {
+                paymentOrders = paymentOrders.filter((order: any) =>
+                    order.payment_method?.toLowerCase() === payment_method.toLowerCase()
+                );
+            }
+
+            // Transform the data for react-admin
+            const transformedOrders = paymentOrders.map((order: any) => ({
+                ...order,
+                id: order.payment_order_id,
+                customer_id: customer_id, // Add customer_id for easier reference
+            }));
+
+            // Apply pagination to the filtered results
+            const total = transformedOrders.length;
+            const startIndex = (page - 1) * perPage;
+            const endIndex = startIndex + perPage;
+            const paginatedOrders = transformedOrders.slice(startIndex, endIndex);
+
+            // Store the current customer_id in localStorage for the show page
+            if (customer_id) {
+                localStorage.setItem('current_customer_id', customer_id.toString());
+            }
+
+            return {
+                data: paginatedOrders,
+                total: total,
+            };
+        }
+        if (resource === 'offers') {
+            const url = `${OFFERS_BASE_URL}`;
+
+            try {
+                const { json } = await httpClient(url);
+
+                // The API returns an array of offers directly
+                const offers = Array.isArray(json) ? json : [];
+
+                // Transform offers to ensure they have id field for react-admin
+                const transformedOffers = offers.map((offer: any) => ({
+                    ...offer,
+                    id: offer.offer_id, // Use offer_id as the id field
+                }));
+
+                // Apply filtering if provided
+                if (params.filter) {
+                    const filteredOffers = transformedOffers.filter((offer: any) => {
+                        // Filter by offer name
+                        if (params.filter.offer_name) {
+                            const searchMatch = offer.offer_name
+                                .toLowerCase()
+                                .includes(params.filter.offer_name.toLowerCase());
+                            if (!searchMatch) return false;
+                        }
+
+                        // Filter by offer type
+                        if (params.filter.offer_type) {
+                            if (offer.offer_type !== params.filter.offer_type) return false;
+                        }
+
+                        // Filter by offer category
+                        if (params.filter.offer_category) {
+                            if (offer.offer_category !== params.filter.offer_category) return false;
+                        }
+
+                        return true;
+                    });
+
+                    // Apply pagination
+                    const { page = 1, perPage = 25 } = params.pagination;
+                    const { field = 'created_at', order = 'DESC' } = params.sort;
+
+                    // Sort the filtered results
+                    filteredOffers.sort((a: any, b: any) => {
+                        const aVal = a[field];
+                        const bVal = b[field];
+
+                        if (aVal < bVal) return order === 'ASC' ? -1 : 1;
+                        if (aVal > bVal) return order === 'ASC' ? 1 : -1;
+                        return 0;
+                    });
+
+                    // Paginate the sorted results
+                    const total = filteredOffers.length;
+                    const data = filteredOffers.slice((page - 1) * perPage, page * perPage);
+
+                    return { data, total };
+                }
+
+                // If no filters, apply pagination to all offers
+                const { page = 1, perPage = 25 } = params.pagination;
+                const { field = 'created_at', order = 'DESC' } = params.sort;
+
+                // Sort all offers
+                const sortedOffers = [...transformedOffers].sort((a: any, b: any) => {
+                    const aVal = a[field];
+                    const bVal = b[field];
+
+                    if (aVal < bVal) return order === 'ASC' ? -1 : 1;
+                    if (aVal > bVal) return order === 'ASC' ? 1 : -1;
+                    return 0;
+                });
+
+                // Paginate
+                const total = sortedOffers.length;
+                const data = sortedOffers.slice((page - 1) * perPage, page * perPage);
+
+                return { data, total };
+            } catch (error) {
+                console.error('Error fetching offers:', error);
+                throw error;
+            }
         }
             throw new Error(`Unsupported resource for getList: ${resource}`);
 
@@ -412,7 +777,7 @@ export const dataProvider: DataProvider = {
             const { customerId, ...rest } = params.data;
             if (!customerId) throw new Error('Customer ID is required to create an order.');
 
-            const url = `${API_URL}/api/v1/customers/${customerId}/orders/`;
+            const url = `${API_URL}/api/v1/customers/${customerId}/orders`;
             const { json } = await httpClient(url, {
                 method: 'POST',
                 body: JSON.stringify(rest),
@@ -436,7 +801,68 @@ export const dataProvider: DataProvider = {
             });
             return { data: { ...json, id: json.id } };
         }
-        
+        if (resource === 'offers') {
+            const url = `${OFFERS_BASE_URL}/admin/create`;
+
+            try {
+                const { json } = await httpClient(url, {
+                    method: 'POST',
+                    body: JSON.stringify(params.data),
+                });
+
+                // The API should return the created offer data
+                return {
+                    data: {
+                        ...json,
+                        id: json.offer_id || json.data?.offer_id || json.id,
+                    }
+                };
+            } catch (error) {
+                console.error('Error creating offer:', error);
+                throw error;
+            }
+        }
+
+        if (resource === 'consultation-orders') {
+            const { customerId, ...rest } = params.data;
+            if (!customerId) throw new Error('Customer ID is required to create a consultation order.');
+
+            // Use the existing orders API endpoint
+            const url = `${API_URL}/api/v1/customers/${customerId}/orders`;
+            const { json } = await httpClient(url, {
+                method: 'POST',
+                body: JSON.stringify(rest),
+            });
+
+            return {
+                data: {
+                    ...json,
+                    id: json.order_id,
+                    customer_id: customerId,
+                }
+            };
+        }
+
+        if (resource === 'payment-orders') {
+            const { customerId, ...rest } = params.data;
+            if (!customerId) throw new Error('Customer ID is required to create a payment order.');
+
+            // Use the wallet payment orders endpoint
+            const url = `${API_URL}/api/v1/customers/${customerId}/wallet/payment-orders`;
+            const { json } = await httpClient(url, {
+                method: 'POST',
+                body: JSON.stringify(rest),
+            });
+
+            return {
+                data: {
+                    ...json,
+                    id: json.payment_order_id,
+                    customer_id: customerId,
+                }
+            };
+        }
+
         throw new Error(`Unsupported resource: ${resource}`);
     },
     update: async (resource, params) => {
@@ -512,10 +938,101 @@ export const dataProvider: DataProvider = {
             // This assumes you will create a `getOne` endpoint in your Go service
             const url = `${API_URL}/api/v1/consultations/${params.id}`;
             const { json } = await httpClient(url);
-            
+
             // Assuming the getOne response is { success: true, data: { ...consultation } }
             return {
                 data: json.data,
+            };
+        }
+        if (resource === 'offers') {
+            // Fetch a single offer from the API
+            const url = `${OFFERS_BASE_URL}`;
+
+            try {
+                const { json } = await httpClient(url);
+
+                // The API returns an array of offers, so we need to find the specific one
+                const offers = Array.isArray(json) ? json : [];
+                const offer = offers.find((o: any) => o.offer_id === params.id);
+
+                if (!offer) {
+                    throw new Error(`Offer with ID ${params.id} not found`);
+                }
+
+                // Transform the offer to ensure it has id field
+                const transformedOffer = {
+                    ...offer,
+                    id: offer.offer_id,
+                };
+
+                return { data: transformedOffer };
+            } catch (error) {
+                console.error('Error fetching offer:', error);
+                throw error;
+            }
+        }
+
+        if (resource === 'consultation-orders') {
+            // Since there's no direct endpoint for getting a single order,
+            // we'll need to fetch all orders for the user and find the specific one
+            // This is not ideal but necessary given the API limitations
+
+            // For now, we'll store the customer_id in localStorage when navigating from the list
+            // In a real implementation, you'd want to pass this information more elegantly
+            const customerId = localStorage.getItem('current_customer_id');
+
+            if (!customerId) {
+                throw new Error('Customer ID not found. Please navigate from the consultation orders list.');
+            }
+
+            const url = `${API_URL}/api/v1/customers/${customerId}/orders`;
+            const { json } = await httpClient(url);
+
+            // Find the specific order by order_id
+            const orders = json.items || [];
+            const order = orders.find((o: any) => o.order_id === parseInt(params.id as string));
+
+            if (!order) {
+                throw new Error(`Consultation order with ID ${params.id} not found`);
+            }
+
+            // Transform the data for react-admin
+            return {
+                data: {
+                    ...order,
+                    id: order.order_id,
+                    customer_id: customerId,
+                }
+            };
+        }
+
+        if (resource === 'payment-orders') {
+            // Since there's no direct endpoint for getting a single payment order,
+            // we'll fetch all payment orders for the user and find the specific one
+            const customerId = localStorage.getItem('current_customer_id');
+
+            if (!customerId) {
+                throw new Error('Customer ID not found. Please navigate from the payment orders list.');
+            }
+
+            const url = `${API_URL}/api/v1/customers/${customerId}/wallet/payment-orders`;
+            const { json } = await httpClient(url);
+
+            // Find the specific payment order by payment_order_id
+            const paymentOrders = json.items || [];
+            const paymentOrder = paymentOrders.find((po: any) => po.payment_order_id === parseInt(params.id as string));
+
+            if (!paymentOrder) {
+                throw new Error(`Payment order with ID ${params.id} not found`);
+            }
+
+            // Transform the data for react-admin
+            return {
+                data: {
+                    ...paymentOrder,
+                    id: paymentOrder.payment_order_id,
+                    customer_id: customerId,
+                }
             };
         }
 
@@ -523,7 +1040,23 @@ export const dataProvider: DataProvider = {
         return Promise.reject(new Error(`Unsupported resource: ${resource}`));
     },
 
-        
+    update: async (resource, params) => {
+        if (resource === 'offers') {
+            const { id, data } = params;
+            const url = `${OFFERS_BASE_URL}/admin/${id}`;
+
+            const { json } = await httpClient(url, {
+                method: 'PUT',
+                body: JSON.stringify(data),
+            });
+
+            return { data: { ...json, id: json.offer_id || json.id } };
+        }
+
+        console.error(`update not implemented for resource: ${resource}`);
+        return Promise.reject(new Error(`Unsupported resource: ${resource}`));
+    },
+
     updateMany: async (resource, params) => {
         if (resource === 'guides') {
             const { ids, data } = params;
@@ -545,12 +1078,72 @@ export const dataProvider: DataProvider = {
             const { customerId, orderId, action, data } = params;
             return orderAction(action, customerId, orderId, data);
         }
+
+        // Guide earnings endpoint
+        if (resource === 'guides' && type === 'getEarnings') {
+            const { consultantId, startDate, endDate } = params;
+            let url = `${API_URL}/api/v1/consultants/${consultantId}/earnings`;
+
+            const queryParams = new URLSearchParams();
+            if (startDate) queryParams.append('start_date', startDate);
+            if (endDate) queryParams.append('end_date', endDate);
+
+            if (queryParams.toString()) {
+                url += `?${queryParams.toString()}`;
+            }
+
+            const { json } = await httpClient(url);
+            return { data: json };
+        }
+
+        // Guide wallet balance endpoint
+        if (resource === 'guides' && type === 'getWalletBalance') {
+            const { consultantId } = params;
+            const url = `${API_URL}/api/v1/consultants/${consultantId}/wallet-balance`;
+
+            const { json } = await httpClient(url);
+            return { data: json };
+        }
+
+        // Guide completed orders endpoint
+        if (resource === 'guides' && type === 'getCompletedOrders') {
+            const { consultantId, page = 1, perPage = 20, startDate, endDate, status } = params;
+            let url = `${API_URL}/api/v1/consultants/${consultantId}/completed-orders`;
+
+            const queryParams = new URLSearchParams();
+            queryParams.append('page', page.toString());
+            queryParams.append('per_page', perPage.toString());
+
+            if (startDate) queryParams.append('start_date', startDate);
+            if (endDate) queryParams.append('end_date', endDate);
+            if (status) queryParams.append('status', status);
+
+            url += `?${queryParams.toString()}`;
+
+            const { json } = await httpClient(url);
+            return { data: json };
+        }
+
         throw new Error(`Unsupported custom action: ${type}`);
 },
 
     getMany: async () => ({ data: [] }),
     getManyReference: async () => ({ data: [], total: 0 }),
-    delete: async (resource, params) => ({ data: { id: params.id } as any }),
+    delete: async (resource, params) => {
+        if (resource === 'offers') {
+            const { id } = params;
+            const url = `${OFFERS_BASE_URL}/admin/${id}`;
+
+            await httpClient(url, {
+                method: 'DELETE',
+            });
+
+            return { data: { id } };
+        }
+
+        // Default fallback for other resources
+        return { data: { id: params.id } as any };
+    },
     deleteMany: async () => ({ data: [] }),
 };
 

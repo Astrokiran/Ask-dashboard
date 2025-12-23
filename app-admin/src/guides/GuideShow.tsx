@@ -26,7 +26,7 @@ import {
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { UserX } from 'lucide-react';
-import { Banknote, Eye } from 'lucide-react';
+import { Banknote, Eye, Wallet, History } from 'lucide-react';
 import {
     Card,
     CardHeader,
@@ -43,7 +43,7 @@ import { httpClient } from '../dataProvider';
 import { CircularProgress, Box, Switch, FormControlLabel } from '@mui/material';
 
 
-const API_URL = 'https://askapp.astrokiran.com/api/pixel-admin';
+const API_URL = process.env.REACT_APP_API_URL;
 
 // --- Reusable UI Components ---
 
@@ -401,14 +401,40 @@ const BankAccountSummaryCard = ({ guideId }: { guideId: Identifier }) => {
 // --- Main Show View (Updated to display all new data) ---
 const GuideShowView = () => {
     const record = useRecordContext();
+    const navigate = useNavigate();
 
     if (!record) {
         return <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>;
     }
-    
+
     return (
         <>
             <Title title={`Profile: ${record.full_name}`} />
+
+            {/* Guide Financials Buttons */}
+            <Card className="mb-6">
+                <CardContent className="pt-6">
+                    <div className="flex gap-3 flex-wrap">
+                        <Button
+                            onClick={() => navigate(`/guide-earnings/${record.id}`)}
+                            variant="outline"
+                            size="sm"
+                        >
+                            <Wallet className="mr-2 h-4 w-4" />
+                            View Earnings & Wallet
+                        </Button>
+                        <Button
+                            onClick={() => navigate(`/guide-orders/${record.id}`)}
+                            variant="outline"
+                            size="sm"
+                        >
+                            <History className="mr-2 h-4 w-4" />
+                            View Completed Orders
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
             <Card className="mb-6">
                 <CardHeader>
                     <div className="flex justify-between items-start w-full">
@@ -455,6 +481,7 @@ const GuideShowView = () => {
                           <DetailItem label="Revenue Share">
                               <span className="font-semibold">{record.revenue_share ? `${record.revenue_share}%` : 'N/A'}</span>
                           </DetailItem>
+                          <DetailItem label="Tier">{record.tier || 'Standard'}</DetailItem>
                           <DetailItem label="Onboarded On">
                               <span>{new Date(record.created_at).toLocaleDateString()}</span>
                           </DetailItem>
@@ -479,15 +506,42 @@ const GuideShowView = () => {
 
 export const GuideShow = () => {
     const navigate = useNavigate();
+    const record = useRecordContext();
+
     const TopActions = () => (
         <TopToolbar>
             <Button onClick={() => navigate(-1)} variant="ghost" size="sm">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Guides
             </Button>
+
+            {/* Guide Financials Redirects */}
+            {record && (
+                <>
+                    <Button
+                        onClick={() => navigate(`/guide-earnings/${record.id}`)}
+                        variant="outline"
+                        size="sm"
+                        className="mr-2"
+                    >
+                        <Wallet className="mr-2 h-4 w-4" />
+                        Earnings
+                    </Button>
+                    <Button
+                        onClick={() => navigate(`/guide-orders/${record.id}`)}
+                        variant="outline"
+                        size="sm"
+                        className="mr-2"
+                    >
+                        <History className="mr-2 h-4 w-4" />
+                        Orders
+                    </Button>
+                </>
+            )}
+
             <div className="flex-grow" /> {/* This pushes the buttons to the right */}
             <EditButton />
-            <OffboardGuideButton /> 
+            <OffboardGuideButton />
         </TopToolbar>
     );
 

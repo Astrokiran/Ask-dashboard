@@ -112,9 +112,66 @@ const Dashboard: React.FC = () => {
 
   console.log('Fetching dashboard stats for today:', today);
 
-                // Fetch stats with detailed status breakdown
+                // Smart pagination for accurate today's customer count
+                // Only fetch pages until we find no more today's customers
+                const totalCustomersRes = await dataProvider.getList('customers', {
+                    pagination: { page: 1, perPage: 25 },
+                    sort: { field: 'id', order: 'DESC' },
+                    filter: {},
+                });
+
+                let allRecentCustomers: any[] = [...totalCustomersRes.data];
+                let page = 2;
+                const perPage = 25;
+
+                // Check if first page has any today's customers to decide if we need more pages
+                const firstPageTodaysCount = totalCustomersRes.data.filter((c: any) =>
+                    c.created_at && c.created_at.startsWith(today)
+                ).length;
+
+                // If we found today's customers in first page, fetch more pages until we don't find any
+                if (firstPageTodaysCount > 0) {
+                    let hasTodaysCustomers = true;
+                    while (hasTodaysCustomers && page <= 20) { // Safety limit of 20 pages (500 customers)
+                        const nextPageRes = await dataProvider.getList('customers', {
+                            pagination: { page, perPage },
+                            sort: { field: 'id', order: 'DESC' },
+                            filter: {},
+                        });
+
+                        allRecentCustomers = allRecentCustomers.concat(nextPageRes.data);
+
+                        const pageTodaysCount = nextPageRes.data.filter((c: any) =>
+                            c.created_at && c.created_at.startsWith(today)
+                        ).length;
+
+                        // If no today's customers on this page, we can stop
+                        if (pageTodaysCount === 0) {
+                            hasTodaysCustomers = false;
+                        } else {
+                            page++;
+                        }
+                    }
+                }
+
+                console.log(`Fetched ${allRecentCustomers.length} customers across ${page} pages for accurate count`);
+
+                // Calculate today's customers from all fetched data
+                const todayDate = new Date().toISOString().split('T')[0];
+                const todaysCustomers = allRecentCustomers.filter((customer: any) => {
+                    return customer.created_at && customer.created_at.startsWith(todayDate);
+                });
+
+                console.log(`Today's customers count: ${todaysCustomers.length}`);
+
+                // Create today's customers response
+                const todayCustomersRes = {
+                    data: todaysCustomers,
+                    total: todaysCustomers.length
+                };
+
+                // Fetch consultations stats with detailed status breakdown
                 const [
-                    totalCustomersRes,
                     totalConsultationsRes,
                     todayConsultationsRes,
                     overallCompletedRes,
@@ -123,12 +180,6 @@ const Dashboard: React.FC = () => {
                     overallInProgressRes,
                     overallTimeoutRes
                 ] = await Promise.all([
-                    // Total customers
-                    dataProvider.getList('customers', {
-                        pagination: { page: 1, perPage: 25 },
-                        sort: { field: 'id', order: 'DESC' },
-                        filter: {},
-                    }),
                     // Total consultations
                     dataProvider.getList('consultations', {
                         pagination: { page: 1, perPage: 10 },
@@ -175,18 +226,6 @@ const Dashboard: React.FC = () => {
                         filter: { status: 'customer_join_timeout' },
                     }),
                 ]);
-
-                // Calculate today's customers from the same totalCustomersRes data (no extra API call)
-                const todayDate = new Date().toISOString().split('T')[0];
-                const todaysCustomers = totalCustomersRes.data.filter((customer: any) => {
-                    return customer.created_at && customer.created_at.startsWith(todayDate);
-                });
-
-                // Create today's customers response
-                const todayCustomersRes = {
-                    data: todaysCustomers,
-                    total: todaysCustomers.length
-                };
 
                 // For compatibility, create completedConsultationsRes and failedConsultationsRes from the new variables
                 const completedConsultationsRes = overallCompletedRes;

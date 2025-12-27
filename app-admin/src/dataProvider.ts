@@ -439,23 +439,23 @@ export const dataProvider: DataProvider = {
             }
 
             // Add date filters with timezone conversion
-            // Convert user's local timezone (IST) to UTC timestamps for the backend
+            // Convert user's local timezone (IST) to UTC dates (YYYY-MM-DD format only)
             if (date_from) {
                 // Parse date in user's local timezone at start of day
                 const startDate = new Date(date_from + 'T00:00:00');
-                // Convert to full UTC ISO timestamp (includes time)
-                const startUTC = startDate.toISOString();
+                // Convert to UTC and extract date portion only (YYYY-MM-DD)
+                const startUTC = startDate.toISOString().split('T')[0];
                 queryParams.append('start_date', startUTC);
-                console.log(`Date filter: ${date_from}T00:00:00 (local IST) → ${startUTC} (UTC)`);
+                console.log(`Date filter: ${date_from}T00:00:00 (local IST) → ${startUTC} (UTC date)`);
             }
 
             if (date_to) {
                 // Parse date in user's local timezone at end of day
                 const endDate = new Date(date_to + 'T23:59:59');
-                // Convert to full UTC ISO timestamp (includes time)
-                const endUTC = endDate.toISOString();
+                // Convert to UTC and extract date portion only (YYYY-MM-DD)
+                const endUTC = endDate.toISOString().split('T')[0];
                 queryParams.append('end_date', endUTC);
-                console.log(`Date filter: ${date_to}T23:59:59 (local IST) → ${endUTC} (UTC)`);
+                console.log(`Date filter: ${date_to}T23:59:59 (local IST) → ${endUTC} (UTC date)`);
             }
 
             // Use the correct admin API endpoint

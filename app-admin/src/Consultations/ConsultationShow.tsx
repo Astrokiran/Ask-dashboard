@@ -413,8 +413,9 @@ export const ConsultationShow = () => (
                                         let bgColor = '#f1f8f1';
 
                                         // Only calculate duration for completed consultations
-                                        if (record.state === 'completed' && record.completed_at && record.accepted_at) {
-                                            const start = new Date(record.accepted_at);
+                                        // Calculate from requested_at to completed_at
+                                        if (record.state === 'completed' && record.completed_at && record.requested_at) {
+                                            const start = new Date(record.requested_at);
                                             const end = new Date(record.completed_at);
                                             const duration = Math.round((end.getTime() - start.getTime()) / 1000 / 60);
                                             durationText = `${duration} min`;
@@ -460,8 +461,9 @@ export const ConsultationShow = () => (
                                         let bgColor = '#fffbf0';
 
                                         // Only calculate earnings for completed consultations
-                                        if (record.state === 'completed' && record.completed_at && record.accepted_at) {
-                                            const start = new Date(record.accepted_at);
+                                        // Calculate from requested_at to completed_at
+                                        if (record.state === 'completed' && record.completed_at && record.requested_at) {
+                                            const start = new Date(record.requested_at);
                                             const end = new Date(record.completed_at);
                                             const duration = Math.round((end.getTime() - start.getTime()) / 1000 / 60);
                                             const earnings = duration * (record.base_rate_per_minute || 0);

@@ -408,28 +408,29 @@ export const ConsultationShow = () => (
                             <Box flex="1" minWidth={{ xs: '100%', md: 'calc(33.333% - 12px)' }}>
                                 <FunctionField
                                     render={(record: any) => {
-                                        let duration = 0;
-                                        let durationText = 'Not Started';
+                                        let durationText = 'N/A';
+                                        let borderColor = '#e8f5e8';
+                                        let bgColor = '#f1f8f1';
 
-                                        if (record.completed_at && record.accepted_at) {
+                                        // Only calculate duration for completed consultations
+                                        if (record.state === 'completed' && record.completed_at && record.accepted_at) {
                                             const start = new Date(record.accepted_at);
                                             const end = new Date(record.completed_at);
-                                            duration = Math.round((end.getTime() - start.getTime()) / 1000 / 60);
-                                            durationText = `${duration} min ${Math.round((duration % 1) * 60)} sec`;
-                                        } else if (record.accepted_at) {
-                                            const start = new Date(record.accepted_at);
-                                            const now = new Date();
-                                            duration = Math.round((now.getTime() - start.getTime()) / 1000 / 60);
-                                            durationText = `${duration} min (ongoing)`;
+                                            const duration = Math.round((end.getTime() - start.getTime()) / 1000 / 60);
+                                            durationText = `${duration} min`;
+                                        } else {
+                                            // For non-completed states, show N/A with different styling
+                                            borderColor = '#e0e0e0';
+                                            bgColor = '#f5f5f5';
                                         }
 
                                         return (
                                             <Box
                                                 sx={{
                                                     p: 3,
-                                                    border: '2px solid #e8f5e8',
+                                                    border: `2px solid ${borderColor}`,
                                                     borderRadius: 3,
-                                                    bgcolor: '#f1f8f1',
+                                                    bgcolor: bgColor,
                                                     textAlign: 'center',
                                                     transition: 'all 0.3s ease',
                                                     '&:hover': {
@@ -438,11 +439,11 @@ export const ConsultationShow = () => (
                                                     }
                                                 }}
                                             >
-                                                <Typography variant="h4" color="success.main" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                                    {durationText.split(' ')[0]}
+                                                <Typography variant="h4" color={record.state === 'completed' ? 'success.main' : 'text.secondary'} sx={{ fontWeight: 'bold', mb: 1 }}>
+                                                    {durationText}
                                                 </Typography>
                                                 <Typography variant="body2" color="text.secondary">
-                                                    Duration {durationText.includes('ongoing') ? '(Ongoing)' : 'Completed'}
+                                                    Duration
                                                 </Typography>
                                             </Box>
                                         );
@@ -454,21 +455,30 @@ export const ConsultationShow = () => (
                             <Box flex="1" minWidth={{ xs: '100%', md: 'calc(33.333% - 12px)' }}>
                                 <FunctionField
                                     render={(record: any) => {
-                                        let totalEarnings = 0;
-                                        if (record.completed_at && record.accepted_at) {
+                                        let totalEarnings = 'N/A';
+                                        let borderColor = '#fff3e0';
+                                        let bgColor = '#fffbf0';
+
+                                        // Only calculate earnings for completed consultations
+                                        if (record.state === 'completed' && record.completed_at && record.accepted_at) {
                                             const start = new Date(record.accepted_at);
                                             const end = new Date(record.completed_at);
                                             const duration = Math.round((end.getTime() - start.getTime()) / 1000 / 60);
-                                            totalEarnings = duration * (record.base_rate_per_minute || 0);
+                                            const earnings = duration * (record.base_rate_per_minute || 0);
+                                            totalEarnings = earnings.toFixed(2);
+                                        } else {
+                                            // For non-completed states, show N/A with different styling
+                                            borderColor = '#e0e0e0';
+                                            bgColor = '#f5f5f5';
                                         }
 
                                         return (
                                             <Box
                                                 sx={{
                                                     p: 3,
-                                                    border: '2px solid #fff3e0',
+                                                    border: `2px solid ${borderColor}`,
                                                     borderRadius: 3,
-                                                    bgcolor: '#fffbf0',
+                                                    bgcolor: bgColor,
                                                     textAlign: 'center',
                                                     transition: 'all 0.3s ease',
                                                     '&:hover': {
@@ -477,8 +487,8 @@ export const ConsultationShow = () => (
                                                     }
                                                 }}
                                             >
-                                                <Typography variant="h4" color="warning.main" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                                    {totalEarnings.toFixed(2)}
+                                                <Typography variant="h4" color={record.state === 'completed' ? 'warning.main' : 'text.secondary'} sx={{ fontWeight: 'bold', mb: 1 }}>
+                                                    {totalEarnings}
                                                 </Typography>
                                                 <Typography variant="body2" color="text.secondary">
                                                     Total Earnings

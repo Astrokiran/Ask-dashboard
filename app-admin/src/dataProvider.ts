@@ -438,13 +438,24 @@ export const dataProvider: DataProvider = {
                 queryParams.append('customer_id', customer_id);
             }
 
-            // Add date filters with correct parameter names
+            // Add date filters with timezone conversion
+            // Convert user's local timezone (IST) to UTC dates for the backend
             if (date_from) {
-                queryParams.append('start_date', date_from);
+                // Parse date in user's local timezone at start of day
+                const startDate = new Date(date_from + 'T00:00:00');
+                // Convert to UTC and extract date portion
+                const startUTC = startDate.toISOString().split('T')[0];
+                queryParams.append('start_date', startUTC);
+                console.log(`Date filter: ${date_from} (local) → ${startUTC} (UTC start)`);
             }
 
             if (date_to) {
-                queryParams.append('end_date', date_to);
+                // Parse date in user's local timezone at end of day
+                const endDate = new Date(date_to + 'T23:59:59');
+                // Convert to UTC and extract date portion
+                const endUTC = endDate.toISOString().split('T')[0];
+                queryParams.append('end_date', endUTC);
+                console.log(`Date filter: ${date_to} (local) → ${endUTC} (UTC end)`);
             }
 
             // Use the correct admin API endpoint

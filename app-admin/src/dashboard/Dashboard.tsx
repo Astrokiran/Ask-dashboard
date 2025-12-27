@@ -8,18 +8,6 @@ import {
 } from '@mui/material';
 import { useDataProvider } from 'react-admin';
 
-// Helper function to calculate consultation status breakdown
-const calculateStatusBreakdown = (consultations: any[]) => {
-    return {
-        requested: consultations.filter(c => c.state?.toLowerCase() === 'requested').length,
-        in_progress: consultations.filter(c => c.state?.toLowerCase() === 'in_progress').length,
-        completed: consultations.filter(c => c.state?.toLowerCase() === 'completed').length,
-        cancelled: consultations.filter(c => c.state?.toLowerCase() === 'cancelled').length,
-        failed: consultations.filter(c => c.state?.toLowerCase() === 'failed').length,
-        customer_join_timeout: consultations.filter(c => c.state?.toLowerCase() === 'customer_join_timeout').length,
-    };
-};
-
 // Lazy load heavy components
 const CustomerAnalytics = lazy(() => import('./DashboardComponents').then(module => ({ default: module.CustomerAnalytics })));
 const TopPerformingGuides = lazy(() => import('./DashboardComponents').then(module => ({ default: module.TopPerformingGuides })));
@@ -110,7 +98,7 @@ const Dashboard: React.FC = () => {
                 // Get today's date for accurate filtering
                 const today = new Date().toISOString().split('T')[0];
 
-  console.log('Fetching dashboard stats for today:', today);
+                console.log('Fetching dashboard stats for today:', today);
 
                 // Smart pagination for accurate today's customer count
                 // Only fetch pages until we find no more today's customers
@@ -178,53 +166,88 @@ const Dashboard: React.FC = () => {
                     overallFailedRes,
                     overallCancelledRes,
                     overallInProgressRes,
-                    overallTimeoutRes
+                    overallTimeoutRes,
+                    // Today's breakdown by status - fetch counts for each status
+                    todayRequestedRes,
+                    todayInProgressRes,
+                    todayCompletedRes,
+                    todayCancelledRes,
+                    todayFailedRes,
+                    todayTimeoutRes
                 ] = await Promise.all([
                     // Total consultations
                     dataProvider.getList('consultations', {
-                        pagination: { page: 1, perPage: 10 },
+                        pagination: { page: 1, perPage: 1 },
                         sort: { field: 'id', order: 'DESC' },
                         filter: {},
                     }),
-                    // Today's consultations
+                    // Today's total consultations
                     dataProvider.getList('consultations', {
-                        pagination: { page: 1, perPage: 50 }, // Larger sample for today's breakdown
+                        pagination: { page: 1, perPage: 1 },
                         sort: { field: 'id', order: 'DESC' },
                         filter: { date_from: today, date_to: today },
                     }).catch(error => {
-                        console.log('Trying alternative date filter for consultations');
-                        return dataProvider.getList('consultations', {
-                            pagination: { page: 1, perPage: 50 },
-                            sort: { field: 'id', order: 'DESC' },
-                            filter: { start_date: today, end_date: today },
-                        });
+                        console.error('Error fetching today\'s consultations:', error);
+                        // Return empty result on error
+                        return { data: [], total: 0 };
                     }),
                     // Overall consultations by status - using correct 'status' parameter
                     dataProvider.getList('consultations', {
-                        pagination: { page: 1, perPage: 10 },
+                        pagination: { page: 1, perPage: 1 },
                         sort: { field: 'id', order: 'DESC' },
                         filter: { status: 'completed' },
                     }),
                     dataProvider.getList('consultations', {
-                        pagination: { page: 1, perPage: 10 },
+                        pagination: { page: 1, perPage: 1 },
                         sort: { field: 'id', order: 'DESC' },
                         filter: { status: 'failed' },
                     }),
                     dataProvider.getList('consultations', {
-                        pagination: { page: 1, perPage: 10 },
+                        pagination: { page: 1, perPage: 1 },
                         sort: { field: 'id', order: 'DESC' },
                         filter: { status: 'cancelled' },
                     }),
                     dataProvider.getList('consultations', {
-                        pagination: { page: 1, perPage: 10 },
+                        pagination: { page: 1, perPage: 1 },
                         sort: { field: 'id', order: 'DESC' },
                         filter: { status: 'in_progress' },
                     }),
                     dataProvider.getList('consultations', {
-                        pagination: { page: 1, perPage: 10 },
+                        pagination: { page: 1, perPage: 1 },
                         sort: { field: 'id', order: 'DESC' },
                         filter: { status: 'customer_join_timeout' },
                     }),
+                    // Today's status breakdown - fetch accurate counts for each status
+                    dataProvider.getList('consultations', {
+                        pagination: { page: 1, perPage: 1 },
+                        sort: { field: 'id', order: 'DESC' },
+                        filter: { date_from: today, date_to: today, status: 'requested' },
+                    }).catch(() => ({ data: [], total: 0 })),
+                    dataProvider.getList('consultations', {
+                        pagination: { page: 1, perPage: 1 },
+                        sort: { field: 'id', order: 'DESC' },
+                        filter: { date_from: today, date_to: today, status: 'in_progress' },
+                    }).catch(() => ({ data: [], total: 0 })),
+                    dataProvider.getList('consultations', {
+                        pagination: { page: 1, perPage: 1 },
+                        sort: { field: 'id', order: 'DESC' },
+                        filter: { date_from: today, date_to: today, status: 'completed' },
+                    }).catch(() => ({ data: [], total: 0 })),
+                    dataProvider.getList('consultations', {
+                        pagination: { page: 1, perPage: 1 },
+                        sort: { field: 'id', order: 'DESC' },
+                        filter: { date_from: today, date_to: today, status: 'cancelled' },
+                    }).catch(() => ({ data: [], total: 0 })),
+                    dataProvider.getList('consultations', {
+                        pagination: { page: 1, perPage: 1 },
+                        sort: { field: 'id', order: 'DESC' },
+                        filter: { date_from: today, date_to: today, status: 'failed' },
+                    }).catch(() => ({ data: [], total: 0 })),
+                    dataProvider.getList('consultations', {
+                        pagination: { page: 1, perPage: 1 },
+                        sort: { field: 'id', order: 'DESC' },
+                        filter: { date_from: today, date_to: today, status: 'customer_join_timeout' },
+                    }).catch(() => ({ data: [], total: 0 })),
                 ]);
 
                 // For compatibility, create completedConsultationsRes and failedConsultationsRes from the new variables
@@ -275,8 +298,15 @@ const Dashboard: React.FC = () => {
 
                 // Active guides already counted above in optimized fetching
 
-                // Calculate today's consultation status breakdown
-                const todayStatusBreakdown = calculateStatusBreakdown(todayConsultationsRes.data);
+                // Use API counts for today's status breakdown (accurate, not sampled)
+                const todayStatusBreakdown = {
+                    requested: todayRequestedRes.total || 0,
+                    in_progress: todayInProgressRes.total || 0,
+                    completed: todayCompletedRes.total || 0,
+                    cancelled: todayCancelledRes.total || 0,
+                    failed: todayFailedRes.total || 0,
+                    customer_join_timeout: todayTimeoutRes.total || 0,
+                };
 
                 const successRate = (totalConsultationsRes.total ?? 0) > 0
                     ? (((overallCompletedRes.total ?? 0) / (totalConsultationsRes.total ?? 1)) * 100).toFixed(1)

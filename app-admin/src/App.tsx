@@ -4,6 +4,7 @@ import { Route } from 'react-router-dom';
 import { authProvider } from './auth/authProvider';
 import { CustomLoginPage } from './auth/LoginPage';
 import { MyLayout } from './layout/MyLayout';
+import { ThemeSyncWrapper } from './layout/ThemeSyncWrapper';
 import Dashboard from './dashboard/Dashboard';
 import { dataProvider } from './dataProvider';
 import { AdminUserList, AdminUserCreate, AdminUserEdit } from './users/AdminUsers';
@@ -45,15 +46,16 @@ console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('=====================================');
 
 const App: React.FC = () => (
-    <Admin
-        dataProvider={dataProvider}
-        authProvider={authProvider}
-        theme={bwLightTheme}
-        darkTheme={bwDarkTheme}
-        loginPage={CustomLoginPage}
-        dashboard={Dashboard}
-        layout={MyLayout}
-    >
+    <ThemeSyncWrapper>
+        <Admin
+            dataProvider={dataProvider}
+            authProvider={authProvider}
+            theme={bwLightTheme}
+            darkTheme={bwDarkTheme}
+            loginPage={CustomLoginPage}
+            dashboard={Dashboard}
+            layout={MyLayout}
+        >
         <Resource
             name="admin-users"
              list={AdminUserList}
@@ -104,6 +106,7 @@ const App: React.FC = () => (
             <Route path="/guide-orders" element={<GuideOrders />} />
         </CustomRoutes>
     </Admin>
+    </ThemeSyncWrapper>
 );
 
 export default App;

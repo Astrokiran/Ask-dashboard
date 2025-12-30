@@ -8,25 +8,19 @@ import {
     useNotify,
     useRefresh,
     useCreate,
-    Link,
-    RecordContextProvider,
+    Datagrid,
+    TextField,
+    useRecordContext,
 } from 'react-admin';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '../components/ui/table';
-import { Button } from '../components/ui/button';
-import {
     Dialog,
-    DialogContent,
-    DialogHeader,
     DialogTitle,
-    DialogTrigger,
-} from '../components/ui/dialog';
+    DialogContent,
+    DialogActions,
+    DialogContentText,
+    Button,
+    TextField as MuiTextField,
+} from '@mui/material';
 import { FormEvent, useState } from 'react';
 
 const customerFilters = [
@@ -59,18 +53,34 @@ const NewCustomerForm = ({ onSave, saving }: { onSave: (data: any) => void; savi
         }
         onSave({ area_code: areaCode, phone_number: phoneNumber });
     };
-    
+
     return (
-       <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4">
+       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px' }}>
             <div>
-                <label className="text-sm font-medium capitalize">Area Code *</label>
-                <input value={areaCode} onChange={e => setAreaCode(e.target.value)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                <label style={{ fontSize: '0.875rem', fontWeight: 500, textTransform: 'capitalize' }}>
+                    Area Code *
+                </label>
+                <MuiTextField
+                    value={areaCode}
+                    onChange={e => setAreaCode(e.target.value)}
+                    fullWidth
+                    size="small"
+                    sx={{ mt: 1 }}
+                />
             </div>
             <div>
-                <label className="text-sm font-medium capitalize">Phone Number (10 digits) *</label>
-                <input value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                <label style={{ fontSize: '0.875rem', fontWeight: 500, textTransform: 'capitalize' }}>
+                    Phone Number (10 digits) *
+                </label>
+                <MuiTextField
+                    value={phoneNumber}
+                    onChange={e => setPhoneNumber(e.target.value)}
+                    fullWidth
+                    size="small"
+                    sx={{ mt: 1 }}
+                />
             </div>
-            <Button type="submit" disabled={saving} className="mt-4">
+            <Button type="submit" disabled={saving} variant="contained" sx={{ mt: 1 }}>
                 {saving ? 'Saving...' : 'Save Customer'}
             </Button>
         </form>
@@ -100,16 +110,17 @@ const ListActions = () => {
     return (
         <TopToolbar>
             <FilterButton />
-            <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger asChild>
-                    <Button>Add New Customer</Button>
-                </DialogTrigger>
+            <Button variant="contained" onClick={() => setOpen(true)}>
+                Add New Customer
+            </Button>
+            <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm">
+                <DialogTitle>Create a New Customer</DialogTitle>
                 <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Create a New Customer</DialogTitle>
-                    </DialogHeader>
                     <NewCustomerForm onSave={handleSave} saving={isLoading} />
                 </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpen(false)}>Cancel</Button>
+                </DialogActions>
             </Dialog>
         </TopToolbar>
     );
@@ -122,36 +133,19 @@ const CustomerListView = () => {
     if (!data) return null;
 
     return (
-        <div className="bg-card text-card-foreground rounded-lg border shadow-sm">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Customer ID</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Phone Number</TableHead>
-                        <TableHead>Created At</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {data.map(customer => (
-                        <RecordContextProvider value={customer} key={customer.id}>
-                            <TableRow>
-                                <TableCell>
-                                    <Link to={`/customers/${customer.id}/show`} className="text-blue-600 hover:underline">
-                                        {`#${customer.id}`}
-                                    </Link>
-                                </TableCell>
-                                <TableCell>{customer.name}</TableCell>
-                                <TableCell>{customer.phone}</TableCell>
-                                <TableCell>
-                                    <DateField source="created_at" showTime />
-                                </TableCell>
-                            </TableRow>
-                        </RecordContextProvider>
-                    ))}
-                </TableBody>
-            </Table>
-        </div>
+        <Datagrid
+            rowClick="show"
+            sx={{
+                '& .RaDatagrid-headerCell': {
+                    fontWeight: 'bold',
+                },
+            }}
+        >
+            <TextField source="id" label="Customer ID" />
+            <TextField source="name" label="Name" />
+            <TextField source="phone" label="Phone Number" />
+            <DateField source="created_at" showTime label="Created At" />
+        </Datagrid>
     );
 };
 

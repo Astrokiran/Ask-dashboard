@@ -378,13 +378,14 @@ export const ConsultationShow = () => (
                                 <Box
                                     sx={{
                                         p: 3,
-                                        border: '2px solid #e3f2fd',
+                                        border: '2px solid',
+                                        borderColor: 'primary.light',
                                         borderRadius: 3,
-                                        bgcolor: '#f8f9fa',
+                                        bgcolor: 'background.paper',
                                         textAlign: 'center',
                                         transition: 'all 0.3s ease',
                                         '&:hover': {
-                                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                            boxShadow: 4,
                                             transform: 'translateY(-2px)'
                                         }
                                     }}
@@ -409,8 +410,8 @@ export const ConsultationShow = () => (
                                 <FunctionField
                                     render={(record: any) => {
                                         let durationText = 'N/A';
-                                        let borderColor = '#e8f5e8';
-                                        let bgColor = '#f1f8f1';
+                                        let borderColor = 'success.light';
+                                        let bgColor = 'success.main';
 
                                         // Only calculate duration for completed consultations
                                         // Calculate from requested_at to completed_at
@@ -421,21 +422,23 @@ export const ConsultationShow = () => (
                                             durationText = `${duration} min`;
                                         } else {
                                             // For non-completed states, show N/A with different styling
-                                            borderColor = '#e0e0e0';
-                                            bgColor = '#f5f5f5';
+                                            borderColor = 'divider';
+                                            bgColor = 'background.paper';
                                         }
 
                                         return (
                                             <Box
                                                 sx={{
                                                     p: 3,
-                                                    border: `2px solid ${borderColor}`,
+                                                    border: '2px solid',
+                                                    borderColor: borderColor,
                                                     borderRadius: 3,
-                                                    bgcolor: bgColor,
+                                                    bgcolor: bgColor === 'success.main' ? 'background.paper' : bgColor,
+                                                    opacity: record.state === 'completed' ? 1 : 0.7,
                                                     textAlign: 'center',
                                                     transition: 'all 0.3s ease',
                                                     '&:hover': {
-                                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                                        boxShadow: 4,
                                                         transform: 'translateY(-2px)'
                                                     }
                                                 }}
@@ -457,8 +460,8 @@ export const ConsultationShow = () => (
                                 <FunctionField
                                     render={(record: any) => {
                                         let totalEarnings = 'N/A';
-                                        let borderColor = '#fff3e0';
-                                        let bgColor = '#fffbf0';
+                                        let borderColor = 'warning.light';
+                                        let bgColor = 'warning.main';
 
                                         // Only calculate earnings for completed consultations
                                         // Calculate from requested_at to completed_at
@@ -470,21 +473,23 @@ export const ConsultationShow = () => (
                                             totalEarnings = earnings.toFixed(2);
                                         } else {
                                             // For non-completed states, show N/A with different styling
-                                            borderColor = '#e0e0e0';
-                                            bgColor = '#f5f5f5';
+                                            borderColor = 'divider';
+                                            bgColor = 'background.paper';
                                         }
 
                                         return (
                                             <Box
                                                 sx={{
                                                     p: 3,
-                                                    border: `2px solid ${borderColor}`,
+                                                    border: '2px solid',
+                                                    borderColor: borderColor,
                                                     borderRadius: 3,
-                                                    bgcolor: bgColor,
+                                                    bgcolor: bgColor === 'warning.main' ? 'background.paper' : bgColor,
+                                                    opacity: record.state === 'completed' ? 1 : 0.7,
                                                     textAlign: 'center',
                                                     transition: 'all 0.3s ease',
                                                     '&:hover': {
-                                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                                        boxShadow: 4,
                                                         transform: 'translateY(-2px)'
                                                     }
                                                 }}

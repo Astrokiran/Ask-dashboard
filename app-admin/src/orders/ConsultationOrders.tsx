@@ -146,28 +146,75 @@ const OrderActions = ({ record }: { record: any }) => {
                 </svg>
             </button>
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 ring-1 ring-black ring-opacity-5">
-                    <div className="py-1">
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        right: 0,
+                        top: '100%',
+                        marginTop: 1,
+                        width: 192,
+                        backgroundColor: 'background.paper',
+                        borderRadius: 1,
+                        boxShadow: 3,
+                        zIndex: 10,
+                        border: 1,
+                        borderColor: 'divider'
+                    }}
+                >
+                    <Box>
                         <button
                             onClick={() => handleAction('confirm-rates')}
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                padding: '8px 16px',
+                                fontSize: '0.875rem',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: 'inherit'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.04)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                         >
                             Confirm Rates
                         </button>
                         <button
                             onClick={() => handleAction('start')}
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                padding: '8px 16px',
+                                fontSize: '0.875rem',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: 'inherit'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.04)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                         >
                             Start Order
                         </button>
                         <button
                             onClick={handleCancel}
-                            className="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50"
+                            style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                padding: '8px 16px',
+                                fontSize: '0.875rem',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: '#d32f2f'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(211, 47, 47, 0.04)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                         >
                             Cancel Order
                         </button>
-                    </div>
-                </div>
+                    </Box>
+                </Box>
             )}
         </div>
     );
@@ -320,7 +367,16 @@ const ConsultationOrderListContent = (props: any) => {
                             <Box display="flex" flexWrap="wrap" gap={2}>
                                 {/* Total Orders */}
                                 <Box flex="1 1 200px" minWidth="200px">
-                                    <Box textAlign="center" p={2} className="bg-white rounded border">
+                                    <Box
+                                        textAlign="center"
+                                        p={2}
+                                        sx={{
+                                            backgroundColor: 'background.paper',
+                                            borderRadius: 1,
+                                            border: 1,
+                                            borderColor: 'divider'
+                                        }}
+                                    >
                                         <Typography variant="h4" fontWeight="bold" color="textPrimary">
                                             {stats.total}
                                         </Typography>
@@ -332,7 +388,16 @@ const ConsultationOrderListContent = (props: any) => {
 
                                 {/* Completed Orders */}
                                 <Box flex="1 1 200px" minWidth="200px">
-                                    <Box textAlign="center" p={2} className="bg-white rounded border">
+                                    <Box
+                                        textAlign="center"
+                                        p={2}
+                                        sx={{
+                                            backgroundColor: 'background.paper',
+                                            borderRadius: 1,
+                                            border: 1,
+                                            borderColor: 'divider'
+                                        }}
+                                    >
                                         <Typography variant="h4" fontWeight="bold" color="success.main">
                                             {stats.completed}
                                         </Typography>
@@ -344,7 +409,16 @@ const ConsultationOrderListContent = (props: any) => {
 
                                 {/* Cancelled Orders */}
                                 <Box flex="1 1 200px" minWidth="200px">
-                                    <Box textAlign="center" p={2} className="bg-white rounded border">
+                                    <Box
+                                        textAlign="center"
+                                        p={2}
+                                        sx={{
+                                            backgroundColor: 'background.paper',
+                                            borderRadius: 1,
+                                            border: 1,
+                                            borderColor: 'divider'
+                                        }}
+                                    >
                                         <Typography variant="h4" fontWeight="bold" color="error.main">
                                             {stats.cancelled}
                                         </Typography>
@@ -356,7 +430,16 @@ const ConsultationOrderListContent = (props: any) => {
 
                                 {/* Other Status Orders */}
                                 <Box flex="1 1 200px" minWidth="200px">
-                                    <Box textAlign="center" p={2} className="bg-white rounded border">
+                                    <Box
+                                        textAlign="center"
+                                        p={2}
+                                        sx={{
+                                            backgroundColor: 'background.paper',
+                                            borderRadius: 1,
+                                            border: 1,
+                                            borderColor: 'divider'
+                                        }}
+                                    >
                                         <Typography variant="h4" fontWeight="bold" color="warning.main">
                                             {stats.pending}
                                         </Typography>
@@ -372,7 +455,16 @@ const ConsultationOrderListContent = (props: any) => {
                         <Box mb={3}>
                             <Box display="flex" flexWrap="wrap" gap={2}>
                                 <Box flex="1 1 300px" minWidth="300px">
-                                    <Box textAlign="center" p={2} className="bg-white rounded border">
+                                    <Box
+                                        textAlign="center"
+                                        p={2}
+                                        sx={{
+                                            backgroundColor: 'background.paper',
+                                            borderRadius: 1,
+                                            border: 1,
+                                            borderColor: 'divider'
+                                        }}
+                                    >
                                         <Typography variant="h5" fontWeight="bold" color="primary.main">
                                             ₹{stats.totalRevenue.toFixed(2)}
                                         </Typography>
@@ -383,7 +475,16 @@ const ConsultationOrderListContent = (props: any) => {
                                 </Box>
 
                                 <Box flex="1 1 300px" minWidth="300px">
-                                    <Box textAlign="center" p={2} className="bg-white rounded border">
+                                    <Box
+                                        textAlign="center"
+                                        p={2}
+                                        sx={{
+                                            backgroundColor: 'background.paper',
+                                            borderRadius: 1,
+                                            border: 1,
+                                            borderColor: 'divider'
+                                        }}
+                                    >
                                         <Typography variant="h5" fontWeight="bold" color="success.main">
                                             ₹{stats.completedRevenue.toFixed(2)}
                                         </Typography>

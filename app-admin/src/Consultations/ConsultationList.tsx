@@ -159,7 +159,16 @@ const TotalConsultationsCount = ({ currentFilters }: { currentFilters: any }) =>
     }, [JSON.stringify(currentFilters), dataProvider]); // Use stringified filters to ensure proper dependency
 
     return (
-        <Box textAlign="center" p={2} className="bg-white rounded border">
+        <Box
+            textAlign="center"
+            p={2}
+            sx={{
+                bgcolor: 'background.paper',
+                borderRadius: 1,
+                border: '1px solid',
+                borderColor: 'divider',
+            }}
+        >
             <Typography variant="h4" fontWeight="bold" color="primary.main">
                 {loading ? '...' : totalCount !== null ? totalCount.toLocaleString() : 'N/A'}
             </Typography>

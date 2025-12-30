@@ -240,7 +240,16 @@ const PaymentOrderListContent = (props: any) => {
                             <Box display="flex" flexWrap="wrap" gap={2}>
                                 {/* Total Orders */}
                                 <Box flex="1 1 200px" minWidth="200px">
-                                    <Box textAlign="center" p={2} className="bg-white rounded border">
+                                    <Box
+                                        textAlign="center"
+                                        p={2}
+                                        sx={{
+                                            backgroundColor: 'background.paper',
+                                            borderRadius: 1,
+                                            border: 1,
+                                            borderColor: 'divider'
+                                        }}
+                                    >
                                         <Typography variant="h4" fontWeight="bold" color="textPrimary">
                                             {stats.total}
                                         </Typography>
@@ -252,7 +261,16 @@ const PaymentOrderListContent = (props: any) => {
 
                                 {/* Successful Orders */}
                                 <Box flex="1 1 200px" minWidth="200px">
-                                    <Box textAlign="center" p={2} className="bg-white rounded border">
+                                    <Box
+                                        textAlign="center"
+                                        p={2}
+                                        sx={{
+                                            backgroundColor: 'background.paper',
+                                            borderRadius: 1,
+                                            border: 1,
+                                            borderColor: 'divider'
+                                        }}
+                                    >
                                         <Typography variant="h4" fontWeight="bold" color="success.main">
                                             {stats.successful}
                                         </Typography>
@@ -264,7 +282,16 @@ const PaymentOrderListContent = (props: any) => {
 
                                 {/* Failed Orders */}
                                 <Box flex="1 1 200px" minWidth="200px">
-                                    <Box textAlign="center" p={2} className="bg-white rounded border">
+                                    <Box
+                                        textAlign="center"
+                                        p={2}
+                                        sx={{
+                                            backgroundColor: 'background.paper',
+                                            borderRadius: 1,
+                                            border: 1,
+                                            borderColor: 'divider'
+                                        }}
+                                    >
                                         <Typography variant="h4" fontWeight="bold" color="error.main">
                                             {stats.failed}
                                         </Typography>
@@ -276,7 +303,16 @@ const PaymentOrderListContent = (props: any) => {
 
                                 {/* Other Status Orders */}
                                 <Box flex="1 1 200px" minWidth="200px">
-                                    <Box textAlign="center" p={2} className="bg-white rounded border">
+                                    <Box
+                                        textAlign="center"
+                                        p={2}
+                                        sx={{
+                                            backgroundColor: 'background.paper',
+                                            borderRadius: 1,
+                                            border: 1,
+                                            borderColor: 'divider'
+                                        }}
+                                    >
                                         <Typography variant="h4" fontWeight="bold" color="warning.main">
                                             {stats.pending}
                                         </Typography>
@@ -292,7 +328,16 @@ const PaymentOrderListContent = (props: any) => {
                         <Box mb={3}>
                             <Box display="flex" flexWrap="wrap" gap={2}>
                                 <Box flex="1 1 250px" minWidth="250px">
-                                    <Box textAlign="center" p={2} className="bg-white rounded border">
+                                    <Box
+                                        textAlign="center"
+                                        p={2}
+                                        sx={{
+                                            backgroundColor: 'background.paper',
+                                            borderRadius: 1,
+                                            border: 1,
+                                            borderColor: 'divider'
+                                        }}
+                                    >
                                         <Typography variant="h5" fontWeight="bold" color="primary.main">
                                             ₹{stats.totalAmount.toFixed(2)}
                                         </Typography>
@@ -303,7 +348,16 @@ const PaymentOrderListContent = (props: any) => {
                                 </Box>
 
                                 <Box flex="1 1 250px" minWidth="250px">
-                                    <Box textAlign="center" p={2} className="bg-white rounded border">
+                                    <Box
+                                        textAlign="center"
+                                        p={2}
+                                        sx={{
+                                            backgroundColor: 'background.paper',
+                                            borderRadius: 1,
+                                            border: 1,
+                                            borderColor: 'divider'
+                                        }}
+                                    >
                                         <Typography variant="h5" fontWeight="bold" color="success.main">
                                             ₹{stats.successfulAmount.toFixed(2)}
                                         </Typography>
@@ -314,7 +368,16 @@ const PaymentOrderListContent = (props: any) => {
                                 </Box>
 
                                 <Box flex="1 1 250px" minWidth="250px">
-                                    <Box textAlign="center" p={2} className="bg-white rounded border">
+                                    <Box
+                                        textAlign="center"
+                                        p={2}
+                                        sx={{
+                                            backgroundColor: 'background.paper',
+                                            borderRadius: 1,
+                                            border: 1,
+                                            borderColor: 'divider'
+                                        }}
+                                    >
                                         <Typography variant="h5" fontWeight="bold" color="info.main">
                                             {stats.walletCreditedCount}
                                         </Typography>

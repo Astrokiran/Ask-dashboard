@@ -11,36 +11,31 @@ import {
     EditButton,
 } from 'react-admin';
 import { Link } from 'react-router-dom';
-
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from '../components/ui/alert-dialog';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
 import { UserX } from 'lucide-react';
-import { Banknote, Eye, Wallet, History } from 'lucide-react';
-import {
-    Card,
-    CardHeader,
-    CardTitle,
-    CardContent,
-    CardDescription,
-} from '../components/ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
-import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
-import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { httpClient } from '../dataProvider';
-import { CircularProgress, Box, Switch, FormControlLabel } from '@mui/material';
+import {
+    CircularProgress,
+    Box,
+    Switch,
+    FormControlLabel,
+    Card,
+    CardContent,
+    Typography,
+    Button,
+    Chip,
+    Avatar,
+    Divider,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    DialogContentText,
+    TextField,
+    Alert,
+    AlertTitle,
+} from '@mui/material';
+import { styled } from '@mui/material/styles';
 
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -48,14 +43,22 @@ const API_URL = process.env.REACT_APP_API_URL;
 // --- Reusable UI Components ---
 
 const DocumentImage = ({ label, src }: { label: string, src?: string }) => (
-    <div className="text-center">
-        <p className="font-semibold mb-2">{label}</p>
+    <Box sx={{ textAlign: 'center' }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+            {label}
+        </Typography>
         <img
             src={src || 'https://placeholder.co/300x200?text=No+Image'}
             alt={label}
-            className="rounded-lg border-2 border-dashed w-full object-contain"
+            style={{
+                borderRadius: '8px',
+                border: '2px dashed',
+                borderColor: 'divider',
+                width: '100%',
+                objectFit: 'contain',
+            }}
         />
-    </div>
+    </Box>
 );
 
 const maskAccountNumber = (accNum: string): string => {
@@ -65,11 +68,15 @@ const maskAccountNumber = (accNum: string): string => {
     return '****';
 };
 
-const DetailItem = ({ label, children }: { label: string, children: React.ReactNode }) => (
-  <div>
-    <p className="text-sm text-muted-foreground">{label}</p>
-    <p className="font-medium text-base">{children || '-'}</p>
-  </div>
+const DetailItem = ({ label, children }: { label: string; children: React.ReactNode }) => (
+    <Box>
+        <Typography variant="body2" color="textSecondary" sx={{ mb: 0.5 }}>
+            {label}
+        </Typography>
+        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+            {children || '-'}
+        </Typography>
+    </Box>
 );
 
 // --- Guide Stats Section ---
@@ -83,75 +90,105 @@ const GuideStatsSection = () => {
     const stats = record.guide_stats;
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Guide Statistics</CardTitle>
-                <CardDescription>Performance metrics and consultation history</CardDescription>
-            </CardHeader>
+        <Card sx={{ mb: 3 }}>
+            <Box sx={{ p: 3, pb: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    Guide Statistics
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                    Performance metrics and consultation history
+                </Typography>
+            </Box>
+            <Divider />
             <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <DetailItem label="Total Consultations">
-                        <span className="text-2xl font-bold text-primary">
-                            {stats.total_number_of_completed_consultations || 0}
-                        </span>
-                    </DetailItem>
-                    <DetailItem label="Average Rating">
-                        <span className="text-2xl font-bold text-orange-500">
-                            {stats.rating ? `${stats.rating} ⭐` : 'N/A'}
-                        </span>
-                    </DetailItem>
-                    <DetailItem label="Total Reviews">
-                        <span className="text-2xl font-bold">
-                            {stats.total_number_of_reviews || 0}
-                        </span>
-                    </DetailItem>
-                    <DetailItem label="Total Minutes">
-                        <span className="text-2xl font-bold text-blue-600">
-                            {stats.total_consultation_minutes || 0}
-                        </span>
-                    </DetailItem>
-                </div>
+                <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                        <DetailItem label="Total Consultations">
+                            <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                                {stats.total_number_of_completed_consultations || 0}
+                            </Typography>
+                        </DetailItem>
+                    </Box>
+                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                        <DetailItem label="Average Rating">
+                            <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#ff9800' }}>
+                                {stats.rating ? `${stats.rating} ⭐` : 'N/A'}
+                            </Typography>
+                        </DetailItem>
+                    </Box>
+                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                        <DetailItem label="Total Reviews">
+                            <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                                {stats.total_number_of_reviews || 0}
+                            </Typography>
+                        </DetailItem>
+                    </Box>
+                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                        <DetailItem label="Total Minutes">
+                            <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#2196f3' }}>
+                                {stats.total_consultation_minutes || 0}
+                            </Typography>
+                        </DetailItem>
+                    </Box>
+                </Box>
 
-                <div className="mt-6 pt-6 border-t">
-                    <h3 className="font-semibold mb-4">Consultation Breakdown</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <h4 className="text-sm font-medium text-muted-foreground mb-3">Chat Consultations</h4>
+                <Box sx={{ mt: 4, pt: 3 }}>
+                    <Divider sx={{ mb: 3 }} />
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
+                        Consultation Breakdown
+                    </Typography>
+                    <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                        <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                            <Typography variant="body2" color="textSecondary" sx={{ mb: 2, fontWeight: 500 }}>
+                                Chat Consultations
+                            </Typography>
                             <DetailItem label="Total Sessions">{stats.total_number_of_chat_consultations || 0}</DetailItem>
                             <DetailItem label="Total Minutes">{stats.total_chat_minutes || 0}</DetailItem>
                             <DetailItem label="Avg Length">{stats.average_consultation_length_chat || 0} min</DetailItem>
-                        </div>
-                        <div>
-                            <h4 className="text-sm font-medium text-muted-foreground mb-3">Voice Consultations</h4>
+                        </Box>
+                        <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                            <Typography variant="body2" color="textSecondary" sx={{ mb: 2, fontWeight: 500 }}>
+                                Voice Consultations
+                            </Typography>
                             <DetailItem label="Total Sessions">{stats.total_number_of_voice_consultations || 0}</DetailItem>
                             <DetailItem label="Total Minutes">{stats.total_voice_minutes || 0}</DetailItem>
                             <DetailItem label="Avg Length">{stats.average_consultation_length_voice || 0} min</DetailItem>
-                        </div>
-                        <div>
-                            <h4 className="text-sm font-medium text-muted-foreground mb-3">Video Consultations</h4>
+                        </Box>
+                        <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                            <Typography variant="body2" color="textSecondary" sx={{ mb: 2, fontWeight: 500 }}>
+                                Video Consultations
+                            </Typography>
                             <DetailItem label="Total Sessions">{stats.total_number_of_video_consultations || 0}</DetailItem>
                             <DetailItem label="Total Minutes">{stats.total_video_minutes || 0}</DetailItem>
                             <DetailItem label="Avg Length">{stats.average_consultation_length_video || 0} min</DetailItem>
-                        </div>
-                    </div>
-                </div>
+                        </Box>
+                    </Box>
+                </Box>
 
-                <div className="mt-6 pt-6 border-t">
-                    <h3 className="font-semibold mb-4">Quick Connect</h3>
-                    <div className="grid grid-cols-2 gap-6">
-                        <DetailItem label="Quick Connect Sessions">{stats.total_quick_connect_consultations || 0}</DetailItem>
-                        <DetailItem label="Quick Connect Minutes">{stats.total_quick_connect_consultation_minutes || 0}</DetailItem>
-                    </div>
-                </div>
+                <Box sx={{ mt: 4, pt: 3 }}>
+                    <Divider sx={{ mb: 3 }} />
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
+                        Quick Connect
+                    </Typography>
+                    <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                        <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                            <DetailItem label="Quick Connect Sessions">{stats.total_quick_connect_consultations || 0}</DetailItem>
+                        </Box>
+                        <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                            <DetailItem label="Quick Connect Minutes">{stats.total_quick_connect_consultation_minutes || 0}</DetailItem>
+                        </Box>
+                    </Box>
+                </Box>
 
                 {stats.average_consultation_length > 0 && (
-                    <div className="mt-6 pt-6 border-t">
+                    <Box sx={{ mt: 4, pt: 3 }}>
+                        <Divider sx={{ mb: 3 }} />
                         <DetailItem label="Overall Average Consultation Length">
-                            <span className="text-lg font-semibold text-green-600">
+                            <Typography sx={{ fontSize: '1.125rem', fontWeight: 600, color: '#4caf50' }}>
                                 {stats.average_consultation_length} minutes
-                            </span>
+                            </Typography>
                         </DetailItem>
-                    </div>
+                    </Box>
                 )}
             </CardContent>
         </Card>
@@ -164,7 +201,7 @@ const KycDocumentSection = ({ guideId }: { guideId: Identifier }) => {
     const [documents, setDocuments] = useState<any>({});
     const [loading, setLoading] = useState(true);
     const notify = useNotify();
-    
+
     useEffect(() => {
         if (!guideId) return;
         const fetchDocs = async () => {
@@ -189,15 +226,28 @@ const KycDocumentSection = ({ guideId }: { guideId: Identifier }) => {
     }
 
     return (
-        <Card>
-            <CardHeader><CardTitle>KYC Documents</CardTitle></CardHeader>
+        <Card sx={{ mb: 3 }}>
+            <Box sx={{ p: 3, pb: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                    KYC Documents
+                </Typography>
+            </Box>
+            <Divider />
             <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                   <DocumentImage label="Aadhaar (Front)" src={documents.aadhaar?.front?.src} />
-                   <DocumentImage label="Aadhaar (Back)" src={documents.aadhaar?.back?.src} />
-                   <DocumentImage label="PAN (Front)" src={documents.pan?.front?.src} />
-                   <DocumentImage label="PAN (Back)" src={documents.pan?.back?.src} />
-                </div>
+                <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                        <DocumentImage label="Aadhaar (Front)" src={documents.aadhaar?.front?.src} />
+                    </Box>
+                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                        <DocumentImage label="Aadhaar (Back)" src={documents.aadhaar?.back?.src} />
+                    </Box>
+                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                        <DocumentImage label="PAN (Front)" src={documents.pan?.front?.src} />
+                    </Box>
+                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                        <DocumentImage label="PAN (Back)" src={documents.pan?.back?.src} />
+                    </Box>
+                </Box>
             </CardContent>
         </Card>
     );
@@ -208,14 +258,12 @@ const OffboardGuideButton = () => {
     const notify = useNotify();
     const refresh = useRefresh();
     const navigate = useNavigate();
-    
+
     const [isOpen, setIsOpen] = useState(false);
     const [inputValue, setInputValue] = useState('');
     const [isOffboarding, setIsOffboarding] = useState(false);
 
     if (!record) return null;
-
-  
 
     const handleOffboard = async () => {
         setIsOffboarding(true);
@@ -238,64 +286,69 @@ const OffboardGuideButton = () => {
     const isConfirmationValid = inputValue === 'OFFBOARD';
 
     return (
-        <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-            <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm">
-                    <UserX className="mr-2 h-4 w-4" />
-                    Offboard Guide
-                </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
+        <>
+            <Button
+                variant="contained"
+                color="error"
+                size="small"
+                startIcon={<UserX />}
+                onClick={() => setIsOpen(true)}
+            >
+                Offboard Guide
+            </Button>
+            <Dialog open={isOpen} onClose={() => setIsOpen(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>Offboard Guide</DialogTitle>
+                <DialogContent>
+                    <Alert severity="warning" sx={{ mb: 2 }}>
+                        <AlertTitle>Are you absolutely sure?</AlertTitle>
                         This will offboard the guide and change their status. This action can be undone, but will require manual state changes.
                         To confirm, please type <strong>OFFBOARD</strong> in the box below.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <div className="py-4">
-                    <Label htmlFor="offboard-confirm">Confirmation</Label>
-                    <Input
-                        id="offboard-confirm"
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        placeholder="Type OFFBOARD to confirm"
-                        autoFocus
-                    />
-                </div>
-                <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setInputValue('')}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
+                    </Alert>
+                    <Box sx={{ mt: 2 }}>
+                        <TextField
+                            fullWidth
+                            label="Confirmation"
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            placeholder="Type OFFBOARD to confirm"
+                            autoFocus
+                        />
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => { setIsOpen(false); setInputValue(''); }}>
+                        Cancel
+                    </Button>
+                    <Button
                         onClick={handleOffboard}
                         disabled={!isConfirmationValid || isOffboarding}
-                        className="bg-destructive hover:bg-destructive/90"
+                        variant="contained"
+                        color="error"
                     >
                         {isOffboarding ? <CircularProgress size={20} color="inherit" /> : 'Confirm Offboard'}
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </>
     );
 };
 
-// --- NEW: Status & Controls Section with Toggles ---
+// --- Status & Controls Section with Toggles ---
 const StatusControlSection = () => {
     const record = useRecordContext();
     const notify = useNotify();
     const refresh = useRefresh();
     const [update, { isLoading }] = useUpdate();
 
-    // --- FIX IS HERE ---
-    // Add a check to ensure the record is defined before proceeding.
     if (!record) {
         return null;
     }
 
     const handleToggle = (field: string, value: boolean) => {
-        update('guides', { 
-            id: record.id, 
+        update('guides', {
+            id: record.id,
             data: { [field]: value },
-            previousData: record 
+            previousData: record
         }, {
             onSuccess: () => {
                 notify(`Guide ${field} status updated.`, { type: 'success' });
@@ -308,29 +361,64 @@ const StatusControlSection = () => {
     };
 
     return (
-        <Card>
-            <CardHeader><CardTitle>Status & Controls</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <FormControlLabel
-                    control={<Switch checked={record.is_online || false} onChange={(e) => handleToggle('is_online', e.target.checked)} />}
-                    label="Online"
-                    disabled={isLoading}
-                />
-                <FormControlLabel
-                    control={<Switch checked={record.chat_enabled || false} onChange={(e) => handleToggle('chat_enabled', e.target.checked)} />}
-                    label="Chat Enabled"
-                    disabled={isLoading}
-                />
-                <FormControlLabel
-                    control={<Switch checked={record.voice_enabled || false} onChange={(e) => handleToggle('voice_enabled', e.target.checked)} />}
-                    label="Call Enabled"
-                    disabled={isLoading}
-                />
-                <FormControlLabel
-                    control={<Switch checked={record.video_enabled || false} onChange={(e) => handleToggle('video_enabled', e.target.checked)} />}
-                    label="Video Call Enabled"
-                    disabled={isLoading}
-                />
+        <Card sx={{ mb: 3 }}>
+            <Box sx={{ p: 3, pb: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                    Status & Controls
+                </Typography>
+            </Box>
+            <Divider />
+            <CardContent>
+                <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={record.is_online || false}
+                                    onChange={(e) => handleToggle('is_online', e.target.checked)}
+                                />
+                            }
+                            label="Online"
+                            disabled={isLoading}
+                        />
+                    </Box>
+                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={record.chat_enabled || false}
+                                    onChange={(e) => handleToggle('chat_enabled', e.target.checked)}
+                                />
+                            }
+                            label="Chat Enabled"
+                            disabled={isLoading}
+                        />
+                    </Box>
+                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={record.voice_enabled || false}
+                                    onChange={(e) => handleToggle('voice_enabled', e.target.checked)}
+                                />
+                            }
+                            label="Call Enabled"
+                            disabled={isLoading}
+                        />
+                    </Box>
+                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={record.video_enabled || false}
+                                    onChange={(e) => handleToggle('video_enabled', e.target.checked)}
+                                />
+                            }
+                            label="Video Call Enabled"
+                            disabled={isLoading}
+                        />
+                    </Box>
+                </Box>
             </CardContent>
         </Card>
     );
@@ -361,37 +449,46 @@ const BankAccountSummaryCard = ({ guideId }: { guideId: Identifier }) => {
     }, [guideId]);
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Bank Account Details</CardTitle>
-                <CardDescription>Default account for payouts.</CardDescription>
-            </CardHeader>
+        <Card sx={{ mb: 3 }}>
+            <Box sx={{ p: 3, pb: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                    Bank Account Details
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                    Default account for payouts.
+                </Typography>
+            </Box>
+            <Divider />
             <CardContent>
                 {loading ? (
                     <Box display="flex" justifyContent="center"><CircularProgress size={24} /></Box>
                 ) : defaultAccount ? (
-                    <div className="space-y-4">
+                    <Box>
                         <DetailItem label="Bank Name">{defaultAccount.bank_name}</DetailItem>
                         <DetailItem label="Account Number">{maskAccountNumber(defaultAccount.account_number)}</DetailItem>
-                        <Button 
-                            className="w-full mt-4" 
-                            variant="outline" 
+                        <Button
+                            fullWidth
+                            variant="outlined"
+                            sx={{ mt: 2 }}
                             onClick={() => navigate(`/guides/${guideId}/accounts`)}
                         >
-                            <Eye className="mr-2 h-4 w-4" /> View & Manage All Accounts
+                            View & Manage All Accounts
                         </Button>
-                    </div>
+                    </Box>
                 ) : (
-                    <div className="text-center text-muted-foreground py-4">
-                        <Banknote className="mx-auto h-8 w-8 mb-2" />
-                        <p>No bank accounts found.</p>
-                        <Button 
-                            className="w-full mt-4" 
+                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                        <Typography color="textSecondary">
+                            No bank accounts found.
+                        </Typography>
+                        <Button
+                            fullWidth
+                            variant="outlined"
+                            sx={{ mt: 2 }}
                             onClick={() => navigate(`/guides/${guideId}/accounts`)}
                         >
                             Add Bank Account
                         </Button>
-                    </div>
+                    </Box>
                 )}
             </CardContent>
         </Card>
@@ -412,92 +509,133 @@ const GuideShowView = () => {
             <Title title={`Profile: ${record.full_name}`} />
 
             {/* Guide Financials Buttons */}
-            <Card className="mb-6">
-                <CardContent className="pt-6">
-                    <div className="flex gap-3 flex-wrap">
+            <Card sx={{ mb: 3 }}>
+                <CardContent>
+                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                         <Button
                             onClick={() => navigate(`/guide-earnings/${record.id}`)}
-                            variant="outline"
-                            size="sm"
+                            variant="outlined"
+                            size="small"
                         >
-                            <Wallet className="mr-2 h-4 w-4" />
                             View Earnings & Wallet
                         </Button>
                         <Button
                             onClick={() => navigate(`/guide-orders/${record.id}`)}
-                            variant="outline"
-                            size="sm"
+                            variant="outlined"
+                            size="small"
                         >
-                            <History className="mr-2 h-4 w-4" />
                             View Completed Orders
                         </Button>
-                    </div>
+                    </Box>
                 </CardContent>
             </Card>
 
-            <Card className="mb-6">
-                <CardHeader>
-                    <div className="flex justify-between items-start w-full">
-                        <div className="flex items-center gap-4">
-                            <Avatar className="h-20 w-20">
-                                <AvatarImage src={record.profile_picture_url} alt={record.full_name} />
-                                <AvatarFallback>{record.full_name?.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                                <CardTitle className="text-2xl">{record.full_name}</CardTitle>
-                                <div className="flex gap-1 flex-wrap mt-2">
-                                    {(record.skills || []).map((skill: string) => <Badge key={skill} variant="secondary">{skill}</Badge>)}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </CardHeader>
+            <Card sx={{ mb: 3 }}>
+                <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 2 }}>
+                        <Avatar
+                            src={record.profile_picture_url}
+                            alt={record.full_name}
+                            sx={{ width: 80, height: 80 }}
+                        >
+                            {record.full_name?.charAt(0)}
+                        </Avatar>
+                        <Box sx={{ flex: 1 }}>
+                            <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                {record.full_name}
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                {(record.skills || []).map((skill: string, index: number) => (
+                                    <Chip
+                                        key={index}
+                                        label={skill}
+                                        size="small"
+                                        sx={{ bgcolor: 'action.selected' }}
+                                    />
+                                ))}
+                            </Box>
+                        </Box>
+                    </Box>
+                </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 gap-6 mb-6">
-              <StatusControlSection />
-            </div>
+            <Box sx={{ mb: 3 }}>
+                <StatusControlSection />
+            </Box>
 
-            <div className="grid grid-cols-1 gap-6 mb-6">
-              <GuideStatsSection />
-            </div>
+            <Box sx={{ mb: 3 }}>
+                <GuideStatsSection />
+            </Box>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                <div className="lg:col-span-2">
-                  <Card>
-                      <CardHeader><CardTitle>Guide Information</CardTitle></CardHeader>
-                      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <DetailItem label="Phone">{record.phone_number}</DetailItem>
-                          <DetailItem label="Email Address">{record.email || 'Not provided'}</DetailItem>
-                          <DetailItem label="Years of Experience">{record.years_of_experience} years</DetailItem>
-                          <DetailItem label="Languages Spoken">{(record.languages || []).join(', ')}</DetailItem>
-                          <DetailItem label='Rating'>
-                              <span className="text-orange-500 font-semibold">{record.guide_stats?.rating || record.rating || 'N/A'}</span>
-                          </DetailItem>
-                          <DetailItem label="Total Consultations">{record.guide_stats?.total_number_of_completed_consultations || record.number_of_consultation || 0}</DetailItem>
-                          <DetailItem label="Price per Minute">
-                              <span className="text-green-600 font-semibold">₹{record.price_per_minute || 'N/A'}</span>
-                          </DetailItem>
-                          <DetailItem label="Revenue Share">
-                              <span className="font-semibold">{record.revenue_share ? `${record.revenue_share}%` : 'N/A'}</span>
-                          </DetailItem>
-                          <DetailItem label="Tier">{record.tier || 'Standard'}</DetailItem>
-                          <DetailItem label="Onboarded On">
-                              <span>{new Date(record.created_at).toLocaleDateString()}</span>
-                          </DetailItem>
-                          {record.bio && (
-                              <div className="md:col-span-2">
-                                  <DetailItem label="Bio">{record.bio}</DetailItem>
-                              </div>
-                          )}
-                      </CardContent>
-                  </Card>
-                </div>
-                <div>
-                      <BankAccountSummaryCard guideId={record.id} />
-                </div>
-            </div>
-      
+            <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mb: 3 }}>
+                <Box sx={{ flex: "1 1 600px", minWidth: "400px" }}>
+                    <Card>
+                        <Box sx={{ p: 3, pb: 2 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                                Guide Information
+                            </Typography>
+                        </Box>
+                        <Divider />
+                        <CardContent>
+                            <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                    <DetailItem label="Phone">{record.phone_number}</DetailItem>
+                                </Box>
+                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                    <DetailItem label="Email Address">{record.email || 'Not provided'}</DetailItem>
+                                </Box>
+                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                    <DetailItem label="Years of Experience">{record.years_of_experience} years</DetailItem>
+                                </Box>
+                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                    <DetailItem label="Languages Spoken">{(record.languages || []).join(', ')}</DetailItem>
+                                </Box>
+                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                    <DetailItem label='Rating'>
+                                        <Typography sx={{ color: '#ff9800', fontWeight: 600 }}>
+                                            {record.guide_stats?.rating || record.rating || 'N/A'}
+                                        </Typography>
+                                    </DetailItem>
+                                </Box>
+                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                    <DetailItem label="Total Consultations">{record.guide_stats?.total_number_of_completed_consultations || record.number_of_consultation || 0}</DetailItem>
+                                </Box>
+                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                    <DetailItem label="Price per Minute">
+                                        <Typography sx={{ color: '#4caf50', fontWeight: 600 }}>
+                                            ₹{record.price_per_minute || 'N/A'}
+                                        </Typography>
+                                    </DetailItem>
+                                </Box>
+                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                    <DetailItem label="Revenue Share">
+                                        <Typography sx={{ fontWeight: 600 }}>
+                                            {record.revenue_share ? `${record.revenue_share}%` : 'N/A'}
+                                        </Typography>
+                                    </DetailItem>
+                                </Box>
+                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                    <DetailItem label="Tier">{record.tier || 'Standard'}</DetailItem>
+                                </Box>
+                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                    <DetailItem label="Onboarded On">
+                                        {new Date(record.created_at).toLocaleDateString()}
+                                    </DetailItem>
+                                </Box>
+                                {record.bio && (
+                                    <Box sx={{ flex: "1 1 100%" }}>
+                                        <DetailItem label="Bio">{record.bio}</DetailItem>
+                                    </Box>
+                                )}
+                            </Box>
+                        </CardContent>
+                    </Card>
+                </Box>
+                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                    <BankAccountSummaryCard guideId={record.id} />
+                </Box>
+            </Box>
+
             <KycDocumentSection guideId={record.id} />
         </>
     );
@@ -510,8 +648,7 @@ export const GuideShow = () => {
 
     const TopActions = () => (
         <TopToolbar>
-            <Button onClick={() => navigate(-1)} variant="ghost" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" />
+            <Button onClick={() => navigate(-1)} size="small">
                 Back to Guides
             </Button>
 
@@ -520,28 +657,23 @@ export const GuideShow = () => {
                 <>
                     <Button
                         onClick={() => navigate(`/guide-earnings/${record.id}`)}
-                        variant="outline"
-                        size="sm"
-                        className="mr-2"
+                        variant="outlined"
+                        size="small"
+                        sx={{ mr: 1 }}
                     >
-                        <Wallet className="mr-2 h-4 w-4" />
                         Earnings
                     </Button>
                     <Button
                         onClick={() => navigate(`/guide-orders/${record.id}`)}
-                        variant="outline"
-                        size="sm"
-                        className="mr-2"
+                        variant="outlined"
+                        size="small"
+                        sx={{ mr: 1 }}
                     >
-                        <History className="mr-2 h-4 w-4" />
                         Orders
                     </Button>
+                    <OffboardGuideButton />
                 </>
             )}
-
-            <div className="flex-grow" /> {/* This pushes the buttons to the right */}
-            <EditButton />
-            <OffboardGuideButton />
         </TopToolbar>
     );
 

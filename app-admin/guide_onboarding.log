@@ -1,0 +1,18 @@
+Starting guide registration script for 1 specific guides at Fri Dec 26 12:54:53 UTC 2025
+\n==================================================
+Processing Guide 1/1: Aman jain | Phone: 6366597069
+==================================================
+Generating OTP...
+Executing curl (attempt 1/3): curl -s -L --write-out '%{http_code}' https://devazstg.astrokiran.com/auth/api/v1/auth/otp/generate -H
+Success: HTTP Code: 200
+OTP Request ID: cdf281d3-ff49-4c6b-a2b2-00810e0ab968
+Validating OTP...
+Executing curl (attempt 1/3): curl -s -L --write-out '%{http_code}' https://devazstg.astrokiran.com/auth/api/v1/auth/otp/validate -H
+Success: HTTP Code: 200
+Successfully obtained access token.
+Registering guide...
+Executing curl (attempt 1/3): curl -s -L --write-out '%{http_code}' https://devazstg.astrokiran.com/auth/api/v1/guide/register -H
+ERROR: Curl attempt 1/3 failed for https://devazstg.astrokiran.com/auth/api/v1/guide/register. HTTP Code: 409, Body: {"success":false,"error":{"code":"CONFLICT","message":"Resource already exists","details":"Phone number already exists","category":"business_logic"},"timestamp":"2025-12-23T18:04:01Z","trace_id":"016bf197-07ba-4e38-b2ae-ce6e21820227","path":"/api/v1/guide/register","method":"POST"}
+\n--- Script finished at Fri Dec 26 12:54:57 UTC 2025. ---
+Processed 1 guides. Success: 0, Failures: 0
+Cleaned up temporary files.

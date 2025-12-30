@@ -10,30 +10,30 @@ import { useNavigate } from 'react-router-dom';
 import {
     Card,
     CardContent,
-    CardHeader,
-    CardTitle,
-    CardDescription
-} from '../components/ui/card';
-import {
+    Typography,
+    Button,
+    Chip,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
     Table,
     TableBody,
     TableCell,
+    TableContainer,
     TableHead,
-    TableHeader,
     TableRow,
-} from '../components/ui/table';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '../components/ui/dialog';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { FormEvent, useState,useEffect } from 'react';
-import { User, CreditCard, Users, History, Cake,PlusCircle,Clock, MapPin, Languages, Sparkles,ShoppingCart, Pencil, ChevronDown, ChevronRight } from 'lucide-react'; 
-
+    Divider,
+    Box,
+    TextField as MuiTextField,
+    Checkbox,
+    FormControlLabel,
+    IconButton,
+    Collapse,
+    Paper,
+} from '@mui/material';
+import { ExpandLess, ExpandMore } from '@mui/icons-material';
+import { FormEvent, useState, useEffect } from 'react';
 import { httpClient } from '../dataProvider';
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -50,8 +50,8 @@ const CreateProfileForm = ({ onSave, saving }: { onSave: (data: any) => void; sa
 
     const handleSubmit = (event: FormEvent) => {
         event.preventDefault();
-        onSave({ 
-            name, 
+        onSave({
+            name,
             dob: dob || null,
             tob: tob || null,
             birth_city: birthCity,
@@ -61,57 +61,97 @@ const CreateProfileForm = ({ onSave, saving }: { onSave: (data: any) => void; sa
             is_primary: isPrimary,
         });
     };
-    
+
     return (
-       // This form now uses a responsive grid layout
-       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 p-4">
-            <div className="md:col-span-2">
-                <label className="text-sm font-medium">Full Name *</label>
-                <input value={name} onChange={e => setName(e.target.value)} required className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-            <div>
-                <label className="text-sm font-medium">Date of Birth</label>
-                <input type="date" value={dob} onChange={e => setDob(e.target.value)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-            <div>
-                <label className="text-sm font-medium">Time of Birth</label>
-                <input type="time" value={tob} onChange={e => setTob(e.target.value)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-            <div>
-                <label className="text-sm font-medium">Birth City</label>
-                <input value={birthCity} onChange={e => setBirthCity(e.target.value)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-            <div>
-                <label className="text-sm font-medium">Birth Country</label>
-                <input value={birthCountry} onChange={e => setBirthCountry(e.target.value)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-            <div>
-                <label className="text-sm font-medium">Preferred Language</label>
-                <input value={preferredLanguage} onChange={e => setPreferredLanguage(e.target.value)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-             <div>
-                <label className="text-sm font-medium">Zodiac Sign</label>
-                <input value={zodiacSign} onChange={e => setZodiacSign(e.target.value)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-            <div className="md:col-span-2 flex items-center gap-2 mt-2">
-                <input type="checkbox" checked={isPrimary} onChange={e => setIsPrimary(e.target.checked)} id="is_primary" />
-                <label htmlFor="is_primary" className="text-sm font-medium">Set as Primary Profile</label>
-            </div>
-            <div className="md:col-span-2">
-                <Button type="submit" disabled={saving} className="w-full mt-4">
-                    {saving ? 'Saving...' : 'Save Profile'}
-                </Button>
-            </div>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px' }}>
+            <MuiTextField
+                label="Full Name *"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                required
+                fullWidth
+                size="small"
+            />
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ flex: '1 1 300px', minWidth: '250px' }}>
+                    <MuiTextField
+                        label="Date of Birth"
+                        type="date"
+                        value={dob}
+                        onChange={e => setDob(e.target.value)}
+                        fullWidth
+                        size="small"
+                        InputLabelProps={{ shrink: true }}
+                    />
+                </Box>
+                <Box sx={{ flex: '1 1 300px', minWidth: '250px' }}>
+                    <MuiTextField
+                        label="Time of Birth"
+                        type="time"
+                        value={tob}
+                        onChange={e => setTob(e.target.value)}
+                        fullWidth
+                        size="small"
+                        InputLabelProps={{ shrink: true }}
+                    />
+                </Box>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ flex: '1 1 300px', minWidth: '250px' }}>
+                    <MuiTextField
+                        label="Birth City"
+                        value={birthCity}
+                        onChange={e => setBirthCity(e.target.value)}
+                        fullWidth
+                        size="small"
+                    />
+                </Box>
+                <Box sx={{ flex: '1 1 300px', minWidth: '250px' }}>
+                    <MuiTextField
+                        label="Birth Country"
+                        value={birthCountry}
+                        onChange={e => setBirthCountry(e.target.value)}
+                        fullWidth
+                        size="small"
+                    />
+                </Box>
+            </Box>
+            <MuiTextField
+                label="Preferred Language"
+                value={preferredLanguage}
+                onChange={e => setPreferredLanguage(e.target.value)}
+                fullWidth
+                size="small"
+            />
+            <MuiTextField
+                label="Zodiac Sign"
+                value={zodiacSign}
+                onChange={e => setZodiacSign(e.target.value)}
+                fullWidth
+                size="small"
+            />
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={isPrimary}
+                        onChange={e => setIsPrimary(e.target.checked)}
+                    />
+                }
+                label="Set as Primary Profile"
+            />
+            <Button type="submit" disabled={saving} variant="contained" fullWidth>
+                {saving ? 'Saving...' : 'Save Profile'}
+            </Button>
         </form>
     );
-}
+};
 
 
 const ProfilesGrid = () => {
     const record = useRecordContext();
     const notify = useNotify();
     const refresh = useRefresh();
-    
+
     const [isDialogOpen, setDialogOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -124,12 +164,12 @@ const ProfilesGrid = () => {
     const handleSave = (formData: any) => {
         if (!record) return;
         setIsSaving(true);
-        
+
         httpClient(`${API_URL}/api/v1/customers/${record.id}/profile`, {
             method: 'POST',
             body: JSON.stringify(formData),
         })
-        .then(() => {   
+        .then(() => {
             notify('Profile created successfully!', { type: 'success' });
             setDialogOpen(false);
             refresh();
@@ -162,91 +202,110 @@ const ProfilesGrid = () => {
 
   return (
         <Card>
-            <CardHeader>
-                <div className="flex justify-between items-center">
-                    <CardTitle className="flex items-center gap-2">
-                       <Users className="h-5 w-5 text-muted-foreground" />
-                       Associated Profiles
-                    </CardTitle>
-                    <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button variant="outline" size="sm" className="flex items-center gap-1">
-                                <PlusCircle className="h-4 w-4" />
-                                Create New Profile
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Create a New Profile for {record.name}</DialogTitle>
-                            </DialogHeader>
-                            <CreateProfileForm onSave={handleSave} saving={isSaving} />
-                        </DialogContent>
-                    </Dialog>
-                </div>
-            </CardHeader>
             <CardContent>
-                {(!profileData || !profileData.profiles || profileData.profiles.length === 0) ? (
-                    <p>No profiles found for this customer.</p>
-                ) : (
-                    // This grid now displays more detailed profile cards
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                         {profileData.profiles.map((profile: any, index: number) => (
-                            <div key={profile.id || index} className="p-4 border rounded-lg bg-background flex flex-col gap-2 text-sm">
-                                {/* --- Header --- */}
-                                <div className="flex justify-between items-center">
-                                    <h3 className="font-semibold text-base">{profile.name || `Profile #${profile.customer_id}`}</h3>
-                                    {profile.is_primary && <Badge variant="default">Primary</Badge>}
-                                </div>
-                                
-                                <hr className="my-1"/>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="h6">Associated Profiles</Typography>
+                    </Box>
+                    <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => setDialogOpen(true)}
+                        startIcon={<span style={{ fontSize: '16px' }}>+</span>}
+                    >
+                        Create New Profile
+                    </Button>
+                </Box>
+                <Dialog open={isDialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+                    <DialogTitle>Create a New Profile for {record.name}</DialogTitle>
+                    <DialogContent>
+                        <CreateProfileForm onSave={handleSave} saving={isSaving} />
+                    </DialogContent>
+                </Dialog>
 
-                                {/* --- Details Section --- */}
-                                <div className="space-y-2 text-muted-foreground">
-                                    <div className="flex items-center gap-2">
-                                        <Cake className="h-4 w-4" />
-                                        <span><strong>DOB:</strong> {profile.dob ? new Date(profile.dob).toLocaleDateString() : 'N/A'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="h-4 w-4" />
-                                        <span><strong>TOB:</strong> {profile.tob || 'N/A'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <MapPin className="h-4 w-4" />
-                                        <span><strong>Birth Place:</strong> {`${profile.birth_city || ''}${profile.birth_country ? ', ' + profile.birth_country : ''}` || 'N/A'}</span>
-                                    </div>
-                                     <div className="flex items-center gap-2">
-                                        <Languages className="h-4 w-4" />
-                                        <span><strong>Language:</strong> {profile.preferred_language || 'N/A'}</span>
-                                    </div>
-                                     <div className="flex items-center gap-2">
-                                        <Sparkles className="h-4 w-4" />
-                                        <span><strong>Zodiac:</strong> {profile.zodiac_sign || 'N/A'}</span>
-                                    </div>
-                                </div>
-                                
-                                {/* --- Footer with Creation Date --- */}
-                                <div className="text-xs text-muted-foreground mt-auto pt-2 text-right">
-                                    Created: {new Date(profile.created_at).toLocaleString()}
-                                </div>
-                                <div className="mt-auto pt-2 flex justify-end">
-                                    <Button variant="secondary" size="sm" className="flex items-center gap-1" onClick={() => setEditingProfile(profile)}>
-                                        <Pencil className="h-3 w-3" />
-                                        Edit
-                                    </Button>
-                                </div>
-                            </div>
+                {(!profileData || !profileData.profiles || profileData.profiles.length === 0) ? (
+                    <Typography color="textSecondary">No profiles found for this customer.</Typography>
+                ) : (
+                    <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                         {profileData.profiles.map((profile: any, index: number) => (
+                            <Box sx={{ flex: "1 1 300px", minWidth: "250px" }} key={profile.id || index}>
+                                <Paper
+                                    sx={{
+                                        p: 2,
+                                        height: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: 1,
+                                        bgcolor: 'background.paper',
+                                        border: 1,
+                                        borderColor: 'divider',
+                                    }}
+                                >
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Typography variant="subtitle1" fontWeight="-semibold">
+                                            {profile.name || `Profile #${profile.customer_id}`}
+                                        </Typography>
+                                        {profile.is_primary && (
+                                            <Chip label="Primary" color="primary" size="small" />
+                                        )}
+                                    </Box>
+
+                                    <Divider />
+
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, color: 'text.secondary' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Typography variant="body2">
+                                                <strong>DOB:</strong> {profile.dob ? new Date(profile.dob).toLocaleDateString() : 'N/A'}
+                                            </Typography>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Typography variant="body2">
+                                                <strong>TOB:</strong> {profile.tob || 'N/A'}
+                                            </Typography>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Typography variant="body2">
+                                                <strong>Birth Place:</strong> {`${profile.birth_city || ''}${profile.birth_country ? ', ' + profile.birth_country : ''}` || 'N/A'}
+                                            </Typography>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Typography variant="body2">
+                                                <strong>Language:</strong> {profile.preferred_language || 'N/A'}
+                                            </Typography>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Typography variant="body2">
+                                                <strong>Zodiac:</strong> {profile.zodiac_sign || 'N/A'}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+
+                                    <Box sx={{ mt: 'auto', pt: 1, textAlign: 'right' }}>
+                                        <Typography variant="caption" color="textSecondary">
+                                            Created: {new Date(profile.created_at).toLocaleString()}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ mt: 'auto', pt: 1, display: 'flex', justifyContent: 'flex-end' }}>
+                                        <Button
+                                            variant="text"
+                                            size="small"
+                                            onClick={() => setEditingProfile(profile)}
+                                        >
+                                            Edit
+                                        </Button>
+                                    </Box>
+                                </Paper>
+                            </Box>
                         ))}
-                    </div>
+                    </Box>
                 )}
             </CardContent>
-            <Dialog open={!!editingProfile} onOpenChange={(isOpen) => !isOpen && setEditingProfile(null)}>
+            <Dialog open={!!editingProfile} onClose={() => setEditingProfile(null)} maxWidth="sm" fullWidth>
+                <DialogTitle>Edit Profile for {record.name}</DialogTitle>
                 <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Edit Profile for {record.name}</DialogTitle>
-                    </DialogHeader>
-                    <UpdateProfileForm 
-                        profile={editingProfile} 
-                        onSave={handleUpdateSave} 
+                    <UpdateProfileForm
+                        profile={editingProfile}
+                        onSave={handleUpdateSave}
                         onCancel={() => setEditingProfile(null)}
                         saving={isSaving}
                     />
@@ -325,142 +384,271 @@ const CustomerPaymentOrders = ({ customerId }: { customerId: number }) => {
 
     const stats = getPaymentOrderStats();
 
-    const getOrderStatusColor = (status: string) => {
+    const getOrderStatusColor = (status: string): "success" | "error" | "warning" | "default" => {
         switch (status?.toLowerCase()) {
             case 'successful':
-                return 'text-green-600';
+                return 'success';
             case 'failed':
-                return 'text-red-600';
+                return 'error';
             case 'pending':
-                return 'text-yellow-600';
+                return 'warning';
             default:
-                return 'text-gray-600';
+                return 'default';
         }
     };
 
     return (
-        <div>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Payment Order ID</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Date</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {isLoading ? (
-                         <TableRow><TableCell colSpan={4} className="text-center">Loading payment orders...</TableCell></TableRow>
-                    ) : orders.length > 0 ? (
-                        orders.map((order: any) => (
-                            <TableRow key={order.id || order.payment_order_id}>
-                                <TableCell>
-                                    <button
-                                        onClick={() => handlePaymentOrderClick(order.id || order.payment_order_id)}
-                                        className="text-blue-600 hover:text-blue-800 hover:underline font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
-                                        title="Click to view payment order details"
-                                    >
-                                        #{order.id || order.payment_order_id}
-                                    </button>
-                                </TableCell>
-                                <TableCell>
-                                    <Badge variant={order.status?.toLowerCase() === 'successful' ? 'default' : 'secondary'}>
-                                        {order.status}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="font-medium">
-                                    ₹{parseFloat(order.amount || '0').toFixed(2)}
-                                </TableCell>
-                                <TableCell>{new Date(order.created_at).toLocaleString()}</TableCell>
-                            </TableRow>
-                        ))
-                    ) : (
-                         <TableRow><TableCell colSpan={4} className="text-center">No payment orders found.</TableCell></TableRow>
-                    )}
-                </TableBody>
-            </Table>
+        <Box>
+            <TableContainer component={Box} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}>
+                <Table sx={{ minWidth: 650 }}>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell sx={{ fontWeight: 'bold', width: '25%', whiteSpace: 'nowrap' }}>Payment Order ID</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', width: '20%', whiteSpace: 'nowrap' }}>Status</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', width: '15%', whiteSpace: 'nowrap' }}>Amount</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', width: '40%', whiteSpace: 'nowrap' }}>Date</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {isLoading ? (
+                             <TableRow><TableCell colSpan={4} align="center">Loading payment orders...</TableCell></TableRow>
+                        ) : orders.length > 0 ? (
+                            orders.map((order: any) => (
+                                <TableRow key={order.id || order.payment_order_id} hover>
+                                    <TableCell component="th" scope="row">
+                                        <Button
+                                            onClick={() => handlePaymentOrderClick(order.id || order.payment_order_id)}
+                                            sx={{ color: 'primary.main', fontWeight: 500, textTransform: 'none' }}
+                                        >
+                                            #{order.id || order.payment_order_id}
+                                        </Button>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Chip
+                                            label={order.status}
+                                            color={getOrderStatusColor(order.status)}
+                                            size="small"
+                                        />
+                                    </TableCell>
+                                    <TableCell sx={{ fontWeight: 500 }}>
+                                        ₹{parseFloat(order.amount || '0').toFixed(2)}
+                                    </TableCell>
+                                    <TableCell>{new Date(order.created_at).toLocaleString()}</TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                             <TableRow><TableCell colSpan={4} align="center">No payment orders found.</TableCell></TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </TableContainer>
 
             {/* Payment Order Statistics Summary */}
-            <div className="mt-4 border-t bg-gray-50 p-4 rounded-lg">
-                <div className="space-y-4">
-                    <h3 className="font-semibold text-sm text-gray-700 uppercase tracking-wider">Payment Order Summary</h3>
+            <Paper
+                sx={{
+                    mt: 2,
+                    p: 3,
+                    borderTop: 1,
+                    borderColor: 'divider',
+                    bgcolor: 'action.hover'
+                }}
+            >
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+                        Payment Order Summary
+                    </Typography>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
                         {/* Total Payment Orders */}
-                        <div className="text-center p-3 bg-white rounded-lg border">
-                            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-                            <div className="text-xs text-gray-500 font-medium">Total Orders</div>
-                        </div>
+                        <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                            <Paper
+                                sx={{
+                                    p: 2,
+                                    textAlign: 'center',
+                                    bgcolor: 'background.paper',
+                                    border: 1,
+                                    borderColor: 'divider',
+                                }}
+                            >
+                                <Typography variant="h4" fontWeight="bold" color="textPrimary">
+                                    {stats.total}
+                                </Typography>
+                                <Typography variant="caption" color="textSecondary" fontWeight="medium">
+                                    Total Orders
+                                </Typography>
+                            </Paper>
+                        </Box>
 
                         {/* Successful Orders */}
-                        <div className="text-center p-3 bg-white rounded-lg border">
-                            <div className="text-2xl font-bold text-green-600">{stats.successful}</div>
-                            <div className="text-xs text-gray-500 font-medium">Successful ({stats.successfulPercentage}%)</div>
-                        </div>
+                        <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                            <Paper
+                                sx={{
+                                    p: 2,
+                                    textAlign: 'center',
+                                    bgcolor: 'background.paper',
+                                    border: 1,
+                                    borderColor: 'divider',
+                                }}
+                            >
+                                <Typography variant="h4" fontWeight="bold" color="success.main">
+                                    {stats.successful}
+                                </Typography>
+                                <Typography variant="caption" color="textSecondary" fontWeight="medium">
+                                    Successful ({stats.successfulPercentage}%)
+                                </Typography>
+                            </Paper>
+                        </Box>
 
                         {/* Failed Orders */}
-                        <div className="text-center p-3 bg-white rounded-lg border">
-                            <div className="text-2xl font-bold text-red-600">{stats.failed}</div>
-                            <div className="text-xs text-gray-500 font-medium">Failed ({stats.failedPercentage}%)</div>
-                        </div>
+                        <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                            <Paper
+                                sx={{
+                                    p: 2,
+                                    textAlign: 'center',
+                                    bgcolor: 'background.paper',
+                                    border: 1,
+                                    borderColor: 'divider',
+                                }}
+                            >
+                                <Typography variant="h4" fontWeight="bold" color="error.main">
+                                    {stats.failed}
+                                </Typography>
+                                <Typography variant="caption" color="textSecondary" fontWeight="medium">
+                                    Failed ({stats.failedPercentage}%)
+                                </Typography>
+                            </Paper>
+                        </Box>
 
                         {/* Pending Orders */}
-                        <div className="text-center p-3 bg-white rounded-lg border">
-                            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-                            <div className="text-xs text-gray-500 font-medium">Pending ({stats.pendingPercentage}%)</div>
-                        </div>
-                    </div>
+                        <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                            <Paper
+                                sx={{
+                                    p: 2,
+                                    textAlign: 'center',
+                                    bgcolor: 'background.paper',
+                                    border: 1,
+                                    borderColor: 'divider',
+                                }}
+                            >
+                                <Typography variant="h4" fontWeight="bold" color="warning.main">
+                                    {stats.pending}
+                                </Typography>
+                                <Typography variant="caption" color="textSecondary" fontWeight="medium">
+                                    Pending ({stats.pendingPercentage}%)
+                                </Typography>
+                            </Paper>
+                        </Box>
+                    </Box>
 
                     {/* Amount Summary */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="text-center p-3 bg-white rounded-lg border">
-                            <div className="text-2xl font-bold text-blue-600">
-                                ₹{stats.totalAmount.toFixed(2)}
-                            </div>
-                            <div className="text-xs text-gray-500 font-medium">Total Amount (All Orders)</div>
-                        </div>
+                    <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                        <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                            <Paper
+                                sx={{
+                                    p: 2,
+                                    textAlign: 'center',
+                                    bgcolor: 'background.paper',
+                                    border: 1,
+                                    borderColor: 'divider',
+                                }}
+                            >
+                                <Typography variant="h4" fontWeight="bold" color="primary.main">
+                                    ₹{stats.totalAmount.toFixed(2)}
+                                </Typography>
+                                <Typography variant="caption" color="textSecondary" fontWeight="medium">
+                                    Total Amount (All Orders)
+                                </Typography>
+                            </Paper>
+                        </Box>
 
-                        <div className="text-center p-3 bg-white rounded-lg border">
-                            <div className="text-2xl font-bold text-green-600">
-                                ₹{stats.successfulAmount.toFixed(2)}
-                            </div>
-                            <div className="text-xs text-gray-500 font-medium">Amount from Successful Orders</div>
-                        </div>
-                    </div>
+                        <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                            <Paper
+                                sx={{
+                                    p: 2,
+                                    textAlign: 'center',
+                                    bgcolor: 'background.paper',
+                                    border: 1,
+                                    borderColor: 'divider',
+                                }}
+                            >
+                                <Typography variant="h4" fontWeight="bold" color="success.main">
+                                    ₹{stats.successfulAmount.toFixed(2)}
+                                </Typography>
+                                <Typography variant="caption" color="textSecondary" fontWeight="medium">
+                                    Amount from Successful Orders
+                                </Typography>
+                            </Paper>
+                        </Box>
+                    </Box>
 
                     {/* Visual Status Bar */}
                     {stats.total > 0 && (
-                        <div className="w-full bg-gray-200 rounded-full h-8 overflow-hidden flex">
+                        <Box
+                            sx={{
+                                width: '100%',
+                                height: 32,
+                                bgcolor: 'divider',
+                                borderRadius: 16,
+                                overflow: 'hidden',
+                                display: 'flex',
+                            }}
+                        >
                             {stats.successful > 0 && (
-                                <div
-                                    className="bg-green-500 h-full flex items-center justify-center text-white text-xs font-medium"
-                                    style={{ width: `${stats.successfulPercentage}%` }}
+                                <Box
+                                    sx={{
+                                        bgcolor: 'success.main',
+                                        height: '100%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: 'white',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 'medium',
+                                        width: `${stats.successfulPercentage}%`,
+                                    }}
                                 >
                                     {stats.successfulPercentage}%
-                                </div>
+                                </Box>
                             )}
                             {stats.failed > 0 && (
-                                <div
-                                    className="bg-red-500 h-full flex items-center justify-center text-white text-xs font-medium"
-                                    style={{ width: `${stats.failedPercentage}%` }}
+                                <Box
+                                    sx={{
+                                        bgcolor: 'error.main',
+                                        height: '100%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: 'white',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 'medium',
+                                        width: `${stats.failedPercentage}%`,
+                                    }}
                                 >
                                     {stats.failedPercentage}%
-                                </div>
+                                </Box>
                             )}
                             {stats.pending > 0 && (
-                                <div
-                                    className="bg-yellow-500 h-full flex items-center justify-center text-white text-xs font-medium"
-                                    style={{ width: `${stats.pendingPercentage}%` }}
+                                <Box
+                                    sx={{
+                                        bgcolor: 'warning.main',
+                                        height: '100%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: 'white',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 'medium',
+                                        width: `${stats.pendingPercentage}%`,
+                                    }}
                                 >
                                     {stats.pendingPercentage}%
-                                </div>
+                                </Box>
                             )}
-                        </div>
+                        </Box>
                     )}
-                </div>
-            </div>
-        </div>
+                </Box>
+            </Paper>
+        </Box>
     );
 };
 
@@ -474,28 +662,30 @@ const CollapsibleSection = ({ title, icon, children, defaultOpen = false }: {
     const [isOpen, setIsOpen] = useState(defaultOpen);
 
     return (
-        <Card className="mt-6">
-            <CardHeader
-                className="cursor-pointer hover:bg-gray-50 transition-colors"
+        <Card sx={{ mt: 3 }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    p: 2,
+                    cursor: 'pointer',
+                    '&:hover': { bgcolor: 'action.hover' },
+                    transition: 'background-color 0.2s',
+                }}
                 onClick={() => setIsOpen(!isOpen)}
             >
-                <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        {icon}
-                        {title}
-                    </div>
-                    {isOpen ? (
-                        <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                    ) : (
-                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    )}
-                </CardTitle>
-            </CardHeader>
-            {isOpen && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {icon}
+                    <Typography variant="h6">{title}</Typography>
+                </Box>
+                {isOpen ? <ExpandLess color="action" /> : <ExpandMore color="action" />}
+            </Box>
+            <Collapse in={isOpen}>
                 <CardContent>
                     {children}
                 </CardContent>
-            )}
+            </Collapse>
         </Card>
     );
 };
@@ -517,24 +707,34 @@ const WalletBalance = ({ customerId }: { customerId: number }) => {
     }, [customerId, notify]);
 
     const formatCurrency = (value: string | number | undefined) => parseFloat(String(value || '0')).toFixed(2);
-    
-    if (isLoading) return <p>Loading balance...</p>;
+
+    if (isLoading) return <Typography>Loading balance...</Typography>;
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center p-4 border rounded-lg bg-background mb-6">
-            <div>
-                <p className="text-sm text-muted-foreground">Real Cash</p>
-                <p className="text-2xl font-bold">₹{formatCurrency(balanceData?.real_cash)}</p>
-            </div>
-            <div>
-                <p className="text-sm text-muted-foreground">Virtual Cash</p>
-                <p className="text-2xl font-bold">₹{formatCurrency(balanceData?.virtual_cash)}</p>
-            </div>
-            <div className="border-l-0 md:border-l pl-0 md:pl-4">
-                <p className="text-sm font-bold text-primary">Total Balance</p>
-                <p className="text-2xl font-bold text-primary">₹{formatCurrency(balanceData?.cumulative_sum)}</p>
-            </div>
-        </div>
+        <Paper
+            sx={{
+                p: 3,
+                mb: 3,
+                bgcolor: 'background.paper',
+                border: 1,
+                borderColor: 'divider',
+            }}
+        >
+            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", textAlign: "center" }}>
+                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                    <Typography variant="body2" color="textSecondary">Real Cash</Typography>
+                    <Typography variant="h5" fontWeight="bold">₹{formatCurrency(balanceData?.real_cash)}</Typography>
+                </Box>
+                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                    <Typography variant="body2" color="textSecondary">Virtual Cash</Typography>
+                    <Typography variant="h5" fontWeight="bold">₹{formatCurrency(balanceData?.virtual_cash)}</Typography>
+                </Box>
+                <Box sx={{ flex: "1 1 300px", minWidth: "250px", borderLeft: { md: 1 }, borderColor: 'divider', pl: { md: 2 } }}>
+                    <Typography variant="body2" fontWeight="bold" color="primary">Total Balance</Typography>
+                    <Typography variant="h5" fontWeight="bold" color="primary">₹{formatCurrency(balanceData?.cumulative_sum)}</Typography>
+                </Box>
+            </Box>
+        </Paper>
     );
 };
 
@@ -546,7 +746,7 @@ const UpdateProfileForm = ({ profile, onSave, onCancel, saving }: { profile: any
     const [birthCountry, setBirthCountry] = useState('');
     const [preferredLanguage, setPreferredLanguage] = useState('');
     const [zodiacSign, setZodiacSign] = useState('');
-    
+
 
     // This effect pre-fills the form when the component loads with profile data
     useEffect(() => {
@@ -564,8 +764,8 @@ const UpdateProfileForm = ({ profile, onSave, onCancel, saving }: { profile: any
 
     const handleSubmit = (event: FormEvent) => {
         event.preventDefault();
-        onSave({ 
-            name, 
+        onSave({
+            name,
             dob: dob || null,
             tob: tob || null,
             birth_city: birthCity,
@@ -574,43 +774,85 @@ const UpdateProfileForm = ({ profile, onSave, onCancel, saving }: { profile: any
             zodiac_sign: zodiacSign,
         });
     };
-    
+
     return (
-       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 p-4">
-            <div className="md:col-span-2">
-                <label className="text-sm font-medium">Full Name *</label>
-                <input value={name} onChange={e => setName(e.target.value)} required className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-            <div>
-                <label className="text-sm font-medium">Date of Birth</label>
-                <input type="date" value={dob} onChange={e => setDob(e.target.value)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-            <div>
-                <label className="text-sm font-medium">Time of Birth</label>
-                <input type="time" value={tob} onChange={e => setTob(e.target.value)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-            <div className="md:col-span-2">
-                <label className="text-sm font-medium">Birth City</label>
-                <input value={birthCity} onChange={e => setBirthCity(e.target.value)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-            <div className="md:col-span-2">
-                <label className="text-sm font-medium">Birth Country</label>
-                <input value={birthCountry} onChange={e => setBirthCountry(e.target.value)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-            <div className="md:col-span-2">
-                <label className="text-sm font-medium">Preferred Language</label>
-                <input value={preferredLanguage} onChange={e => setPreferredLanguage(e.target.value)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-            <div className="md:col-span-2">
-                <label className="text-sm font-medium">Zodiac Sign</label>
-                <input value={zodiacSign} onChange={e => setZodiacSign(e.target.value)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-            <div className="md:col-span-2 flex justify-end gap-2 mt-4">
-                <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
-                <Button type="submit" disabled={saving}>
-                    {saving ? 'Saving...' : 'Save Changes'}
-                </Button>
-            </div>
+       <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
+            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", p: 2 }}>
+                <Box sx={{ flex: "1 1 100%" }}>
+                    <MuiTextField
+                        label="Full Name *"
+                        value={name}
+                        onChange={e => setName(e.target.value)}
+                        required
+                        fullWidth
+                        size="small"
+                    />
+                </Box>
+                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                    <MuiTextField
+                        label="Date of Birth"
+                        type="date"
+                        value={dob}
+                        onChange={e => setDob(e.target.value)}
+                        fullWidth
+                        size="small"
+                        InputLabelProps={{ shrink: true }}
+                    />
+                </Box>
+                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                    <MuiTextField
+                        label="Time of Birth"
+                        type="time"
+                        value={tob}
+                        onChange={e => setTob(e.target.value)}
+                        fullWidth
+                        size="small"
+                        InputLabelProps={{ shrink: true }}
+                    />
+                </Box>
+                <Box sx={{ flex: "1 1 100%" }}>
+                    <MuiTextField
+                        label="Birth City"
+                        value={birthCity}
+                        onChange={e => setBirthCity(e.target.value)}
+                        fullWidth
+                        size="small"
+                    />
+                </Box>
+                <Box sx={{ flex: "1 1 100%" }}>
+                    <MuiTextField
+                        label="Birth Country"
+                        value={birthCountry}
+                        onChange={e => setBirthCountry(e.target.value)}
+                        fullWidth
+                        size="small"
+                    />
+                </Box>
+                <Box sx={{ flex: "1 1 100%" }}>
+                    <MuiTextField
+                        label="Preferred Language"
+                        value={preferredLanguage}
+                        onChange={e => setPreferredLanguage(e.target.value)}
+                        fullWidth
+                        size="small"
+                    />
+                </Box>
+                <Box sx={{ flex: "1 1 100%" }}>
+                    <MuiTextField
+                        label="Zodiac Sign"
+                        value={zodiacSign}
+                        onChange={e => setZodiacSign(e.target.value)}
+                        fullWidth
+                        size="small"
+                    />
+                </Box>
+                <Box sx={{ flex: "1 1 100%", display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
+                    <Button type="button" onClick={onCancel}>Cancel</Button>
+                    <Button type="submit" variant="contained" disabled={saving}>
+                        {saving ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                </Box>
+            </Box>
         </form>
     );
 }
@@ -633,65 +875,66 @@ const WalletTransactions = ({ customerId }: { customerId: number }) => {
     const getTransactionStyle = (type: string) => {
         switch (type.toUpperCase()) {
             case 'ADD':
-                return { text: 'Credit', variant: 'default' as const, color: 'text-green-600' };
+                return { text: 'Credit', color: 'success' as const };
             // Add other types like 'DEDUCT', 'SUBTRACT', 'SPEND' here
             case 'DEDUCT':
             case 'SPEND':
-                return { text: 'Debit', variant: 'destructive' as const, color: 'text-red-600' };
+                return { text: 'Debit', color: 'error' as const };
             default:
-                return { text: type, variant: 'secondary' as const, color: 'text-gray-600' };
+                return { text: type, color: 'default' as const };
         }
     };
 
     return (
-        <div className="mt-6">
-            <h3 className="font-semibold mb-2 flex items-center gap-2">
-                <History className="h-4 w-4 text-muted-foreground" />
+        <Box sx={{ mt: 3 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
                 Transaction History
-            </h3>
-            <div className="border rounded-md">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Details</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {isLoading ? (
-                            <TableRow><TableCell colSpan={3} className="text-center">Loading transactions...</TableCell></TableRow>
-                        ) : transactions.length > 0 ? (
-                            transactions.map((tx: any) => {
-                                const style = getTransactionStyle(tx.type);
-                                return (
-                                    <TableRow key={tx.transaction_id}>
-                                        <TableCell>
-                                            {/* Show the descriptive comment */}
-                                            <p className="font-medium">{tx.comment}</p>
-                                            {/* Show the date underneath */}
-                                            <p className="text-xs text-muted-foreground">
-                                                {new Date(tx.created_at).toLocaleString()}
-                                            </p>
-                                        </TableCell>
-                                        <TableCell>
-                                            {/* Show a colored badge for the type */}
-                                            <Badge variant={style.variant}>{style.text}</Badge>
-                                        </TableCell>
-                                        <TableCell className={`text-right font-medium ${style.color}`}>
-                                            {/* Add a +/- sign and format the amount */}
-                                            {style.text === 'Credit' ? '+' : '-'} ₹{parseFloat(tx.amount).toFixed(2)}
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })
-                        ) : (
-                            <TableRow><TableCell colSpan={3} className="text-center">No transactions found.</TableCell></TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
-        </div>
+            </Typography>
+            <Paper sx={{ border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}>
+                <TableContainer sx={{ overflowX: 'auto' }}>
+                    <Table sx={{ minWidth: 600 }}>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 'bold', width: '50%', whiteSpace: 'nowrap' }}>Details</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', width: '25%', whiteSpace: 'nowrap' }}>Type</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', width: '25%', whiteSpace: 'nowrap' }} align="right">Amount</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {isLoading ? (
+                                <TableRow><TableCell colSpan={3} align="center">Loading transactions...</TableCell></TableRow>
+                            ) : transactions.length > 0 ? (
+                                transactions.map((tx: any) => {
+                                    const style = getTransactionStyle(tx.type);
+                                    return (
+                                        <TableRow key={tx.transaction_id} hover>
+                                            <TableCell>
+                                                {/* Show the descriptive comment */}
+                                                <Typography variant="body2" fontWeight="medium">{tx.comment}</Typography>
+                                                {/* Show the date underneath */}
+                                                <Typography variant="caption" color="textSecondary">
+                                                    {new Date(tx.created_at).toLocaleString()}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                {/* Show a colored badge for the type */}
+                                                <Chip label={style.text} color={style.color} size="small" />
+                                            </TableCell>
+                                            <TableCell align="right" sx={{ fontWeight: 'medium', color: `${style.color}.main` }}>
+                                                {/* Add a +/- sign and format the amount */}
+                                                {style.text === 'Credit' ? '+' : '-'} ₹{parseFloat(tx.amount).toFixed(2)}
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })
+                            ) : (
+                                <TableRow><TableCell colSpan={3} align="center">No transactions found.</TableCell></TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </Paper>
+        </Box>
     );
 };
 
@@ -758,115 +1001,248 @@ const CustomerOrders = ({ customerId }: { customerId: number }) => {
     const stats = getOrderStats();
 
     return (
-        <div>
-            <Table>
-                <TableHeader><TableRow><TableHead>Order ID</TableHead><TableHead>Status</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
-                <TableBody>
-                    {isLoading ? (
-                         <TableRow><TableCell colSpan={3} className="text-center">Loading orders...</TableCell></TableRow>
-                    ) : orders.length > 0 ? (
-                        orders.map((order: any) => (
-                            <TableRow key={order.order_id}>
-                                <TableCell>
-                                    <button
-                                        onClick={() => handleOrderClick(order.order_id)}
-                                        className="text-blue-600 hover:text-blue-800 hover:underline font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
-                                        title="Click to view order details"
-                                    >
-                                        #{order.order_id}
-                                    </button>
-                                </TableCell>
-                                <TableCell><Badge>{order.status}</Badge></TableCell>
-                                <TableCell>{new Date(order.created_at).toLocaleString()}</TableCell>
-                            </TableRow>
-                        ))
-                    ) : (
-                         <TableRow><TableCell colSpan={3} className="text-center">No orders found.</TableCell></TableRow>
-                    )}
-                </TableBody>
-            </Table>
+        <Box>
+            <TableContainer component={Box} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}>
+                <Table sx={{ minWidth: 600 }}>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell sx={{ fontWeight: 'bold', width: '35%', whiteSpace: 'nowrap' }}>Order ID</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', width: '25%', whiteSpace: 'nowrap' }}>Status</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', width: '40%', whiteSpace: 'nowrap' }}>Date</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {isLoading ? (
+                             <TableRow><TableCell colSpan={3} align="center">Loading orders...</TableCell></TableRow>
+                        ) : orders.length > 0 ? (
+                            orders.map((order: any) => (
+                                <TableRow key={order.order_id} hover>
+                                    <TableCell component="th" scope="row">
+                                        <Button
+                                            onClick={() => handleOrderClick(order.order_id)}
+                                            sx={{ color: 'primary.main', fontWeight: 500, textTransform: 'none' }}
+                                        >
+                                            #{order.order_id}
+                                        </Button>
+                                    </TableCell>
+                                    <TableCell><Chip label={order.status} size="small" /></TableCell>
+                                    <TableCell>{new Date(order.created_at).toLocaleString()}</TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                             <TableRow><TableCell colSpan={3} align="center">No orders found.</TableCell></TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </TableContainer>
 
             {/* Order Statistics Summary */}
-            <div className="mt-4 border-t bg-gray-50 p-4 rounded-lg">
-                <div className="space-y-4">
-                    <h3 className="font-semibold text-sm text-gray-700 uppercase tracking-wider">Order Summary</h3>
+            <Paper
+                sx={{
+                    mt: 2,
+                    p: 3,
+                    borderTop: 1,
+                    borderColor: 'divider',
+                    bgcolor: 'action.hover'
+                }}
+            >
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+                        Order Summary
+                    </Typography>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
                         {/* Total Orders */}
-                        <div className="text-center p-3 bg-white rounded-lg border">
-                            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-                            <div className="text-xs text-gray-500 font-medium">Total Orders</div>
-                        </div>
+                        <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                            <Paper
+                                sx={{
+                                    p: 2,
+                                    textAlign: 'center',
+                                    bgcolor: 'background.paper',
+                                    border: 1,
+                                    borderColor: 'divider',
+                                }}
+                            >
+                                <Typography variant="h4" fontWeight="bold" color="textPrimary">
+                                    {stats.total}
+                                </Typography>
+                                <Typography variant="caption" color="textSecondary" fontWeight="medium">
+                                    Total Orders
+                                </Typography>
+                            </Paper>
+                        </Box>
 
                         {/* Completed Orders */}
-                        <div className="text-center p-3 bg-white rounded-lg border">
-                            <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
-                            <div className="text-xs text-gray-500 font-medium">Completed ({stats.completedPercentage}%)</div>
-                        </div>
+                        <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                            <Paper
+                                sx={{
+                                    p: 2,
+                                    textAlign: 'center',
+                                    bgcolor: 'background.paper',
+                                    border: 1,
+                                    borderColor: 'divider',
+                                }}
+                            >
+                                <Typography variant="h4" fontWeight="bold" color="success.main">
+                                    {stats.completed}
+                                </Typography>
+                                <Typography variant="caption" color="textSecondary" fontWeight="medium">
+                                    Completed ({stats.completedPercentage}%)
+                                </Typography>
+                            </Paper>
+                        </Box>
 
                         {/* Cancelled Orders */}
-                        <div className="text-center p-3 bg-white rounded-lg border">
-                            <div className="text-2xl font-bold text-red-600">{stats.cancelled}</div>
-                            <div className="text-xs text-gray-500 font-medium">Cancelled ({stats.cancelledPercentage}%)</div>
-                        </div>
+                        <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                            <Paper
+                                sx={{
+                                    p: 2,
+                                    textAlign: 'center',
+                                    bgcolor: 'background.paper',
+                                    border: 1,
+                                    borderColor: 'divider',
+                                }}
+                            >
+                                <Typography variant="h4" fontWeight="bold" color="error.main">
+                                    {stats.cancelled}
+                                </Typography>
+                                <Typography variant="caption" color="textSecondary" fontWeight="medium">
+                                    Cancelled ({stats.cancelledPercentage}%)
+                                </Typography>
+                            </Paper>
+                        </Box>
 
                         {/* Pending Orders */}
-                        <div className="text-center p-3 bg-white rounded-lg border">
-                            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-                            <div className="text-xs text-gray-500 font-medium">Other Status</div>
-                        </div>
-                    </div>
+                        <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                            <Paper
+                                sx={{
+                                    p: 2,
+                                    textAlign: 'center',
+                                    bgcolor: 'background.paper',
+                                    border: 1,
+                                    borderColor: 'divider',
+                                }}
+                            >
+                                <Typography variant="h4" fontWeight="bold" color="warning.main">
+                                    {stats.pending}
+                                </Typography>
+                                <Typography variant="caption" color="textSecondary" fontWeight="medium">
+                                    Other Status
+                                </Typography>
+                            </Paper>
+                        </Box>
+                    </Box>
 
                     {/* Revenue Summary */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="text-center p-3 bg-white rounded-lg border">
-                            <div className="text-2xl font-bold text-blue-600">
-                                ₹{stats.totalRevenue.toFixed(2)}
-                            </div>
-                            <div className="text-xs text-gray-500 font-medium">Total Revenue (All Orders)</div>
-                        </div>
+                    <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                        <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                            <Paper
+                                sx={{
+                                    p: 2,
+                                    textAlign: 'center',
+                                    bgcolor: 'background.paper',
+                                    border: 1,
+                                    borderColor: 'divider',
+                                }}
+                            >
+                                <Typography variant="h4" fontWeight="bold" color="primary.main">
+                                    ₹{stats.totalRevenue.toFixed(2)}
+                                </Typography>
+                                <Typography variant="caption" color="textSecondary" fontWeight="medium">
+                                    Total Revenue (All Orders)
+                                </Typography>
+                            </Paper>
+                        </Box>
 
-                        <div className="text-center p-3 bg-white rounded-lg border">
-                            <div className="text-2xl font-bold text-green-600">
-                                ₹{stats.completedRevenue.toFixed(2)}
-                            </div>
-                            <div className="text-xs text-gray-500 font-medium">Revenue from Completed Orders</div>
-                        </div>
-                    </div>
+                        <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                            <Paper
+                                sx={{
+                                    p: 2,
+                                    textAlign: 'center',
+                                    bgcolor: 'background.paper',
+                                    border: 1,
+                                    borderColor: 'divider',
+                                }}
+                            >
+                                <Typography variant="h4" fontWeight="bold" color="success.main">
+                                    ₹{stats.completedRevenue.toFixed(2)}
+                                </Typography>
+                                <Typography variant="caption" color="textSecondary" fontWeight="medium">
+                                    Revenue from Completed Orders
+                                </Typography>
+                            </Paper>
+                        </Box>
+                    </Box>
 
                     {/* Visual Status Bar */}
                     {stats.total > 0 && (
-                        <div className="w-full bg-gray-200 rounded-full h-8 overflow-hidden flex">
+                        <Box
+                            sx={{
+                                width: '100%',
+                                height: 32,
+                                bgcolor: 'divider',
+                                borderRadius: 16,
+                                overflow: 'hidden',
+                                display: 'flex',
+                            }}
+                        >
                             {stats.completed > 0 && (
-                                <div
-                                    className="bg-green-500 h-full flex items-center justify-center text-white text-xs font-medium"
-                                    style={{ width: `${stats.completedPercentage}%` }}
+                                <Box
+                                    sx={{
+                                        bgcolor: 'success.main',
+                                        height: '100%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: 'white',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 'medium',
+                                        width: `${stats.completedPercentage}%`,
+                                    }}
                                 >
                                     {stats.completedPercentage}%
-                                </div>
+                                </Box>
                             )}
                             {stats.cancelled > 0 && (
-                                <div
-                                    className="bg-red-500 h-full flex items-center justify-center text-white text-xs font-medium"
-                                    style={{ width: `${stats.cancelledPercentage}%` }}
+                                <Box
+                                    sx={{
+                                        bgcolor: 'error.main',
+                                        height: '100%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: 'white',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 'medium',
+                                        width: `${stats.cancelledPercentage}%`,
+                                    }}
                                 >
                                     {stats.cancelledPercentage}%
-                                </div>
+                                </Box>
                             )}
                             {stats.pending > 0 && (
-                                <div
-                                    className="bg-yellow-500 h-full flex items-center justify-center text-white text-xs font-medium"
-                                    style={{ width: `${(100 - parseFloat(String(stats.completedPercentage)) - parseFloat(String(stats.cancelledPercentage))).toFixed(1)}%` }}
+                                <Box
+                                    sx={{
+                                        bgcolor: 'warning.main',
+                                        height: '100%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: 'white',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 'medium',
+                                        width: `${(100 - parseFloat(String(stats.completedPercentage)) - parseFloat(String(stats.cancelledPercentage))).toFixed(1)}%`,
+                                    }}
                                 >
                                     {(100 - parseFloat(String(stats.completedPercentage)) - parseFloat(String(stats.cancelledPercentage))).toFixed(1)}%
-                                </div>
+                                </Box>
                             )}
-                        </div>
+                        </Box>
                     )}
-                </div>
-            </div>
-        </div>
-    );  
+                </Box>
+            </Paper>
+        </Box>
+    );
 };
 
 const CustomerShowView = () => {
@@ -878,31 +1254,34 @@ const CustomerShowView = () => {
     const customerIdAsNumber = Number(record.id);
 
     return (
-        <div className="flex flex-col gap-6">
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-xl">
-                        <User className="h-6 w-6 text-muted-foreground" />
-                        Customer Overview
-                    </CardTitle>
-                </CardHeader>
                 <CardContent>
-                     <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 text-sm p-4">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                        <Typography variant="h5">Customer Overview</Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", p: 2 }}>
+                        <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                            <Typography variant="subtitle2" color="textSecondary" fontWeight="-semibold">
+                                Primary Phone
+                            </Typography>
+                            <TextField source="phone" />
+                        </Box>
 
-                         <div>
-                             <p className="font-semibold text-muted-foreground">Primary Phone</p>
-                             <TextField source="phone" className="text-base" emptyText="N/A"/>
-                         </div>
+                        <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                            <Typography variant="subtitle2" color="textSecondary" fontWeight="-semibold">
+                                Customer ID
+                            </Typography>
+                            <TextField source="id" />
+                        </Box>
 
-                         <div>
-                            <p className="font-semibold text-muted-foreground">Customer ID</p>
-                            <TextField source="id" className="text-base" />
-                         </div>
-                         <div>
-                            <p className="font-semibold text-muted-foreground">Customer Since</p>
-                            <DateField source="created_at" showTime className="text-base" />
-                         </div>
-                      </div>
+                        <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                            <Typography variant="subtitle2" color="textSecondary" fontWeight="-semibold">
+                                Customer Since
+                            </Typography>
+                            <DateField source="created_at" showTime />
+                        </Box>
+                    </Box>
                 </CardContent>
             </Card>
 
@@ -911,7 +1290,7 @@ const CustomerShowView = () => {
             {/* Collapsible Wallet Section */}
             <CollapsibleSection
                 title="Wallet"
-                icon={<CreditCard className="h-5 w-5" />}
+                icon={<span>💳</span>}
                 defaultOpen={false}
             >
                 <WalletBalance customerId={customerIdAsNumber} />
@@ -921,7 +1300,7 @@ const CustomerShowView = () => {
             {/* Collapsible Consultation Orders Section */}
             <CollapsibleSection
                 title="Consultation Orders"
-                icon={<ShoppingCart className="h-5 w-5" />}
+                icon={<span>🛒</span>}
                 defaultOpen={false}
             >
                 <CustomerOrders customerId={customerIdAsNumber} />
@@ -930,12 +1309,12 @@ const CustomerShowView = () => {
             {/* Collapsible Payment Orders Section */}
             <CollapsibleSection
                 title="Payment Orders"
-                icon={<CreditCard className="h-5 w-5" />}
+                icon={<span>💳</span>}
                 defaultOpen={false}
             >
                 <CustomerPaymentOrders customerId={customerIdAsNumber} />
             </CollapsibleSection>
-        </div>
+        </Box>
     );
 };
 

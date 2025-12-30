@@ -6,27 +6,16 @@ import {
   ExportButton,
   FilterButton,
   TextInput,
-  Filter,
   SelectInput,
-  ShowButton,
-
-  BulkDeleteButton,
+  Datagrid,
+  TextField,
+  NumberField,
+  FunctionField,
   BulkUpdateButton,
-  BooleanField,
+  BulkDeleteButton,
 } from 'react-admin';
 import { Link } from 'react-router-dom';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../components/ui/table';
-import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
-import { Checkbox } from '../components/ui/checkbox';
-import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
+import { Chip, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -65,7 +54,7 @@ const ListActions = () => {
                 </>
             )}
             <Button
-                variant="default"
+                variant="contained"
                 onClick={() => navigate('/pending-verifications')}
             >
                 KYC Pending Review
@@ -74,89 +63,102 @@ const ListActions = () => {
     );
 };
 
-const GuideListView = () => {
-    const { data, isLoading, selectedIds, onToggleItem, onSelect } = useListContext();
-
-    if (isLoading || !data) return null;
-
-    const handleSelectAll = (checked: boolean | 'indeterminate') => {
-        if (checked === true) {
-            onSelect(data.map(record => record.id));
-        } else {
-            onSelect([]);
-        }
-    };
-
+// Status field component that respects theme
+const StatusField = ({ record }: { record?: any }) => {
+    if (!record) return null;
+    const isOnline = record.status === 'online';
     return (
-        <div className="bg-white rounded-lg border shadow-sm">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="w-12">
-                            <Checkbox
-                                checked={selectedIds.length === data.length}
-                                onCheckedChange={handleSelectAll}
-                            />
-                        </TableHead>
-                        <TableHead>ID</TableHead>
-                        <TableHead>Profile</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Tier</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Skills</TableHead>
-                        <TableHead>Total Consultations</TableHead>
-                        <TableHead>Rating</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {/* The .map() function should return a <TableRow> with ONLY <TableCell> children */}
-                    {data.map(guide => (
-                        <TableRow key={guide.id} data-state={selectedIds.includes(guide.id) ? 'selected' : undefined}>
-                            <TableCell>
-                                <Checkbox
-                                    checked={selectedIds.includes(guide.id)}
-                                    onCheckedChange={() => onToggleItem(guide.id)}
-                                />
-                            </TableCell>
-                            <TableCell>{guide.id}</TableCell>
-                            <TableCell>
-                                <Avatar className="h-10 w-10">
-                                    <AvatarImage src={guide.profile_picture_url} alt={guide.full_name} />
-                                    <AvatarFallback>{guide.full_name?.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                            </TableCell>
-                            <TableCell className="font-medium">
-                                <Button variant="link" asChild className="p-0 h-auto">
-                                    <Link to={`/guides/${guide.id}/show`}>{guide.full_name}</Link>
-                                </Button>
-                            </TableCell>
-                            <TableCell>{guide.tier}</TableCell>
-                            <TableCell>
-                            <Badge variant={guide.status === 'online' ? 'default' : 'secondary'}>
-                                {guide.status}
-                            </Badge>
-                            </TableCell>
-                            <TableCell>
-                                <div className="flex gap-1 flex-wrap">
-                                    {guide.skills?.map((skill: any) => <Badge key={skill.id || skill} variant="secondary">{skill.name || skill}</Badge>)}
-                                </div>
-                            </TableCell>
-                            <TableCell>{guide.guide_stats?.total_number_of_completed_consultations || guide.number_of_consultation || 0}</TableCell>
-                            <TableCell>
-                                <span className="text-orange-500 font-semibold">
-                                    {guide.guide_stats?.rating || guide.rating || 'N/A'}
-                                </span>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </div>
+        <Chip
+            label={record.status}
+            sx={{
+                bgcolor: isOnline ? 'rgba(76, 175, 80, 0.1)' : 'rgba(158, 158, 158, 0.1)',
+                color: isOnline ? '#4caf50' : '#9e9e9e',
+                fontWeight: 500,
+                textTransform: 'capitalize',
+            }}
+        />
     );
 };
 
 export const GuideList = () => (
-  <List actions={<ListActions />} filters={guideFilters} title="Guides">
-    <GuideListView />
+  <List
+    actions={<ListActions />}
+    filters={guideFilters}
+    title="Guides"
+  >
+    <Datagrid
+      rowClick="show"
+      bulkActionButtons={false}
+      sx={{
+        '& .RaDatagrid-headerCell': {
+          fontWeight: 'bold',
+        },
+      }}
+    >
+      <TextField source="id" label="ID" />
+      <FunctionField
+        source="profile_picture_url"
+        label="Profile"
+        render={(record: any) => (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {record?.profile_picture_url ? (
+              <img
+                src={record.profile_picture_url}
+                alt={record.full_name}
+                style={{ width: 40, height: 40, borderRadius: '50%' }}
+              />
+            ) : (
+              <div style={{
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                backgroundColor: '#1976d2',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                {record?.full_name?.charAt(0) || '?'}
+              </div>
+            )}
+          </div>
+        )}
+      />
+      <TextField source="full_name" label="Name" />
+      <TextField source="tier" label="Tier" />
+      <FunctionField
+        label="Status"
+        render={(record: any) => <StatusField record={record} />}
+      />
+      <FunctionField
+        source="skills"
+        label="Skills"
+        render={(record: any) => (
+          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+            {record?.skills?.map((skill: any, index: number) => (
+              <Chip
+                key={skill.id || skill || index}
+                label={skill.name || skill}
+                size="small"
+                sx={{ bgcolor: 'action.selected', fontSize: '0.75rem' }}
+              />
+            ))}
+          </div>
+        )}
+      />
+      <NumberField
+        source="guide_stats.total_number_of_completed_consultations"
+        label="Total Consultations"
+        sortable={false}
+      />
+      <FunctionField
+        label="Rating"
+        render={(record: any) => (
+          <span style={{ color: '#ff9800', fontWeight: 600 }}>
+            {record?.guide_stats?.rating || record?.rating || 'N/A'}
+          </span>
+        )}
+      />
+    </Datagrid>
   </List>
 );

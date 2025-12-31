@@ -21,7 +21,7 @@ import GuideOrders from './guides/GuideOrders';
 import guides from './guides';
 import customers from './customers';
 import consultations from './Consultations';
-// import offers from './offers'; // Temporarily disabled
+import offers from './offers';
 
 import {
     Users,
@@ -79,11 +79,11 @@ const App: React.FC = () => (
             {...consultations}
             icon={ClipboardList}
         />
-        {/* <Resource
+        <Resource
             name="offers"
             {...offers}
             icon={Gift}
-        /> */} // Temporarily disabled
+        />
         <Resource
             name="pending-verifications"
             list={KycPendingList}

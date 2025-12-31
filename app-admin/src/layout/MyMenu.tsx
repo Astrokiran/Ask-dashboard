@@ -94,7 +94,7 @@ export const MyMenu = () => {
             <Menu.Item to="/admin-users" primaryText="Admin Users" leftIcon={<UserCircle />} />
             <Menu.Item to="/customers" primaryText="Customers" leftIcon={<Users />} />
             <Menu.Item to="/consultations" primaryText="Consultations" leftIcon={<ClipboardList />} />
-            {/* <Menu.Item to="/offers" primaryText="Offers" leftIcon={<Gift />} /> */} 
+            <Menu.Item to="/offers" primaryText="Offers" leftIcon={<Gift />} />
             {/* Orders Submenu */}
             <SubMenu
                 handleToggle={handleOrdersToggle}

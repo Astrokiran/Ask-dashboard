@@ -22,6 +22,7 @@ import guides from './guides';
 import customers from './customers';
 import consultations from './Consultations';
 import offers from './offers';
+import reconciliation, { reconciliationOffers } from './reconciliation';
 
 import {
     Users,
@@ -30,6 +31,7 @@ import {
     UserCircle,
     ShoppingCart,
     Gift,
+    RefreshCw,
 } from 'lucide-react';
 import { OrderList } from './orders/Orders';
 import { PaymentOrderList } from './orders/PaymentOrders';
@@ -82,6 +84,16 @@ const App: React.FC = () => (
         <Resource
             name="offers"
             {...offers}
+            icon={Gift}
+        />
+        <Resource
+            name="refundable-consultations"
+            {...reconciliation}
+            icon={RefreshCw}
+        />
+        <Resource
+            name="reconciliation-offers"
+            {...reconciliationOffers}
             icon={Gift}
         />
         <Resource

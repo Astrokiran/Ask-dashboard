@@ -12,6 +12,7 @@ import {
     Gift,
     Wallet,
     History,
+    RefreshCw,
 } from 'lucide-react';
 import { Box, Collapse, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
@@ -75,6 +76,7 @@ export const MyMenu = () => {
     const [openOrdersMenu, setOpenOrdersMenu] = useState(false);
     const [openGuidesMenu, setOpenGuidesMenu] = useState(false);
     const [openGuideFinancialsMenu, setOpenGuideFinancialsMenu] = useState(false);
+    const [openReconciliationMenu, setOpenReconciliationMenu] = useState(false);
 
     const handleOrdersToggle = () => {
         setOpenOrdersMenu(!openOrdersMenu);
@@ -86,6 +88,10 @@ export const MyMenu = () => {
 
     const handleGuideFinancialsToggle = () => {
         setOpenGuideFinancialsMenu(!openGuideFinancialsMenu);
+    };
+
+    const handleReconciliationToggle = () => {
+        setOpenReconciliationMenu(!openReconciliationMenu);
     };
 
     return (
@@ -126,6 +132,17 @@ export const MyMenu = () => {
             >
                 <Menu.Item to="/guide-earnings" primaryText="Earnings & Wallet" leftIcon={<Wallet />} />
                 <Menu.Item to="/guide-orders" primaryText="Completed Orders" leftIcon={<History />} />
+            </SubMenu>
+
+            {/* Reconciliation Submenu */}
+            <SubMenu
+                handleToggle={handleReconciliationToggle}
+                isOpen={openReconciliationMenu}
+                name="Reconciliation"
+                icon={<RefreshCw />}
+            >
+                <Menu.Item to="/refundable-consultations" primaryText="Refundable Consultations" leftIcon={<RefreshCw />} />
+                <Menu.Item to="/reconciliation-offers" primaryText="Reconciliation Offers" leftIcon={<Gift />} />
             </SubMenu>
         </Menu>
     );

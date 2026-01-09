@@ -692,7 +692,7 @@ export const dataProvider: DataProvider = {
                     // Sort the filtered results
                     filteredOffers.sort((a: any, b: any) => {
                         const aVal = a[field];
-                        const bVal = b[field];  
+                        const bVal = b[field];
 
                         if (aVal < bVal) return order === 'ASC' ? -1 : 1;
                         if (aVal > bVal) return order === 'ASC' ? 1 : -1;
@@ -727,6 +727,78 @@ export const dataProvider: DataProvider = {
                 return { data, total };
             } catch (error) {
                 console.error('Error fetching offers:', error);
+                throw error;
+            }
+        }
+
+        // Reconciliation: Get refundable consultations
+        if (resource === 'refundable-consultations') {
+            const { page = 1, perPage = 20 } = params.pagination ?? {};
+            const { is_refunded } = params.filter;
+
+            const queryParams = new URLSearchParams();
+            queryParams.append('page', page.toString());
+            queryParams.append('page_size', perPage.toString());
+
+            if (is_refunded !== undefined) {
+                queryParams.append('is_refunded', is_refunded.toString());
+            }
+
+            const url = `${API_URL}/api/v1/consultations/refundable?${queryParams.toString()}`;
+
+            try {
+                const { json } = await httpClient(url);
+
+                const consultations = json.data?.consultations || [];
+                const pagination = json.data?.pagination || {};
+
+                // The API response already has 'id' field, no transformation needed
+                return {
+                    data: consultations,
+                    total: pagination.total || consultations.length,
+                };
+            } catch (error) {
+                console.error('Error fetching refundable consultations:', error);
+                throw error;
+            }
+        }
+
+        // Reconciliation: Get reconciliation offers
+        if (resource === 'reconciliation-offers') {
+            const { page = 1, perPage = 25 } = params.pagination ?? {};
+            const { field = 'valid_from', order = 'DESC' } = params.sort ?? {};
+
+            let url = `${API_URL}/api/v1/offers/reconciliation`;
+
+            try {
+                const { json } = await httpClient(url);
+
+                // The API response has structure: { success: true, message: "...", data: [...] }
+                const offers = json.data || [];
+                console.log('Reconciliation offers fetched:', offers.length);
+
+                const transformedOffers = offers.map((offer: any) => ({
+                    ...offer,
+                    id: offer.offer_id,
+                }));
+
+                const { page = 1, perPage = 25 } = params.pagination ?? {};
+
+                const sortedOffers = [...transformedOffers].sort((a: any, b: any) => {
+                    const aVal = a[field];
+                    const bVal = b[field];
+
+                    if (aVal < bVal) return order === 'ASC' ? -1 : 1;
+                    if (aVal > bVal) return order === 'ASC' ? 1 : -1;
+                    return 0;
+                });
+
+                const total = sortedOffers.length;
+                const data = sortedOffers.slice((page - 1) * perPage, page * perPage);
+
+                return { data, total };
+            } catch (error) {
+                console.error('Error fetching reconciliation offers:', error);
                 throw error;
             }
         }
@@ -1118,6 +1190,83 @@ export const dataProvider: DataProvider = {
             if (status) queryParams.append('status', status);
 
             url += `?${queryParams.toString()}`;
+
+            const { json } = await httpClient(url);
+            return { data: json };
+        }
+
+        // Reconciliation: Mark consultation as refundable
+        if (resource === 'consultations' && type === 'markRefundable') {
+            const { consultationId, adminUserId, reason } = params;
+            const url = `${API_URL}/api/v1/admin/consultations/${consultationId}/mark-refundable`;
+
+            const { json } = await httpClient(url, {
+                method: 'POST',
+                body: JSON.stringify({
+                    admin_user_id: adminUserId,
+                    reason: reason,
+                }),
+            });
+
+            return { data: json };
+        }
+
+        // Reconciliation: Trigger refund workflow
+        if (resource === 'consultations' && type === 'triggerRefund') {
+            const { consultationId, reconciliationMethod, offerId, sendNotification } = params;
+            const url = `${API_URL}/api/v1/consultations/${consultationId}/refund`;
+
+            const payload: any = {
+                reconciliation_method: reconciliationMethod,
+            };
+
+            if (reconciliationMethod === 'voucher_allocation' && offerId) {
+                payload.offer_id = offerId;
+            }
+
+            if (sendNotification !== undefined) {
+                payload.send_notification = sendNotification;
+            }
+
+            const { json } = await httpClient(url, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
+
+            return { data: json };
+        }
+
+        // Reconciliation: Create reconciliation voucher directly
+        if (resource === 'reconciliation' && type === 'createVoucher') {
+            const { offerId, customerId, consultationId, reason, adminUserId, expiresInSeconds } = params;
+            const url = `${API_URL}/api/v1/offers/reconciliation-voucher`;
+
+            const payload: any = {
+                offer_id: offerId,
+                customer_id: customerId,
+            };
+
+            if (consultationId) payload.consultation_id = consultationId;
+            if (reason) payload.reason = reason;
+            if (adminUserId) payload.admin_user_id = adminUserId;
+            if (expiresInSeconds) payload.expires_in_seconds = expiresInSeconds;
+
+            const { json } = await httpClient(url, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
+
+            return { data: json };
+        }
+
+        // Reconciliation: Get user reconciliation reservations
+        if (resource === 'reconciliation' && type === 'getReservations') {
+            const { customerId, status } = params;
+            let url = `${OFFERS_BASE_URL}/reservations?customer_id=${customerId}`;
+
+            if (status) {
+                url += `&status=${status}`;
+            }
 
             const { json } = await httpClient(url);
             return { data: json };

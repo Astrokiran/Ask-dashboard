@@ -438,12 +438,17 @@ export const dataProvider: DataProvider = {
                 queryParams.append('customer_id', customer_id);
             }
 
-            // Add date filters
+            // Add date filters with timezone awareness
+            // Convert simple date strings to ISO 8601 format with user's local timezone
             if (date_from) {
-                queryParams.append('start_date', date_from);
+                // Create date at start of day (00:00:00) in user's local timezone
+                const startDateTime = new Date(`${date_from}T00:00:00`).toISOString();
+                queryParams.append('start_date', startDateTime);
             }
             if (date_to) {
-                queryParams.append('end_date', date_to);
+                // Create date at end of day (23:59:59) in user's local timezone
+                const endDateTime = new Date(`${date_to}T23:59:59`).toISOString();
+                queryParams.append('end_date', endDateTime);
             }
 
             // Use the correct admin API endpoint

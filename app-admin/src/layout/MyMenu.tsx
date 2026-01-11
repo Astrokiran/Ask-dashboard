@@ -29,33 +29,34 @@ const SubMenu = ({
     name: string;
     icon?: React.ReactNode;
     children?: React.ReactNode;
-}) => {    const [sidebarIsOpen] = useSidebarState();
+}) => {
+    const [sidebarIsOpen] = useSidebarState();
 
     return (
         <>
-           <MenuItemLink
-    onClick={handleToggle}
-    to="#"
-    leftIcon={icon}
-    primaryText={
-        <Box
-            sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                width: '100%',
-            }}
-        >
-            <span>{name}</span>
-            <ExpandMore
-                sx={{
-                    transform: isOpen ? 'rotate(-180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s ease',
-                }}
+            <MenuItemLink
+                onClick={handleToggle}
+                to="#"
+                leftIcon={icon}
+                primaryText={
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            width: '100%',
+                        }}
+                    >
+                        <span>{name}</span>
+                        <ExpandMore
+                            sx={{
+                                transform: isOpen ? 'rotate(-180deg)' : 'rotate(0deg)',
+                                transition: 'transform 0.2s ease',
+                            }}
+                        />
+                    </Box>
+                }
             />
-        </Box>
-    }
-/>
 
             <Collapse in={isOpen} timeout="auto" unmountOnExit>
                 <Box
@@ -101,6 +102,7 @@ export const MyMenu = () => {
             <Menu.Item to="/customers" primaryText="Customers" leftIcon={<Users />} />
             <Menu.Item to="/consultations" primaryText="Consultations" leftIcon={<ClipboardList />} />
             <Menu.Item to="/offers" primaryText="Offers" leftIcon={<Gift />} />
+            <Menu.Item to="/notifications" primaryText="Notifications" leftIcon={<FileText />} />
             {/* Orders Submenu */}
             <SubMenu
                 handleToggle={handleOrdersToggle}

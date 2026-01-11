@@ -56,7 +56,7 @@ export const BulkNotificationPage = () => {
     };
 
     const handleSend = async () => {
-        if (!title || !body || userIds.length === 0) {
+        if (!title.trim() || !body.trim() || userIds.length === 0) {
             notify('Please fill all fields and upload a valid CSV', { type: 'warning' });
             return;
         }
@@ -64,15 +64,25 @@ export const BulkNotificationPage = () => {
         setLoading(true);
         setResult(null);
 
+        // Get current admin user ID
+        const userString = localStorage.getItem('user');
+        const user = userString ? JSON.parse(userString) : null;
+        const adminId = user ? (user.id || user.ID || 'admin') : 'admin';
+
         try {
-            const payload = {
+            const payload: any = {
                 user_ids: userIds,
-                title,
-                body,
+                title: title.trim(),
+                body: body.trim(),
                 target_type: targetType,
-                deep_link: deepLink,
-                priority: "highlight"
+                priority: "transactional",
+                created_by: adminId
             };
+
+            // Only add deep_link if properly set
+            if (deepLink && deepLink.trim()) {
+                payload.deep_link = deepLink.trim();
+            }
 
             // Using httpClient which handles auth headers automatically
             const { json } = await httpClient(`${API_URL}/api/v1/notifications/bulk`, {
@@ -84,7 +94,22 @@ export const BulkNotificationPage = () => {
             notify('Bulk notification process completed', { type: 'success' });
         } catch (error: any) {
             console.error('Error sending notifications:', error);
-            notify(`Error: ${error.message || 'Failed to send notifications'}`, { type: 'error' });
+
+            // Try to extract validation error message
+            let errorMessage = error.message || 'Failed to send notifications';
+
+            if (error.body && error.body.detail) {
+                // If detail is array (standard FastAPI validation error)
+                if (Array.isArray(error.body.detail)) {
+                    errorMessage = error.body.detail
+                        .map((err: any) => `${err.loc.join('.')}: ${err.msg}`)
+                        .join(', ');
+                } else if (typeof error.body.detail === 'string') {
+                    errorMessage = error.body.detail;
+                }
+            }
+
+            notify(`Error: ${errorMessage}`, { type: 'error', multiLine: true });
         } finally {
             setLoading(false);
         }

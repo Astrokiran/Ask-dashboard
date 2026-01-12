@@ -100,63 +100,22 @@ const Dashboard: React.FC = () => {
 
                 console.log('Fetching dashboard stats for today:', today);
 
-                // Smart pagination for accurate today's customer count
-                // Only fetch pages until we find no more today's customers
+                // Fetch total customers (just the count, not all data)
                 const totalCustomersRes = await dataProvider.getList('customers', {
-                    pagination: { page: 1, perPage: 25 },
+                    pagination: { page: 1, perPage: 1 },
                     sort: { field: 'id', order: 'DESC' },
                     filter: {},
                 });
 
-                let allRecentCustomers: any[] = [...totalCustomersRes.data];
-                let page = 2;
-                const perPage = 25;
-
-                // Check if first page has any today's customers to decide if we need more pages
-                const firstPageTodaysCount = totalCustomersRes.data.filter((c: any) =>
-                    c.created_at && c.created_at.startsWith(today)
-                ).length;
-
-                // If we found today's customers in first page, fetch more pages until we don't find any
-                if (firstPageTodaysCount > 0) {
-                    let hasTodaysCustomers = true;
-                    while (hasTodaysCustomers && page <= 20) { // Safety limit of 20 pages (500 customers)
-                        const nextPageRes = await dataProvider.getList('customers', {
-                            pagination: { page, perPage },
-                            sort: { field: 'id', order: 'DESC' },
-                            filter: {},
-                        });
-
-                        allRecentCustomers = allRecentCustomers.concat(nextPageRes.data);
-
-                        const pageTodaysCount = nextPageRes.data.filter((c: any) =>
-                            c.created_at && c.created_at.startsWith(today)
-                        ).length;
-
-                        // If no today's customers on this page, we can stop
-                        if (pageTodaysCount === 0) {
-                            hasTodaysCustomers = false;
-                        } else {
-                            page++;
-                        }
-                    }
-                }
-
-                console.log(`Fetched ${allRecentCustomers.length} customers across ${page} pages for accurate count`);
-
-                // Calculate today's customers from all fetched data
-                const todayDate = new Date().toISOString().split('T')[0];
-                const todaysCustomers = allRecentCustomers.filter((customer: any) => {
-                    return customer.created_at && customer.created_at.startsWith(todayDate);
+                // Fetch today's customers using date filters - much more efficient!
+                console.log('Fetching today\'s customers with date filters:', { from_date: today, to_date: today });
+                const todayCustomersRes = await dataProvider.getList('customers', {
+                    pagination: { page: 1, perPage: 1 },
+                    sort: { field: 'id', order: 'DESC' },
+                    filter: { from_date: today, to_date: today },
                 });
 
-                console.log(`Today's customers count: ${todaysCustomers.length}`);
-
-                // Create today's customers response
-                const todayCustomersRes = {
-                    data: todaysCustomers,
-                    total: todaysCustomers.length
-                };
+                console.log(`Today's customers count from API: ${todayCustomersRes.total}`);
 
                 // Fetch consultations stats with detailed status breakdown
                 const [

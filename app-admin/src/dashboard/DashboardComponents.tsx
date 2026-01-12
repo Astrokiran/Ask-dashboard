@@ -113,91 +113,29 @@ export const CustomerAnalytics = ({ stats }: { stats: DashboardStats }) => {
     useEffect(() => {
         const fetchCustomerData = async () => {
             try {
-                console.log('Fetching customer analytics (optimized)...');
+                console.log('Fetching customer analytics with date filters...');
 
-                // Smart pagination - fetch until we have enough for last 7 days
-                const today = new Date().toISOString().split('T')[0];
-
-                // Fetch first page
-                const firstPageRes = await dataProvider.getList('customers', {
-                    pagination: { page: 1, perPage: 25 },
-                    sort: { field: 'id', order: 'DESC' },
-                    filter: {},
-                });
-
-                let allCustomers: any[] = [...firstPageRes.data];
-                let page = 2;
-                const perPage = 25;
-
-                // Calculate the date 7 days ago
-                const sevenDaysAgo = new Date();
-                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
-
-                // Check if we have customers from last 7 days in first page
-                const hasRecentCustomers = firstPageRes.data.some((c: any) =>
-                    c.created_at && c.created_at >= sevenDaysAgoStr
-                );
-
-                // Fetch more pages if we have recent customers
-                if (hasRecentCustomers) {
-                    let continueFetching = true;
-                    while (continueFetching && page <= 20) { // Safety limit of 20 pages (500 customers)
-                        const nextPageRes = await dataProvider.getList('customers', {
-                            pagination: { page, perPage },
-                            sort: { field: 'id', order: 'DESC' },
-                            filter: {},
-                        });
-
-                        allCustomers = allCustomers.concat(nextPageRes.data);
-
-                        // Check if this page has any customers from last 7 days
-                        const pageHasRecent = nextPageRes.data.some((c: any) =>
-                            c.created_at && c.created_at >= sevenDaysAgoStr
-                        );
-
-                        if (!pageHasRecent) {
-                            continueFetching = false;
-                        } else {
-                            page++;
-                        }
-                    }
-                }
-
-                console.log('Fetched customers for analytics:', allCustomers.length, 'across', page, 'pages');
-
-                // Get last 7 days customer data
+                // Get last 7 days customer data using date range filters
                 const last7Days: CustomerByDate[] = [];
+
                 for (let i = 6; i >= 0; i--) {
                     const date = new Date();
                     date.setDate(date.getDate() - i);
                     const dateStr = date.toISOString().split('T')[0];
                     const displayDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-                    console.log(`Filtering customers for date: ${dateStr}`);
+                    console.log(`Fetching customers for date: ${dateStr}`);
 
-                    // Filter customers by creation date client-side
-                    const dayCustomers = allCustomers.filter((customer: any) => {
-                        return customer.created_at && customer.created_at.startsWith(dateStr);
+                    // Use date filter to get customers for this specific day
+                    // Much faster than fetching all and filtering client-side
+                    const dayCustomersRes = await dataProvider.getList('customers', {
+                        pagination: { page: 1, perPage: 1 }, // Only need count, not actual data
+                        sort: { field: 'id', order: 'DESC' },
+                        filter: { from_date: dateStr, to_date: dateStr },
                     });
 
-                    console.log(`Date ${dateStr} customers count:`, dayCustomers.length);
-
-                    // Special debugging for December 16th
-                    if (dateStr === '2025-12-16') {
-                        console.log('=== DECEMBER 16 DEBUG ===');
-                        if (dayCustomers.length > 0) {
-                            dayCustomers.forEach((customer, idx) => {
-                                console.log(`Customer ${idx}:`, {
-                                    id: customer.id,
-                                    created_at: customer.created_at,
-                                    name: customer.profile?.name
-                                });
-                            });
-                        }
-                    }
-
-                    last7Days.push({ date: displayDate, count: dayCustomers.length });
+                    console.log(`Date ${dateStr} customers count:`, dayCustomersRes.total);
+                    last7Days.push({ date: displayDate, count: dayCustomersRes.total || 0 });
                 }
 
                 console.log('Final customer data:', last7Days);

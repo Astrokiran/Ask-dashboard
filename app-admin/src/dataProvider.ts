@@ -292,9 +292,9 @@ export const dataProvider: DataProvider = {
         
             if (resource === 'customers') {
                 const { page, perPage } = params.pagination || { page: 1, perPage: 25 };
-                const { customer_id, phone_number, profile_name } = params.filter;
+                const { customer_id, phone_number, profile_name, from_date, to_date } = params.filter;
 
-                console.log('Customer filters - customer_id:', customer_id, 'phone_number:', phone_number, 'profile_name:', profile_name);
+                console.log('Customer filters - customer_id:', customer_id, 'phone_number:', phone_number, 'profile_name:', profile_name, 'from_date:', from_date, 'to_date:', to_date);
 
                 // Handle exact customer ID search using dedicated endpoint
                 if (customer_id) {
@@ -338,6 +338,21 @@ export const dataProvider: DataProvider = {
                     console.log('Searching by profile_name:', profile_name.trim());
                 }
 
+                // Add date filters with timezone awareness
+                if (from_date) {
+                    // Convert to ISO 8601 format
+                    const fromDateTime = new Date(`${from_date}T00:00:00`).toISOString();
+                    queryParams.append('from_date', fromDateTime);
+                    console.log('Added from_date filter:', fromDateTime);
+                }
+
+                if (to_date) {
+                    // Convert to ISO 8601 format
+                    const toDateTime = new Date(`${to_date}T23:59:59`).toISOString();
+                    queryParams.append('to_date', toDateTime);
+                    console.log('Added to_date filter:', toDateTime);
+                }
+
                 const url = `${API_URL}/api/v1/customers/?${queryParams.toString()}`;
                 console.log('Customer search - URL:', url);
 
@@ -360,11 +375,11 @@ export const dataProvider: DataProvider = {
                     page,
                     perPage,
                     processed_customers_count: processedCustomers.length,
-                    has_filters: !!(customer_id || phone_number || profile_name)
+                    has_filters: !!(customer_id || phone_number || profile_name || from_date || to_date)
                 });
 
                 // Only use estimation if API total is genuinely 0 (fallback)
-                if (total === 0 && customers.length > 0 && !customer_id && !phone_number && !profile_name) {
+                if (total === 0 && customers.length > 0 && !customer_id && !phone_number && !profile_name && !from_date && !to_date) {
                     console.log('API returned total=0, using customer count as fallback');
                     total = customers.length;
                 }
@@ -374,7 +389,7 @@ export const dataProvider: DataProvider = {
                     page,
                     perPage,
                     processed_customers_count: processedCustomers.length,
-                    has_filters: !!(customer_id || phone_number || profile_name)
+                    has_filters: !!(customer_id || phone_number || profile_name || from_date || to_date)
                 });
 
                 return {

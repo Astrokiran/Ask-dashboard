@@ -14,7 +14,8 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { KycPendingList } from './guides/KycPendingList';
 import { GuideBankAccountsPage } from './guides/GuideBankAccountPage';
 import GuideEarnings from './guides/GuideEarnings';
-import GuideOrders from './guides/GuideOrders'; 
+import GuideOrders from './guides/GuideOrders';
+import { BulkNotificationPage } from './notifications/BulkNotificationPage';
 
 
 // Import the resource objects
@@ -58,66 +59,67 @@ const App: React.FC = () => (
             dashboard={Dashboard}
             layout={MyLayout}
         >
-        <Resource
-            name="admin-users"
-             list={AdminUserList}
-            create={AdminUserCreate}
-            edit={AdminUserEdit}
-            icon={AdminPanelSettingsIcon}
-        />
-        {/* The "guides" resource now serves as the main entry */}
-        <Resource
-            name="guides"
-            {...guides}
-            icon={LifeBuoy}
-        />
-        <Resource
-            name="customers"
-            {...customers}
-            icon={Users}
-        />
-          <Resource
-            name="consultations"
-            {...consultations}
-            icon={ClipboardList}
-        />
-        <Resource
-            name="offers"
-            {...offers}
-            icon={Gift}
-        />
-        <Resource
-            name="refundable-consultations"
-            {...reconciliation}
-            icon={RefreshCw}
-        />
-        <Resource
-            name="reconciliation-offers"
-            {...reconciliationOffers}
-            icon={Gift}
-        />
-        <Resource
-            name="pending-verifications"
-            list={KycPendingList}
-        />
-        <Resource
-            name="payment-orders"
-            list={PaymentOrderList}
-            show={PaymentOrderShow}
-        />
-        <Resource
-            name="consultation-orders"
-            list={ConsultationOrderList}
-            show={ConsultationOrderShow}
-        />
-        <CustomRoutes>
-            <Route path="/guides/:id/accounts" element={<GuideBankAccountsPage />} />
-            <Route path="/guide-earnings/:id" element={<GuideEarnings />} />
-            <Route path="/guide-earnings" element={<GuideEarnings />} />
-            <Route path="/guide-orders/:id" element={<GuideOrders />} />
-            <Route path="/guide-orders" element={<GuideOrders />} />
-        </CustomRoutes>
-    </Admin>
+            <Resource
+                name="admin-users"
+                list={AdminUserList}
+                create={AdminUserCreate}
+                edit={AdminUserEdit}
+                icon={AdminPanelSettingsIcon}
+            />
+            {/* The "guides" resource now serves as the main entry */}
+            <Resource
+                name="guides"
+                {...guides}
+                icon={LifeBuoy}
+            />
+            <Resource
+                name="customers"
+                {...customers}
+                icon={Users}
+            />
+            <Resource
+                name="consultations"
+                {...consultations}
+                icon={ClipboardList}
+            />
+            <Resource
+                name="offers"
+                {...offers}
+                icon={Gift}
+            />
+            <Resource
+                name="refundable-consultations"
+                {...reconciliation}
+                icon={RefreshCw}
+            />
+            <Resource
+                name="reconciliation-offers"
+                {...reconciliationOffers}
+                icon={Gift}
+            />
+            <Resource
+                name="pending-verifications"
+                list={KycPendingList}
+            />
+            <Resource
+                name="payment-orders"
+                list={PaymentOrderList}
+                show={PaymentOrderShow}
+            />
+            <Resource
+                name="consultation-orders"
+                list={ConsultationOrderList}
+                show={ConsultationOrderShow}
+            />
+            <CustomRoutes>
+                <Route path="/guides/:id/accounts" element={<GuideBankAccountsPage />} />
+                <Route path="/guide-earnings/:id" element={<GuideEarnings />} />
+                <Route path="/guide-earnings" element={<GuideEarnings />} />
+                <Route path="/guide-orders/:id" element={<GuideOrders />} />
+                <Route path="/guide-orders" element={<GuideOrders />} />
+                <Route path="/notifications" element={<BulkNotificationPage />} />
+            </CustomRoutes>
+        </Admin>
     </ThemeSyncWrapper>
 );
 

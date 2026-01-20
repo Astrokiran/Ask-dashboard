@@ -125,7 +125,9 @@ export const KycActionButtons = ({ record, status, onUploadClick }: KycActionBut
             // Use the correct admin API endpoint for complete onboarding
             const url = `${process.env.REACT_APP_API_URL}/api/v1/admin/guides/${record.id}/complete-onboarding`;
             const body = JSON.stringify({
-                price_per_minute: pricePerMinute,
+                chat_base_rate_per_minute: pricePerMinute,
+                voice_base_rate_per_minute: pricePerMinute,
+                video_base_rate_per_minute: pricePerMinute,
                 revenue_share: parseInt(revenueShare, 10)
             });
 

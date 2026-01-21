@@ -850,17 +850,18 @@ export const dataProvider: DataProvider = {
             const apiPayload = {
                 area_code: params.data.area_code,
                 phone_number: params.data.phone_number,
+                source: params.data.source || 'admin-dashboard',
             };
-            
+
             // 2. Make the single API call to your admin-service.
             const { json } = await httpClient(`${API_URL}/api/v1/customers/`, {
                 method: 'POST',
                 body: JSON.stringify(apiPayload),
             });
-            
+
             // 3. Return the data in the format React Admin expects.
-            return { 
-                data: { ...json, id: json.customer_id } 
+            return {
+                data: { ...json, id: json.customer_id }
             };
         }
             

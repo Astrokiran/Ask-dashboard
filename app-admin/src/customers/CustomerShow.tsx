@@ -31,6 +31,11 @@ import {
     IconButton,
     Collapse,
     Paper,
+    Alert,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
 } from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { FormEvent, useState, useEffect } from 'react';
@@ -169,7 +174,8 @@ const ProfilesGrid = () => {
             method: 'POST',
             body: JSON.stringify(formData),
         })
-        .then(() => {
+        .then(({ json }) => {
+            console.log('Profile created response:', json);
             notify('Profile created successfully!', { type: 'success' });
             setDialogOpen(false);
             refresh();
@@ -184,14 +190,36 @@ const ProfilesGrid = () => {
     };
 
     const handleUpdateSave = (formData: any) => {
-        if (!record) return;
+        if (!record || !editingProfile) return;
         setIsSaving(true);
-        httpClient(`${API_URL}/api/v1/customers/${record.id}/profile`, { // The API endpoint for updating
-            method: 'PUT',
+
+        const profileId = editingProfile.profile_id;
+        const url = `${API_URL}/api/v1/customers/${record.id}/profile/${profileId}`;
+
+        console.log('=== Profile Update ===');
+        console.log('URL:', url);
+        console.log('Method: PATCH');
+        console.log('Profile ID:', profileId);
+        console.log('Form data:', JSON.stringify(formData, null, 2));
+
+        // Use the endpoint with profile_id in the URL and PATCH method
+        httpClient(url, {
+            method: 'PATCH',
             body: JSON.stringify(formData),
         })
-        .then(() => { notify('Profile updated successfully!'); setEditingProfile(null); refresh(); })
-        .catch(error => notify(`Error: ${error.message || 'An error occurred'}`, { type: 'warning' }))
+        .then(({ json }) => {
+            console.log('Profile updated response:', json);
+            notify('Profile updated successfully!');
+            setEditingProfile(null);
+            refresh();
+        })
+        .catch((error: any) => {
+            console.error('Profile update error:', error);
+            console.error('Error status:', error.status);
+            console.error('Error body:', error.body);
+            const errorMessage = error.body?.detail?.message || error.message || 'An error occurred';
+            notify(`Error: ${errorMessage}`, { type: 'warning' });
+        })
         .finally(() => setIsSaving(false));
     };
 
@@ -300,7 +328,7 @@ const ProfilesGrid = () => {
                     </Box>
                 )}
             </CardContent>
-            <Dialog open={!!editingProfile} onClose={() => setEditingProfile(null)} maxWidth="sm" fullWidth>
+            <Dialog open={!!editingProfile} onClose={() => setEditingProfile(null)} maxWidth="md" fullWidth>
                 <DialogTitle>Edit Profile for {record.name}</DialogTitle>
                 <DialogContent>
                     <UpdateProfileForm
@@ -308,6 +336,8 @@ const ProfilesGrid = () => {
                         onSave={handleUpdateSave}
                         onCancel={() => setEditingProfile(null)}
                         saving={isSaving}
+                        customerId={record.id}
+                        refresh={refresh}
                     />
                 </DialogContent>
             </Dialog>
@@ -738,7 +768,8 @@ const WalletBalance = ({ customerId }: { customerId: number }) => {
     );
 };
 
-const UpdateProfileForm = ({ profile, onSave, onCancel, saving }: { profile: any; onSave: (data: any) => void; onCancel: () => void; saving: boolean; }) => {
+const UpdateProfileForm = ({ profile, onSave, onCancel, saving, customerId, refresh }: { profile: any; onSave: (data: any) => void; onCancel: () => void; saving: boolean; customerId: number; refresh: () => void; }) => {
+    const notify = useNotify();
     const [name, setName] = useState('');
     const [dob, setDob] = useState('');
     const [tob, setTob] = useState('');
@@ -746,6 +777,9 @@ const UpdateProfileForm = ({ profile, onSave, onCancel, saving }: { profile: any
     const [birthCountry, setBirthCountry] = useState('');
     const [preferredLanguage, setPreferredLanguage] = useState('');
     const [zodiacSign, setZodiacSign] = useState('');
+    const [leftHandImage, setLeftHandImage] = useState<File | null>(null);
+    const [rightHandImage, setRightHandImage] = useState<File | null>(null);
+    const [uploadingImages, setUploadingImages] = useState(false);
 
 
     // This effect pre-fills the form when the component loads with profile data
@@ -762,9 +796,11 @@ const UpdateProfileForm = ({ profile, onSave, onCancel, saving }: { profile: any
         }
     }, [profile]);
 
-    const handleSubmit = (event: FormEvent) => {
+    // Separate handler for profile update only
+    const handleProfileUpdate = (event: FormEvent) => {
         event.preventDefault();
-        onSave({
+
+        const profileData = {
             name,
             dob: dob || null,
             tob: tob || null,
@@ -772,11 +808,81 @@ const UpdateProfileForm = ({ profile, onSave, onCancel, saving }: { profile: any
             birth_country: birthCountry,
             preferred_language: preferredLanguage,
             zodiac_sign: zodiacSign,
-        });
+        };
+
+        onSave(profileData);
+    };
+
+    // Separate handler for hand image upload only
+    const handleHandImageUpload = async () => {
+        if (!leftHandImage && !rightHandImage) {
+            notify('Please select at least one hand image to upload.', { type: 'warning' });
+            return;
+        }
+
+        const profileId = profile.profile_id;
+
+        if (!profileId) {
+            notify('Error: Profile ID not found. Unable to upload hand images.', { type: 'error' });
+            return;
+        }
+
+        setUploadingImages(true);
+
+        try {
+            const formData = new FormData();
+
+            if (leftHandImage) {
+                formData.append('left_hand_image', leftHandImage);
+            }
+
+            if (rightHandImage) {
+                formData.append('right_hand_image', rightHandImage);
+            }
+
+            const token = localStorage.getItem('access_token');
+            const uploadUrl = `${API_URL}/api/v1/customers/${customerId}/profile/${profileId}/hand-images`;
+
+            console.log('Uploading hand images to:', uploadUrl);
+
+            const response = await fetch(uploadUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'X-Internal-API-Key': 'dummy_service_secret',
+                },
+                body: formData,
+            });
+
+            if (response.ok) {
+                console.log('Hand images uploaded successfully');
+                notify('Hand images uploaded successfully!', { type: 'success' });
+
+                // Clear the file inputs after successful upload
+                setLeftHandImage(null);
+                setRightHandImage(null);
+                const fileInputs = document.querySelectorAll('input[type="file"]');
+                fileInputs.forEach(input => (input as HTMLInputElement).value = '');
+
+                // Close the dialog and refresh data
+                onCancel();
+                refresh();
+            } else {
+                const errorData = await response.json();
+                console.error('Failed to upload hand images:', errorData);
+                const errorMessage = errorData.detail?.message || errorData.message || 'Failed to upload hand images';
+                notify(errorMessage, { type: 'error' });
+            }
+        } catch (error: any) {
+            console.error('Error uploading hand images:', error);
+            notify(`Error uploading hand images: ${error.message}`, { type: 'error' });
+        } finally {
+            setUploadingImages(false);
+        }
     };
 
     return (
-       <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
+       <div style={{ display: 'contents' }}>
             <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", p: 2 }}>
                 <Box sx={{ flex: "1 1 100%" }}>
                     <MuiTextField
@@ -846,14 +952,107 @@ const UpdateProfileForm = ({ profile, onSave, onCancel, saving }: { profile: any
                         size="small"
                     />
                 </Box>
-                <Box sx={{ flex: "1 1 100%", display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
-                    <Button type="button" onClick={onCancel}>Cancel</Button>
-                    <Button type="submit" variant="contained" disabled={saving}>
-                        {saving ? 'Saving...' : 'Save Changes'}
+                <Box sx={{ flex: "1 1 100%" }}>
+                    <Typography variant="subtitle2" gutterBottom fontWeight="medium">
+                        Left Hand Image
+                    </Typography>
+                    <Box
+                        sx={{
+                            border: 1,
+                            borderColor: 'divider',
+                            borderRadius: 1,
+                            p: 2,
+                            bgcolor: 'background.paper',
+                        }}
+                    >
+                        <input
+                            type="file"
+                            accept="image/jpeg,image/jpg,image/png"
+                            onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) setLeftHandImage(file);
+                            }}
+                            style={{ width: '100%' }}
+                        />
+                        <Typography variant="caption" color="textSecondary" display="block" sx={{ mt: 1 }}>
+                            Upload left hand image (JPEG, PNG)
+                        </Typography>
+                        {leftHandImage && (
+                            <Chip
+                                label={`Selected: ${leftHandImage.name}`}
+                                size="small"
+                                color="primary"
+                                sx={{ mt: 1 }}
+                                onDelete={() => setLeftHandImage(null)}
+                            />
+                        )}
+                    </Box>
+                </Box>
+                <Box sx={{ flex: "1 1 100%" }}>
+                    <Typography variant="subtitle2" gutterBottom fontWeight="medium">
+                        Right Hand Image
+                    </Typography>
+                    <Box
+                        sx={{
+                            border: 1,
+                            borderColor: 'divider',
+                            borderRadius: 1,
+                            p: 2,
+                            bgcolor: 'background.paper',
+                        }}
+                    >
+                        <input
+                            type="file"
+                            accept="image/jpeg,image/jpg,image/png"
+                            onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) setRightHandImage(file);
+                            }}
+                            style={{ width: '100%' }}
+                        />
+                        <Typography variant="caption" color="textSecondary" display="block" sx={{ mt: 1 }}>
+                            Upload right hand image (JPEG, PNG)
+                        </Typography>
+                        {rightHandImage && (
+                            <Chip
+                                label={`Selected: ${rightHandImage.name}`}
+                                size="small"
+                                color="primary"
+                                sx={{ mt: 1 }}
+                                onDelete={() => setRightHandImage(null)}
+                            />
+                        )}
+                    </Box>
+                </Box>
+                <Box sx={{ flex: "1 1 100%", display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2, flexWrap: 'wrap', gap: 2 }}>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button type="button" onClick={onCancel} variant="outlined">
+                            Cancel
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={handleProfileUpdate}
+                            variant="contained"
+                            disabled={saving}
+                            color="primary"
+                        >
+                            {saving ? 'Updating Profile...' : 'Update Profile'}
+                        </Button>
+                    </Box>
+
+                    <Button
+                        type="button"
+                        onClick={handleHandImageUpload}
+                        variant="contained"
+                        disabled={uploadingImages}
+                        color="secondary"
+                        startIcon={uploadingImages ? <span>⏳</span> : <span>📤</span>}
+                    >
+                        {uploadingImages ? 'Uploading...' : 'Upload Hand Images'}
                     </Button>
                 </Box>
             </Box>
-        </form>
+        </div>
     );
 }
 
@@ -1245,6 +1444,607 @@ const CustomerOrders = ({ customerId }: { customerId: number }) => {
     );
 };
 
+// --- QR Code Payment Order Component ---
+const QRCodePaymentOrder = ({ customerId, customerPhone }: { customerId: number; customerPhone: string }) => {
+    const [amount, setAmount] = useState('25');
+    const [qrData, setQrData] = useState<any>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [paymentOrders, setPaymentOrders] = useState<any[]>([]);
+    const [loadingOrders, setLoadingOrders] = useState(true);
+    const [sendDialogOpen, setSendDialogOpen] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState<any>(null);
+    const [caption, setCaption] = useState('');
+    const [sendingMedia, setSendingMedia] = useState(false);
+    const notify = useNotify();
+
+    // Fetch payment orders on component mount
+    useEffect(() => {
+        fetchPaymentOrders();
+    }, [customerId]);
+
+    const fetchPaymentOrders = async () => {
+        setLoadingOrders(true);
+        try {
+            const token = localStorage.getItem('access_token');
+            const url = `${API_URL}/api/v1/customers/${customerId}/wallet/payment-orders`;
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'X-Internal-API-Key': 'dummy_service_secret',
+                },
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                const orders = data.items || [];
+                setPaymentOrders(orders);
+            } else {
+                console.error('Failed to fetch payment orders:', data);
+            }
+        } catch (err) {
+            console.error('Error fetching payment orders:', err);
+        } finally {
+            setLoadingOrders(false);
+        }
+    };
+
+    const handleCreateQR = async () => {
+        if (!amount || parseFloat(amount) <= 0) {
+            setError('Please enter a valid amount');
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+        setQrData(null);
+
+        try {
+            const token = localStorage.getItem('access_token');
+            const url = `${API_URL}/api/v1/customers/${customerId}/wallet/payment-orders/qr-code`;
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-Internal-API-Key': 'dummy_service_secret',
+                },
+                body: JSON.stringify({ amount: amount }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setQrData(data);
+                notify('QR code created successfully!', { type: 'success' });
+                // Refresh payment orders list
+                setTimeout(() => fetchPaymentOrders(), 1000);
+            } else {
+                const errorMsg = data.detail?.message || data.message || data.error || 'Failed to create QR code';
+                setError(errorMsg);
+                notify(`Error: ${errorMsg}`, { type: 'error' });
+            }
+        } catch (err: any) {
+            const errorMsg = err.message || 'Network error occurred';
+            setError(errorMsg);
+            notify(`Error: ${errorMsg}`, { type: 'error' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSendToWhatsApp = (order: any) => {
+        setSelectedOrder(order);
+        setCaption('');
+        setSendDialogOpen(true);
+    };
+
+    const handleSendMedia = async () => {
+        if (!selectedOrder || !customerPhone) {
+            notify('Missing required information', { type: 'error' });
+            return;
+        }
+
+        setSendingMedia(true);
+
+        try {
+            const url = 'https://prod.astrokiran.com/api/conversations/send-media/';
+
+            const payload = {
+                phone: customerPhone,
+                media_type: 'image',
+                media_url: selectedOrder.qr_code_url || selectedOrder.image_url,
+                caption: caption || `Please scan this QR code to pay ₹${selectedOrder.amount}`,
+            };
+
+            console.log('Sending to WhatsApp:', payload);
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.status === 'success') {
+                notify('QR code sent to WhatsApp successfully!', { type: 'success' });
+                setSendDialogOpen(false);
+            } else {
+                const errorMsg = result.message || result.error || 'Failed to send';
+                notify(`Error: ${errorMsg}`, { type: 'error' });
+            }
+        } catch (err: any) {
+            const errorMsg = err.message || 'Network error occurred';
+            notify(`Error: ${errorMsg}`, { type: 'error' });
+        } finally {
+            setSendingMedia(false);
+        }
+    };
+
+    return (
+        <Box>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                QR Code Payment Orders
+            </Typography>
+
+            {/* Amount Input Form */}
+            <Paper
+                sx={{
+                    p: 3,
+                    mb: 3,
+                    bgcolor: 'background.paper',
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                }}
+            >
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                    <Box sx={{ flex: '1 1 200px', minWidth: '150px' }}>
+                        <Typography variant="body2" gutterBottom fontWeight="medium">
+                            Amount (₹)
+                        </Typography>
+                        <MuiTextField
+                            type="number"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            fullWidth
+                            size="small"
+                            placeholder="Enter amount"
+                            inputProps={{ min: '1', step: '1' }}
+                        />
+                    </Box>
+                    <Button
+                        variant="contained"
+                        onClick={handleCreateQR}
+                        disabled={loading}
+                        sx={{ height: 40 }}
+                    >
+                        {loading ? 'Creating...' : 'Generate QR Code'}
+                    </Button>
+                </Box>
+            </Paper>
+
+            {/* Error Display */}
+            {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    {error}
+                </Alert>
+            )}
+
+            {/* Latest QR Code Display */}
+            {qrData && (
+                <Paper
+                    sx={{
+                        p: 3,
+                        mb: 3,
+                        bgcolor: 'success.light',
+                        border: 1,
+                        borderColor: 'success.main',
+                        borderRadius: 1,
+                    }}
+                >
+                    <Typography variant="h6" fontWeight="medium" gutterBottom>
+                        Latest QR Code Generated
+                    </Typography>
+
+                    <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+                        {qrData.image_url && (
+                            <Box
+                                sx={{
+                                    p: 1,
+                                    bgcolor: 'white',
+                                    borderRadius: 1,
+                                    border: 1,
+                                    borderColor: 'divider',
+                                }}
+                            >
+                                <img
+                                    src={qrData.image_url}
+                                    alt="Payment QR Code"
+                                    style={{
+                                        width: '100px',
+                                        height: '100px',
+                                        display: 'block',
+                                    }}
+                                />
+                            </Box>
+                        )}
+
+                        <Box sx={{ flex: 1 }}>
+                            <Typography variant="body1" gutterBottom>
+                                <strong>Amount:</strong> ₹{qrData.amount || amount}
+                            </Typography>
+                            {qrData.payment_url && (
+                                <Typography variant="body2" sx={{ mt: 1 }}>
+                                    <a href={qrData.payment_url} target="_blank" rel="noopener noreferrer">
+                                        {qrData.payment_url}
+                                    </a>
+                                </Typography>
+                            )}
+                            {qrData.qr_code_id && (
+                                <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+                                    Order ID: {qrData.qr_code_id}
+                                </Typography>
+                            )}
+                        </Box>
+
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => handleSendToWhatsApp({
+                                ...qrData,
+                                amount: qrData.amount || amount
+                            })}
+                            startIcon={<span>💬</span>}
+                        >
+                            Send to WhatsApp
+                        </Button>
+                    </Box>
+                </Paper>
+            )}
+
+            {/* Payment Orders List */}
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                Payment Orders History
+            </Typography>
+
+            {loadingOrders ? (
+                <Typography color="textSecondary">Loading payment orders...</Typography>
+            ) : paymentOrders.length === 0 ? (
+                <Typography color="textSecondary">No payment orders found.</Typography>
+            ) : (
+                <TableContainer component={Paper} sx={{ border: 1, borderColor: 'divider' }}>
+                    <Table sx={{ minWidth: 650 }}>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Order ID</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>QR Code</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Amount</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Created</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {paymentOrders.map((order: any) => (
+                                <TableRow key={order.payment_order_id} hover>
+                                    <TableCell>
+                                        <Typography variant="body2" fontWeight="medium">
+                                            #{order.payment_order_id}
+                                        </Typography>
+                                        {order.gateway_order_id && (
+                                            <Typography variant="caption" color="textSecondary" display="block">
+                                                Gateway: {order.gateway_order_id}
+                                            </Typography>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
+                                        {order.qr_code_url || order.image_url ? (
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                <img
+                                                    src={order.qr_code_url || order.image_url}
+                                                    alt="QR Code"
+                                                    style={{
+                                                        width: '50px',
+                                                        height: '50px',
+                                                        border: '1px solid #ddd',
+                                                        borderRadius: '4px',
+                                                    }}
+                                                />
+                                            </Box>
+                                        ) : (
+                                            <Typography variant="caption" color="textSecondary">
+                                                No QR
+                                            </Typography>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography variant="body2" fontWeight="medium">
+                                            ₹{parseFloat(order.amount || '0').toFixed(2)}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Chip
+                                            label={order.status}
+                                            size="small"
+                                            color={order.status === 'PENDING' ? 'warning' : order.status === 'SUCCESS' ? 'success' : 'default'}
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography variant="caption" color="textSecondary">
+                                            {new Date(order.created_at).toLocaleString()}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        {(order.qr_code_url || order.image_url) && (
+                                            <Button
+                                                variant="outlined"
+                                                size="small"
+                                                onClick={() => handleSendToWhatsApp(order)}
+                                                startIcon={<span>💬</span>}
+                                            >
+                                                Send
+                                            </Button>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
+
+            {/* Send to WhatsApp Dialog */}
+            <Dialog open={sendDialogOpen} onClose={() => setSendDialogOpen(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>Send QR Code to WhatsApp</DialogTitle>
+                <DialogContent>
+                    <Box sx={{ mt: 2 }}>
+                        {selectedOrder && (
+                            <Box sx={{ mb: 2 }}>
+                                <Typography variant="body2" color="textSecondary" gutterBottom>
+                                    Order Details:
+                                </Typography>
+                                <Typography variant="body2">
+                                    <strong>Amount:</strong> ₹{parseFloat(selectedOrder.amount || '0').toFixed(2)}
+                                </Typography>
+                                <Typography variant="body2">
+                                    <strong>Phone:</strong> {customerPhone}
+                                </Typography>
+                            </Box>
+                        )}
+
+                        {selectedOrder?.qr_code_url && (
+                            <Box sx={{ mb: 2, textAlign: 'center' }}>
+                                <img
+                                    src={selectedOrder.qr_code_url}
+                                    alt="QR Code"
+                                    style={{
+                                        width: '150px',
+                                        height: '150px',
+                                        border: '1px solid #ddd',
+                                        borderRadius: '8px',
+                                    }}
+                                />
+                            </Box>
+                        )}
+
+                        <MuiTextField
+                            label="Caption (optional)"
+                            multiline
+                            rows={3}
+                            fullWidth
+                            value={caption}
+                            onChange={(e) => setCaption(e.target.value)}
+                            placeholder="Enter a message to send with the QR code..."
+                            helperText={`Default: Please scan this QR code to pay ₹${selectedOrder?.amount || '0'}`}
+                            sx={{ mt: 2 }}
+                        />
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setSendDialogOpen(false)}>Cancel</Button>
+                    <Button
+                        onClick={handleSendMedia}
+                        variant="contained"
+                        disabled={sendingMedia}
+                        startIcon={<span>💬</span>}
+                    >
+                        {sendingMedia ? 'Sending...' : 'Send to WhatsApp'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </Box>
+    );
+};
+
+// --- WhatsApp Consultation Creation Component ---
+const WhatsAppConsultation = ({ customerId, xAuthId, profiles }: { customerId: number; xAuthId: number; profiles: any[] }) => {
+    const [selectedProfileId, setSelectedProfileId] = useState('');
+    const [mode, setMode] = useState('voice');
+    const [loading, setLoading] = useState(false);
+    const [consultationData, setConsultationData] = useState<any>(null);
+    const notify = useNotify();
+
+    const handleCreateConsultation = async () => {
+        if (!selectedProfileId) {
+            notify('Please select a profile', { type: 'warning' });
+            return;
+        }
+
+        setLoading(true);
+        setConsultationData(null);
+
+        try {
+            const token = localStorage.getItem('access_token');
+            const url = `${API_URL}/api/v1/consultations/whatsapp`;
+
+            const payload = {
+                customer_id: customerId,
+                customer_x_auth_id: xAuthId,
+                profile_id: parseInt(selectedProfileId, 10),
+                user_source: 'whatsapp',
+                mode: mode,
+            };
+
+            console.log('Creating WhatsApp consultation:', payload);
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-Internal-API-Key': 'dummy_service_secret',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setConsultationData(data);
+                notify('Consultation created successfully!', { type: 'success' });
+            } else {
+                const errorMsg = data.detail?.message || data.message || data.error || 'Failed to create consultation';
+                notify(`Error: ${errorMsg}`, { type: 'error' });
+            }
+        } catch (err: any) {
+            const errorMsg = err.message || 'Network error occurred';
+            notify(`Error: ${errorMsg}`, { type: 'error' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <Box>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                Create WhatsApp Consultation
+            </Typography>
+
+            {/* Consultation Creation Form */}
+            <Paper
+                sx={{
+                    p: 3,
+                    mb: 3,
+                    bgcolor: 'background.paper',
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                }}
+            >
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    {/* Profile Selection */}
+                    <Box>
+                        <Typography variant="body2" gutterBottom fontWeight="medium">
+                            Select Profile *
+                        </Typography>
+                        <MuiTextField
+                            select
+                            value={selectedProfileId}
+                            onChange={(e) => setSelectedProfileId(e.target.value)}
+                            fullWidth
+                            size="small"
+                            SelectProps={{
+                                native: true,
+                            }}
+                        >
+                            <option value="">Select a profile</option>
+                            {profiles.map((profile: any) => (
+                                <option key={profile.profile_id} value={profile.profile_id}>
+                                    {profile.name} (ID: {profile.profile_id})
+                                </option>
+                            ))}
+                        </MuiTextField>
+                    </Box>
+
+                    {/* Mode Selection */}
+                    <Box>
+                        <Typography variant="body2" gutterBottom fontWeight="medium">
+                            Consultation Mode *
+                        </Typography>
+                        <MuiTextField
+                            select
+                            value={mode}
+                            onChange={(e) => setMode(e.target.value)}
+                            fullWidth
+                            size="small"
+                            SelectProps={{
+                                native: true,
+                            }}
+                        >
+                            <option value="voice">Voice Call</option>
+                            <option value="video">Video Call</option>
+                            <option value="chat">Chat</option>
+                        </MuiTextField>
+                    </Box>
+
+                    {/* Create Button */}
+                    <Button
+                        variant="contained"
+                        onClick={handleCreateConsultation}
+                        disabled={loading || !selectedProfileId}
+                        sx={{ alignSelf: 'flex-start' }}
+                    >
+                        {loading ? 'Creating...' : 'Create Consultation'}
+                    </Button>
+                </Box>
+            </Paper>
+
+            {/* Consultation Result Display */}
+            {consultationData && (
+                <Paper
+                    sx={{
+                        p: 3,
+                        bgcolor: 'success.light',
+                        border: 1,
+                        borderColor: 'success.main',
+                        borderRadius: 1,
+                    }}
+                >
+                    <Typography variant="h6" fontWeight="medium" gutterBottom>
+                        Consultation Created Successfully!
+                    </Typography>
+
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
+                        <Typography variant="body2">
+                            <strong>Consultation ID:</strong> {consultationData.consultation_id}
+                        </Typography>
+                        <Typography variant="body2">
+                            <strong>State:</strong> {consultationData.state}
+                        </Typography>
+                        <Typography variant="body2">
+                            <strong>Mode:</strong> {consultationData.mode}
+                        </Typography>
+                        <Typography variant="body2">
+                            <strong>Customer ID:</strong> {consultationData.customer_id}
+                        </Typography>
+                        <Typography variant="body2">
+                            <strong>Profile ID:</strong> {consultationData.profile_id}
+                        </Typography>
+                        {consultationData.workflow_id && (
+                            <Typography variant="body2">
+                                <strong>Workflow ID:</strong> {consultationData.workflow_id}
+                            </Typography>
+                        )}
+                        {consultationData.message && (
+                            <Alert severity="success" sx={{ mt: 2 }}>
+                                {consultationData.message}
+                            </Alert>
+                        )}
+                    </Box>
+                </Paper>
+            )}
+        </Box>
+    );
+};
+
 const CustomerShowView = () => {
     const record = useRecordContext();
 
@@ -1252,6 +2052,10 @@ const CustomerShowView = () => {
     if (!record) return null;
 
     const customerIdAsNumber = Number(record.id);
+
+    // Extract x_auth_id and profiles for WhatsApp consultation
+    const xAuthId = record.x_auth_id;
+    const profiles = record.profile?.[0]?.profiles || [];
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -1314,6 +2118,30 @@ const CustomerShowView = () => {
             >
                 <CustomerPaymentOrders customerId={customerIdAsNumber} />
             </CollapsibleSection>
+
+            {/* Collapsible QR Code Payment Order Section */}
+            <CollapsibleSection
+                title="QR Code Payment"
+                icon={<span>📱</span>}
+                defaultOpen={false}
+            >
+                <QRCodePaymentOrder customerId={customerIdAsNumber} customerPhone={record.phone} />
+            </CollapsibleSection>
+
+            {/* Collapsible WhatsApp Consultation Section */}
+            {profiles && profiles.length > 0 && (
+                <CollapsibleSection
+                    title="WhatsApp Consultation"
+                    icon={<span>💬</span>}
+                    defaultOpen={false}
+                >
+                    <WhatsAppConsultation
+                        customerId={customerIdAsNumber}
+                        xAuthId={xAuthId}
+                        profiles={profiles}
+                    />
+                </CollapsibleSection>
+            )}
         </Box>
     );
 };

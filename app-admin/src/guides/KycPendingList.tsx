@@ -122,8 +122,8 @@ export const KycActionButtons = ({ record, status, onUploadClick }: KycActionBut
     const handleCompleteOnboarding = async (pricePerMinute: string, revenueShare: string) => {
         setIsLoading(true);
         try {
-            // Use the correct admin API endpoint for complete onboarding
-            const url = `${process.env.REACT_APP_API_URL}/api/v1/admin/guides/${record.id}/complete-onboarding`;
+            // Use environment variable for API URL instead of hardcoded URL
+            const url = `${process.env.REACT_APP_GUIDE_ONBOARDING_URL}/guides/${record.id}/complete-onboarding`;
             const body = JSON.stringify({
                 chat_base_rate_per_minute: pricePerMinute,
                 voice_base_rate_per_minute: pricePerMinute,

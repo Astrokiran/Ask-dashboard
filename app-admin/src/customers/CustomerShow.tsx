@@ -336,7 +336,7 @@ const ProfilesGrid = () => {
                         onSave={handleUpdateSave}
                         onCancel={() => setEditingProfile(null)}
                         saving={isSaving}
-                        customerId={record.id}
+                        customerId={Number(record.id)}
                         refresh={refresh}
                     />
                 </DialogContent>

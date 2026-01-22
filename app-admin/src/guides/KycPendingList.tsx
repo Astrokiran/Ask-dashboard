@@ -123,7 +123,7 @@ export const KycActionButtons = ({ record, status, onUploadClick }: KycActionBut
         setIsLoading(true);
         try {
             // Use the correct admin API endpoint for complete onboarding
-            const url = `${process.env.REACT_APP_API_URL}/api/v1/admin/guides/${record.id}/complete-onboarding`;
+            const url = `https://askapp.astrokiran.com/api/v1/admin/guides/${record.id}/complete-onboarding`;
             const body = JSON.stringify({
                 chat_base_rate_per_minute: pricePerMinute,
                 voice_base_rate_per_minute: pricePerMinute,

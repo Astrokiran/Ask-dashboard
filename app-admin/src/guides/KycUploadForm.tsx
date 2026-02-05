@@ -44,11 +44,11 @@ export const KycUploadForm = ({ authUserId, onSuccess }: KycUploadFormProps) => 
     const token = auth.token;
     const internalApiKey = 'dummy_service_secret';
 
-    // if (!token) {
-    //     setError('Authentication token not found. Please log in again.');
-    //     setIsLoading(false);
-    //     return;
-    // }
+    if (!token) {
+        setError('Authentication token not found. Please log in again.');
+        setIsLoading(false);
+        return;
+    }
 
     const headers = new Headers();
     headers.append('Authorization', `Bearer ${token}`);

@@ -4,6 +4,7 @@ import {
   Box, Button, TextField, Typography, CircularProgress, Card, CardContent, CardHeader, Alert
 } from '@mui/material';
 import { UploadFile } from '@mui/icons-material';
+import { httpClient } from '../dataProvider';
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -36,53 +37,51 @@ export const KycUploadForm = ({ authUserId, onSuccess }: KycUploadFormProps) => 
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
+  e.preventDefault();
+  setIsLoading(true);
+  setError('');
 
-    const auth = JSON.parse(localStorage.getItem('auth') || '{}');
-    const token = auth.token;
-    const internalApiKey = 'dummy_service_secret';
+  const internalApiKey = 'dummy_service_secret';
 
-    if (!token) {
-        setError('Authentication token not found. Please log in again.');
-        setIsLoading(false);
-        return;
-    }
-
-    const headers = new Headers();
-    headers.append('Authorization', `Bearer ${token}`);
-    headers.append('X-Internal-API-Key', internalApiKey);
-
+  try {
     const formData = new FormData();
     formData.append('bank_account', JSON.stringify(bankDetails));
+
     Object.entries(files).forEach(([key, value]) => {
-      if (value) { formData.append(key, value); }
+      if (value) {
+        formData.append(key, value);
+      }
     });
 
-    fetch(`${API_URL}/api/v1/guides/${authUserId}/kyc/submit`, {
+    await httpClient(
+      `${API_URL}/api/v1/guides/${authUserId}/kyc/submit`,
+      {
         method: 'POST',
-        headers: headers,
         body: formData,
-    })
-    .then(response => {
-        if (!response.ok) { return response.json().then(err => Promise.reject(err)); }
-        return response.json();
-    })
-    .then(() => {
-        notify('KYC documents submitted successfully!', { type: 'success' });
-        refresh();
-        onSuccess();
-    })
-    .catch(err => {
-        const errorMessage = err.detail?.[0]?.msg || err.detail || 'KYC submission failed.';
-        setError(errorMessage);
-        notify(errorMessage, { type: 'error' });
-    })
-    .finally(() => {
-        setIsLoading(false);
-    });
-  };
+        headers: new Headers({
+          'X-Internal-API-Key': internalApiKey,
+        }),
+      }
+    );
+
+    notify('KYC documents submitted successfully!', { type: 'success' });
+    refresh();
+    onSuccess();
+
+  } catch (err: any) {
+    const errorMessage =
+      err?.body?.detail?.[0]?.msg ||
+      err?.body?.detail ||
+      'KYC submission failed.';
+
+    setError(errorMessage);
+    notify(errorMessage, { type: 'error' });
+
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   return (
     <Card sx={{ mt: 4, mb: 4 }}>

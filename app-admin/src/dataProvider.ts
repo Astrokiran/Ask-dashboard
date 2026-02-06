@@ -45,7 +45,9 @@ export const httpClient = async (url: string, options: fetchUtils.Options = {}) 
     const apiKey = 'dummy_service_secret'; 
     (options.headers as Headers).set('X-Internal-API-Key', apiKey);
 
-    if (options.body) { 
+    // Only set Content-Type to application/json if body is not FormData
+    // For FormData, let the browser set Content-Type with boundary automatically
+    if (options.body && !(options.body instanceof FormData)) {
         (options.headers as Headers).set('Content-Type', 'application/json');
     }
 

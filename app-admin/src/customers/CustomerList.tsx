@@ -44,6 +44,7 @@ const customerFilters = [
 const NewCustomerForm = ({ onSave, saving }: { onSave: (data: any) => void; saving: boolean }) => {
     const [areaCode, setAreaCode] = useState('+91');
     const [phoneNumber, setPhoneNumber] = useState('');
+    const [source, setSource] = useState('admin-dashboard');
 
     const handleSubmit = (event: FormEvent) => {
         event.preventDefault();
@@ -51,7 +52,7 @@ const NewCustomerForm = ({ onSave, saving }: { onSave: (data: any) => void; savi
             alert('Area Code and Phone Number are required.');
             return;
         }
-        onSave({ area_code: areaCode, phone_number: phoneNumber });
+        onSave({ area_code: areaCode, phone_number: phoneNumber, source: source });
     };
 
     return (
@@ -78,6 +79,19 @@ const NewCustomerForm = ({ onSave, saving }: { onSave: (data: any) => void; savi
                     fullWidth
                     size="small"
                     sx={{ mt: 1 }}
+                />
+            </div>
+            <div>
+                <label style={{ fontSize: '0.875rem', fontWeight: 500, textTransform: 'capitalize' }}>
+                    Source *
+                </label>
+                <MuiTextField
+                    value={source}
+                    onChange={e => setSource(e.target.value)}
+                    fullWidth
+                    size="small"
+                    sx={{ mt: 1 }}
+                    helperText="The source where this customer was created from"
                 />
             </div>
             <Button type="submit" disabled={saving} variant="contained" sx={{ mt: 1 }}>

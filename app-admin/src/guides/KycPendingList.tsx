@@ -162,16 +162,18 @@ export const KycActionButtons = ({ record, status, onUploadClick }: KycActionBut
     const handleCompleteOnboarding = async (rates: { chatRate: string; voiceRate: string; videoRate: string; revenueShare: string }) => {
         setIsLoading(true);
         try {
-            // 1. Complete onboarding via guide onboarding API (original 2-field format)
-            const onboardingUrl = `${process.env.REACT_APP_GUIDE_ONBOARDING_URL}/guides/${record.id}/complete-onboarding`;
-            const onboardingBody = JSON.stringify({
-                price_per_minute: rates.chatRate,
+            // Use the correct admin API endpoint for complete onboarding
+            const url = `https://askapp.astrokiran.com/api/v1/admin/guides/${record.id}/complete-onboarding`;
+            const body = JSON.stringify({
+                chat_base_rate_per_minute: rates.chatRate,
+                voice_base_rate_per_minute: rates.voiceRate,
+                video_base_rate_per_minute: rates.videoRate,
                 revenue_share: parseInt(rates.revenueShare, 10)
             });
 
-            await httpClient(onboardingUrl, {
+            await httpClient(url, {
                 method: 'POST',
-                body: onboardingBody
+                body: body
             });
 
             // 2. Update consultant rates via offers API (all 3 separate rates)

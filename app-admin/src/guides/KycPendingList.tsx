@@ -12,10 +12,11 @@ import {
     Identifier,
     useListContext,
 } from 'react-admin';
-import { 
-    Send, 
-    DoneAll, 
-    CheckCircle 
+import {
+    Send,
+    DoneAll,
+    CheckCircle,
+    Edit
 } from '@mui/icons-material';
 import { Button, Box, Tabs, Tab, Typography, Alert, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { TextField as MuiTextField } from '@mui/material';
@@ -152,11 +153,105 @@ const OnboardingDialog = ({ open, onClose, onConfirm, guideName }: OnboardingDia
     );
 };
 
+interface UpdateRatesDialogProps {
+    open: boolean;
+    onClose: () => void;
+    onConfirm: (rates: { chatRate: string; voiceRate: string; videoRate: string }) => void;
+    guideName: string;
+}
+
+const UpdateRatesDialog = ({ open, onClose, onConfirm, guideName }: UpdateRatesDialogProps) => {
+    const [chatRate, setChatRate] = useState('50.00');
+    const [voiceRate, setVoiceRate] = useState('50.00');
+    const [videoRate, setVideoRate] = useState('50.00');
+
+    const handleSubmit = () => {
+        // Validate inputs
+        const chat = parseFloat(chatRate);
+        const voice = parseFloat(voiceRate);
+        const video = parseFloat(videoRate);
+
+        if (isNaN(chat) || chat <= 0) {
+            alert('Please enter a valid chat rate per minute');
+            return;
+        }
+
+        if (isNaN(voice) || voice <= 0) {
+            alert('Please enter a valid voice rate per minute');
+            return;
+        }
+
+        if (isNaN(video) || video <= 0) {
+            alert('Please enter a valid video rate per minute');
+            return;
+        }
+
+        onConfirm({ chatRate, voiceRate, videoRate });
+        onClose();
+    };
+
+    return (
+        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+            <DialogTitle>Update Consultant Price - {guideName}</DialogTitle>
+            <DialogContent>
+                <Box sx={{ pt: 2 }}>
+                    <MuiTextField
+                        label="Chat Rate Per Minute (₹)"
+                        type="number"
+                        value={chatRate}
+                        onChange={(e) => setChatRate(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        inputProps={{
+                            min: "0",
+                            step: "0.01"
+                        }}
+                        helperText="Enter the per-minute rate for chat consultations"
+                    />
+                    <MuiTextField
+                        label="Voice Rate Per Minute (₹)"
+                        type="number"
+                        value={voiceRate}
+                        onChange={(e) => setVoiceRate(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        inputProps={{
+                            min: "0",
+                            step: "0.01"
+                        }}
+                        helperText="Enter the per-minute rate for voice consultations"
+                    />
+                    <MuiTextField
+                        label="Video Rate Per Minute (₹)"
+                        type="number"
+                        value={videoRate}
+                        onChange={(e) => setVideoRate(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        inputProps={{
+                            min: "0",
+                            step: "0.01"
+                        }}
+                        helperText="Enter the per-minute rate for video consultations"
+                    />
+                </Box>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={onClose}>Cancel</Button>
+                <Button onClick={handleSubmit} variant="contained" color="primary">
+                    Update Rates
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
+};
+
 export const KycActionButtons = ({ record, status, onUploadClick }: KycActionButtonsProps) => {
     const notify = useNotify();
     const refresh = useRefresh();
     const [isLoading, setIsLoading] = useState(false);
     const [showOnboardingDialog, setShowOnboardingDialog] = useState(false);
+    const [showUpdateRatesDialog, setShowUpdateRatesDialog] = useState(false);
 
     // Handler for complete onboarding with price and share input
     const handleCompleteOnboarding = async (rates: { chatRate: string; voiceRate: string; videoRate: string; revenueShare: string }) => {
@@ -194,6 +289,34 @@ export const KycActionButtons = ({ record, status, onUploadClick }: KycActionBut
             refresh();
         } catch (error: any) {
             notify(`Error completing onboarding: ${error.message}`, { type: 'error' });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Handler for updating consultant rates via offers API
+    const handleUpdateRates = async (rates: { chatRate: string; voiceRate: string; videoRate: string }) => {
+        setIsLoading(true);
+        try {
+            const url = `https://devazstg.astrokiran.com/auth/api/pixel-admin/api/v1/offers/consultants/${record.id}/rates/batch`;
+            const body = JSON.stringify({
+                chat_rate_per_minute: rates.chatRate,
+                voice_rate_per_minute: rates.voiceRate,
+                video_rate_per_minute: rates.videoRate
+            });
+
+            await httpClient(url, {
+                method: 'POST',
+                body: body,
+                headers: {
+                    'X-Internal-Api-Key': 'dummy_service_secret'
+                }
+            });
+
+            notify('Consultant rates updated successfully!', { type: 'success' });
+            refresh();
+        } catch (error: any) {
+            notify(`Error updating rates: ${error.message}`, { type: 'error' });
         } finally {
             setIsLoading(false);
         }
@@ -329,11 +452,33 @@ export const KycActionButtons = ({ record, status, onUploadClick }: KycActionBut
                 </Button>
             )}
 
+            {/* Button to Update Consultant Price (after onboarding is complete) */}
+            {status === 'ONBOARDED' && (
+                <Button
+                    variant="outlined"
+                    size="small"
+                    color="primary"
+                    onClick={() => setShowUpdateRatesDialog(true)}
+                    disabled={isLoading}
+                    startIcon={<Edit />}
+                >
+                    Update Consultant Price
+                </Button>
+            )}
+
             {/* Onboarding Dialog */}
             <OnboardingDialog
                 open={showOnboardingDialog}
                 onClose={() => setShowOnboardingDialog(false)}
                 onConfirm={handleCompleteOnboarding}
+                guideName={record.full_name || `Guide #${record.id}`}
+            />
+
+            {/* Update Rates Dialog */}
+            <UpdateRatesDialog
+                open={showUpdateRatesDialog}
+                onClose={() => setShowUpdateRatesDialog(false)}
+                onConfirm={handleUpdateRates}
                 guideName={record.full_name || `Guide #${record.id}`}
             />
         </Box>

@@ -271,21 +271,7 @@ export const KycActionButtons = ({ record, status, onUploadClick }: KycActionBut
                 body: body
             });
 
-            // 2. Update consultant rates via offers API (all 3 separate rates)
-            const offersBaseUrl = process.env.REACT_APP_OFFERS_BASE_URL;
-            const ratesUrl = `${offersBaseUrl}/api/v1/offers/consultants/${record.x_auth_id}/rates/batch`;
-            const ratesBody = JSON.stringify({
-                chat_rate_per_minute: rates.chatRate,
-                voice_rate_per_minute: rates.voiceRate,
-                video_rate_per_minute: rates.videoRate
-            });
-
-            await httpClient(ratesUrl, {
-                method: 'POST',
-                body: ratesBody
-            });
-
-            notify('Guide onboarded successfully and rates updated!', { type: 'success' });
+            notify('Guide onboarded successfully!', { type: 'success' });
             refresh();
         } catch (error: any) {
             notify(`Error completing onboarding: ${error.message}`, { type: 'error' });

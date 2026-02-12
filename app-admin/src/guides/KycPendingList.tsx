@@ -12,10 +12,11 @@ import {
     Identifier,
     useListContext,
 } from 'react-admin';
-import { 
-    Send, 
-    DoneAll, 
-    CheckCircle 
+import {
+    Send,
+    DoneAll,
+    CheckCircle,
+    Edit
 } from '@mui/icons-material';
 import { Button, Box, Tabs, Tab, Typography, Alert, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { TextField as MuiTextField } from '@mui/material';
@@ -41,21 +42,35 @@ interface KycActionButtonsProps {
 interface OnboardingDialogProps {
     open: boolean;
     onClose: () => void;
-    onConfirm: (pricePerMinute: string, revenueShare: string) => void;
+    onConfirm: (rates: { chatRate: string; voiceRate: string; videoRate: string; revenueShare: string }) => void;
     guideName: string;
 }
 
 const OnboardingDialog = ({ open, onClose, onConfirm, guideName }: OnboardingDialogProps) => {
-    const [pricePerMinute, setPricePerMinute] = useState('50.00');
+    const [chatRate, setChatRate] = useState('50.00');
+    const [voiceRate, setVoiceRate] = useState('50.00');
+    const [videoRate, setVideoRate] = useState('50.00');
     const [revenueShare, setRevenueShare] = useState('20');
 
     const handleSubmit = () => {
         // Validate inputs
-        const price = parseFloat(pricePerMinute);
+        const chat = parseFloat(chatRate);
+        const voice = parseFloat(voiceRate);
+        const video = parseFloat(videoRate);
         const share = parseFloat(revenueShare);
 
-        if (isNaN(price) || price <= 0) {
-            alert('Please enter a valid price per minute');
+        if (isNaN(chat) || chat <= 0) {
+            alert('Please enter a valid chat rate per minute');
+            return;
+        }
+
+        if (isNaN(voice) || voice <= 0) {
+            alert('Please enter a valid voice rate per minute');
+            return;
+        }
+
+        if (isNaN(video) || video <= 0) {
+            alert('Please enter a valid video rate per minute');
             return;
         }
 
@@ -64,7 +79,7 @@ const OnboardingDialog = ({ open, onClose, onConfirm, guideName }: OnboardingDia
             return;
         }
 
-        onConfirm(pricePerMinute, revenueShare);
+        onConfirm({ chatRate, voiceRate, videoRate, revenueShare });
         onClose();
     };
 
@@ -74,17 +89,43 @@ const OnboardingDialog = ({ open, onClose, onConfirm, guideName }: OnboardingDia
             <DialogContent>
                 <Box sx={{ pt: 2 }}>
                     <MuiTextField
-                        label="Price Per Minute (₹)"
+                        label="Chat Rate Per Minute (₹)"
                         type="number"
-                        value={pricePerMinute}
-                        onChange={(e) => setPricePerMinute(e.target.value)}
+                        value={chatRate}
+                        onChange={(e) => setChatRate(e.target.value)}
                         fullWidth
                         margin="normal"
                         inputProps={{
                             min: "0",
                             step: "0.01"
                         }}
-                        helperText="Enter the per-minute consultation rate for this guide"
+                        helperText="Enter the per-minute rate for chat consultations"
+                    />
+                    <MuiTextField
+                        label="Voice Rate Per Minute (₹)"
+                        type="number"
+                        value={voiceRate}
+                        onChange={(e) => setVoiceRate(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        inputProps={{
+                            min: "0",
+                            step: "0.01"
+                        }}
+                        helperText="Enter the per-minute rate for voice consultations"
+                    />
+                    <MuiTextField
+                        label="Video Rate Per Minute (₹)"
+                        type="number"
+                        value={videoRate}
+                        onChange={(e) => setVideoRate(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        inputProps={{
+                            min: "0",
+                            step: "0.01"
+                        }}
+                        helperText="Enter the per-minute rate for video consultations"
                     />
                     <MuiTextField
                         label="Admin Revenue Share (%)"
@@ -112,23 +153,117 @@ const OnboardingDialog = ({ open, onClose, onConfirm, guideName }: OnboardingDia
     );
 };
 
+interface UpdateRatesDialogProps {
+    open: boolean;
+    onClose: () => void;
+    onConfirm: (rates: { chatRate: string; voiceRate: string; videoRate: string }) => void;
+    guideName: string;
+}
+
+const UpdateRatesDialog = ({ open, onClose, onConfirm, guideName }: UpdateRatesDialogProps) => {
+    const [chatRate, setChatRate] = useState('50.00');
+    const [voiceRate, setVoiceRate] = useState('50.00');
+    const [videoRate, setVideoRate] = useState('50.00');
+
+    const handleSubmit = () => {
+        // Validate inputs
+        const chat = parseFloat(chatRate);
+        const voice = parseFloat(voiceRate);
+        const video = parseFloat(videoRate);
+
+        if (isNaN(chat) || chat <= 0) {
+            alert('Please enter a valid chat rate per minute');
+            return;
+        }
+
+        if (isNaN(voice) || voice <= 0) {
+            alert('Please enter a valid voice rate per minute');
+            return;
+        }
+
+        if (isNaN(video) || video <= 0) {
+            alert('Please enter a valid video rate per minute');
+            return;
+        }
+
+        onConfirm({ chatRate, voiceRate, videoRate });
+        onClose();
+    };
+
+    return (
+        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+            <DialogTitle>Update Consultant Price - {guideName}</DialogTitle>
+            <DialogContent>
+                <Box sx={{ pt: 2 }}>
+                    <MuiTextField
+                        label="Chat Rate Per Minute (₹)"
+                        type="number"
+                        value={chatRate}
+                        onChange={(e) => setChatRate(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        inputProps={{
+                            min: "0",
+                            step: "0.01"
+                        }}
+                        helperText="Enter the per-minute rate for chat consultations"
+                    />
+                    <MuiTextField
+                        label="Voice Rate Per Minute (₹)"
+                        type="number"
+                        value={voiceRate}
+                        onChange={(e) => setVoiceRate(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        inputProps={{
+                            min: "0",
+                            step: "0.01"
+                        }}
+                        helperText="Enter the per-minute rate for voice consultations"
+                    />
+                    <MuiTextField
+                        label="Video Rate Per Minute (₹)"
+                        type="number"
+                        value={videoRate}
+                        onChange={(e) => setVideoRate(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        inputProps={{
+                            min: "0",
+                            step: "0.01"
+                        }}
+                        helperText="Enter the per-minute rate for video consultations"
+                    />
+                </Box>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={onClose}>Cancel</Button>
+                <Button onClick={handleSubmit} variant="contained" color="primary">
+                    Update Rates
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
+};
+
 export const KycActionButtons = ({ record, status, onUploadClick }: KycActionButtonsProps) => {
     const notify = useNotify();
     const refresh = useRefresh();
     const [isLoading, setIsLoading] = useState(false);
     const [showOnboardingDialog, setShowOnboardingDialog] = useState(false);
+    const [showUpdateRatesDialog, setShowUpdateRatesDialog] = useState(false);
 
     // Handler for complete onboarding with price and share input
-    const handleCompleteOnboarding = async (pricePerMinute: string, revenueShare: string) => {
+    const handleCompleteOnboarding = async (rates: { chatRate: string; voiceRate: string; videoRate: string; revenueShare: string }) => {
         setIsLoading(true);
         try {
             // Use the correct admin API endpoint for complete onboarding
-            const url = `https://askapp.astrokiran.com/api/v1/admin/guides/${record.id}/complete-onboarding`;
+            const url = `https://devazstg.astrokiran.com/auth/api/v1/admin/guides/${record.id}/complete-onboarding`;
             const body = JSON.stringify({
-                chat_base_rate_per_minute: pricePerMinute,
-                voice_base_rate_per_minute: pricePerMinute,
-                video_base_rate_per_minute: pricePerMinute,
-                revenue_share: parseInt(revenueShare, 10)
+                chat_base_rate_per_minute: rates.chatRate,
+                voice_base_rate_per_minute: rates.voiceRate,
+                video_base_rate_per_minute: rates.videoRate,
+                revenue_share: parseInt(rates.revenueShare, 10)
             });
 
             await httpClient(url, {
@@ -140,6 +275,33 @@ export const KycActionButtons = ({ record, status, onUploadClick }: KycActionBut
             refresh();
         } catch (error: any) {
             notify(`Error completing onboarding: ${error.message}`, { type: 'error' });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Handler for updating consultant rates via offers API
+    const handleUpdateRates = async (rates: { chatRate: string; voiceRate: string; videoRate: string }) => {
+        setIsLoading(true);
+        try {
+
+            const offers_url = process.env.REACT_APP_API_URL;
+            const url = `${offers_url}/api/v1/offers/consultants/${record.id}/rates/batch`;
+            const body = JSON.stringify({
+                chat_rate_per_minute: rates.chatRate,
+                voice_rate_per_minute: rates.voiceRate,
+                video_rate_per_minute: rates.videoRate
+            });
+
+            await httpClient(url, {
+                method: 'POST',
+                body: body
+            });
+
+            notify('Consultant rates updated successfully!', { type: 'success' });
+            refresh();
+        } catch (error: any) {
+            notify(`Error updating rates: ${error.message}`, { type: 'error' });
         } finally {
             setIsLoading(false);
         }
@@ -275,11 +437,31 @@ export const KycActionButtons = ({ record, status, onUploadClick }: KycActionBut
                 </Button>
             )}
 
+            {/* Button to Update Consultant Price - available for all guides */}
+            <Button
+                variant="outlined"
+                size="small"
+                color="info"
+                onClick={() => setShowUpdateRatesDialog(true)}
+                disabled={isLoading}
+                startIcon={<Edit />}
+            >
+                Update Consultant Price
+            </Button>
+
             {/* Onboarding Dialog */}
             <OnboardingDialog
                 open={showOnboardingDialog}
                 onClose={() => setShowOnboardingDialog(false)}
                 onConfirm={handleCompleteOnboarding}
+                guideName={record.full_name || `Guide #${record.id}`}
+            />
+
+            {/* Update Rates Dialog */}
+            <UpdateRatesDialog
+                open={showUpdateRatesDialog}
+                onClose={() => setShowUpdateRatesDialog(false)}
+                onConfirm={handleUpdateRates}
                 guideName={record.full_name || `Guide #${record.id}`}
             />
         </Box>

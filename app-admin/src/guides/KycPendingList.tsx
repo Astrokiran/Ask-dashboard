@@ -293,10 +293,7 @@ export const KycActionButtons = ({ record, status, onUploadClick }: KycActionBut
 
             await httpClient(url, {
                 method: 'POST',
-                body: body,
-                headers: {
-                    'X-Internal-Api-Key': 'dummy_service_secret'
-                }
+                body: body
             });
 
             notify('Consultant rates updated successfully!', { type: 'success' });

@@ -438,19 +438,17 @@ export const KycActionButtons = ({ record, status, onUploadClick }: KycActionBut
                 </Button>
             )}
 
-            {/* Button to Update Consultant Price (after onboarding is complete) */}
-            {status === 'ONBOARDED' && (
-                <Button
-                    variant="outlined"
-                    size="small"
-                    color="primary"
-                    onClick={() => setShowUpdateRatesDialog(true)}
-                    disabled={isLoading}
-                    startIcon={<Edit />}
-                >
-                    Update Consultant Price
-                </Button>
-            )}
+            {/* Button to Update Consultant Price - available for all guides */}
+            <Button
+                variant="outlined"
+                size="small"
+                color="info"
+                onClick={() => setShowUpdateRatesDialog(true)}
+                disabled={isLoading}
+                startIcon={<Edit />}
+            >
+                Update Consultant Price
+            </Button>
 
             {/* Onboarding Dialog */}
             <OnboardingDialog

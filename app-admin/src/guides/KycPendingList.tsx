@@ -284,7 +284,9 @@ export const KycActionButtons = ({ record, status, onUploadClick }: KycActionBut
     const handleUpdateRates = async (rates: { chatRate: string; voiceRate: string; videoRate: string }) => {
         setIsLoading(true);
         try {
-            const url = `https://devazstg.astrokiran.com/auth/api/pixel-admin/api/v1/offers/consultants/${record.id}/rates/batch`;
+
+            const offers_url = process.env.REACT_APP_API_URL;
+            const url = `${offers_url}/api/v1/offers/consultants/${record.id}/rates/batch`;
             const body = JSON.stringify({
                 chat_rate_per_minute: rates.chatRate,
                 voice_rate_per_minute: rates.voiceRate,

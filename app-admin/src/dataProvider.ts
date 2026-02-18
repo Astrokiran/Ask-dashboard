@@ -7,6 +7,8 @@ import queryString from 'query-string';
 const API_URL = process.env.REACT_APP_API_URL;
 console.log('API_URL:', API_URL); // Log the API URL to verify it's being read correctly
 const AUTH_API_URL = process.env.REACT_APP_AUTH_URL; // Base URL for your API
+// Fix: AUTH_API_URL includes /auth at the end, but superadmin routes are at /api/v1/superadmin
+const API_ROOT_URL = AUTH_API_URL?.replace(/\/auth$/, '') || '';
 const OFFERS_BASE_URL = process.env.REACT_APP_OFFERS_BASE_URL;
 
 const refreshToken = async () => {
@@ -825,7 +827,7 @@ export const dataProvider: DataProvider = {
             }
         }
         if (resource === 'videos') {
-            const { json } = await httpClient(`${AUTH_API_URL}/superadmin/media?type=video`);
+            const { json } = await httpClient(`${API_ROOT_URL}/superadmin/media?type=video`);
 
             const mediaList = json.data || [];
             const transformedMedia = mediaList.map((m: any) => ({
@@ -841,7 +843,7 @@ export const dataProvider: DataProvider = {
             return { data, total };
         }
         if (resource === 'stories') {
-            const { json } = await httpClient(`${AUTH_API_URL}/superadmin/media`);
+            const { json } = await httpClient(`${API_ROOT_URL}/superadmin/media`);
 
             const mediaList = (json.data || []).filter((m: any) => m.purpose === 'story');
             const transformedMedia = mediaList.map((m: any) => ({ ...m, id: m.id }));
@@ -1107,7 +1109,7 @@ export const dataProvider: DataProvider = {
         }
 
         if (resource === 'videos') {
-            const { json } = await httpClient(`${AUTH_API_URL}/superadmin/media?type=video`);
+            const { json } = await httpClient(`${API_ROOT_URL}/superadmin/media?type=video`);
 
             const mediaList = json.data || [];
             const media = mediaList.find((m: any) => m.id === parseInt(params.id as string) || m.id === params.id);
@@ -1119,7 +1121,7 @@ export const dataProvider: DataProvider = {
             return { data: { ...media, id: media.id } };
         }
         if (resource === 'stories') {
-            const { json } = await httpClient(`${AUTH_API_URL}/superadmin/media`);
+            const { json } = await httpClient(`${API_ROOT_URL}/superadmin/media`);
 
             const mediaList = (json.data || []).filter((m: any) => m.purpose === 'story');
             const media = mediaList.find((m: any) => m.id === parseInt(params.id as string) || m.id === params.id);
@@ -1379,7 +1381,7 @@ export const dataProvider: DataProvider = {
 
         if (resource === 'videos' || resource === 'stories') {
             const { id } = params;
-            await httpClient(`${AUTH_API_URL}/superadmin/media/${id}`, {
+            await httpClient(`${API_ROOT_URL}/superadmin/media/${id}`, {
                 method: 'DELETE',
             });
             return { data: { id } };

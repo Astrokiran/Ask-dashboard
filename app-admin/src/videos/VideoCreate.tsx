@@ -15,6 +15,9 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { httpClient } from '../dataProvider';
 
 const AUTH_API_URL = process.env.REACT_APP_AUTH_URL;
+// Fix: AUTH_API_URL includes /auth at the end, but superadmin routes are at /api/v1/superadmin
+// We need to strip the /auth suffix to get the API root
+const API_ROOT_URL = AUTH_API_URL?.replace(/\/auth$/, '') || '';
 
 // Accepted video MIME types
 const ACCEPTED_VIDEO_TYPES = [
@@ -148,7 +151,7 @@ export const VideoCreate = () => {
             }
 
             const { json: presignJson } = await httpClient(
-                `${AUTH_API_URL}/superadmin/media/presign`,
+                `${API_ROOT_URL}/superadmin/media/presign`,
                 {
                     method: 'POST',
                     body: JSON.stringify(presignPayload),
@@ -187,7 +190,7 @@ export const VideoCreate = () => {
                 createPayload.thumbnail_url = presignData.thumbnail_cdn_url;
             }
 
-            await httpClient(`${AUTH_API_URL}/superadmin/media`, {
+            await httpClient(`${API_ROOT_URL}/superadmin/media`, {
                 method: 'POST',
                 body: JSON.stringify(createPayload),
             });

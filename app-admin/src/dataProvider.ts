@@ -42,7 +42,7 @@ export const httpClient = async (url: string, options: fetchUtils.Options = {}) 
     const token = localStorage.getItem('access_token');
     (options.headers as Headers).set('Authorization', `Bearer ${token}`);
 
-    const apiKey = 'dummy_service_secret'; 
+    const apiKey = 'dummy_service_secret';
     (options.headers as Headers).set('X-Internal-API-Key', apiKey);
 
     // Only set Content-Type to application/json if body is not FormData
@@ -69,11 +69,11 @@ export const httpClient = async (url: string, options: fetchUtils.Options = {}) 
 
 
 interface Customer {
-  id: number;
-  name: string;
-  phone: string;
-  altPhone: string;
-  createdAt: Date;
+    id: number;
+    name: string;
+    phone: string;
+    altPhone: string;
+    createdAt: Date;
 }
 
 interface Order {
@@ -100,8 +100,8 @@ interface Consultation {
         phone: string;
     };
     status: 'In Progress' | 'Customer Canceled' | 'Completed' | 'Short Duration';
-    duration: number; 
-    conversationDuration: number; 
+    duration: number;
+    conversationDuration: number;
     createdAt: Date;
 }
 
@@ -129,29 +129,29 @@ const transformCustomer = (customer: any) => {
     let primaryProfile = null;
 
     if (customer.profile?.profiles && Array.isArray(customer.profile.profiles)) {
-      primaryProfile = customer.profile.profiles.find((p: any) => p.is_primary);
+        primaryProfile = customer.profile.profiles.find((p: any) => p.is_primary);
     } else if (customer.profile && Array.isArray(customer.profile)) {
-      primaryProfile = customer.profile.find((p: any) => p.is_primary);
+        primaryProfile = customer.profile.find((p: any) => p.is_primary);
     }
 
     // If no primary found, try to use the first profile
     if (!primaryProfile) {
-      if (customer.profile?.profiles && Array.isArray(customer.profile.profiles) && customer.profile.profiles.length > 0) {
-        primaryProfile = customer.profile.profiles[0];
-      } else if (customer.profile && Array.isArray(customer.profile) && customer.profile.length > 0) {
-        primaryProfile = customer.profile[0];
-      }
+        if (customer.profile?.profiles && Array.isArray(customer.profile.profiles) && customer.profile.profiles.length > 0) {
+            primaryProfile = customer.profile.profiles[0];
+        } else if (customer.profile && Array.isArray(customer.profile) && customer.profile.length > 0) {
+            primaryProfile = customer.profile[0];
+        }
     }
 
     console.log('Transforming customer:', customer.id, 'Primary profile:', primaryProfile);
 
     return {
-      ...customer, // Keep all original data for the show view
-      id: customer.id, // Ensure react-admin has the id
-      // Set a top-level 'name' for easy display in lists
-      name: primaryProfile?.full_name || `Customer #${customer.id}`,
-      // Create a formatted phone number
-      phone: `${customer.country_code || ''} ${customer.phone_number || ''}`.trim(),
+        ...customer, // Keep all original data for the show view
+        id: customer.id, // Ensure react-admin has the id
+        // Set a top-level 'name' for easy display in lists
+        name: primaryProfile?.full_name || `Customer #${customer.id}`,
+        // Create a formatted phone number
+        phone: `${customer.country_code || ''} ${customer.phone_number || ''}`.trim(),
     };
 };
 
@@ -198,7 +198,7 @@ export const dataProvider: DataProvider = {
         if (resource === 'admin-users') {
             const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
             const { field, order } = params.sort || { field: 'id', order: 'ASC' };
-            
+
             // Handle filters from the AdminUserList component
             const query = {
                 ...fetchUtils.flattenObject(params.filter),
@@ -223,181 +223,181 @@ export const dataProvider: DataProvider = {
 
             const url = `${API_URL}/api/v1/guides/`;
             const { json } = await httpClient(url);
-            
-             let guides = (json.data.guides || []).map((guide: any) => ({
-        ...guide,
-        status: guide.online ? 'online' : 'offline',
-                }));
 
-            if (filter) {   
-            guides = guides.filter((guide: any) => {
-                const searchMatch = filter.q
-                    ? guide.full_name && guide.full_name.toLowerCase().includes(filter.q.toLowerCase())
-                    : true;
-                
-                const statusMatch = (filter.online != null && filter.online !== '')
-                    ? String(guide.online) === filter.online
-                    : true;
+            let guides = (json.data.guides || []).map((guide: any) => ({
+                ...guide,
+                status: guide.online ? 'online' : 'offline',
+            }));
 
-                return searchMatch && statusMatch;
-            });
-        }
-            guides.sort((a: any, b: any) => {
-                    if (a[field] < b[field]) return order === 'ASC' ? -1 : 1;
-                    if (a[field] > b[field]) return order === 'ASC' ? 1 : -1;
-                    return 0;
+            if (filter) {
+                guides = guides.filter((guide: any) => {
+                    const searchMatch = filter.q
+                        ? guide.full_name && guide.full_name.toLowerCase().includes(filter.q.toLowerCase())
+                        : true;
+
+                    const statusMatch = (filter.online != null && filter.online !== '')
+                        ? String(guide.online) === filter.online
+                        : true;
+
+                    return searchMatch && statusMatch;
                 });
-                
-                const total = guides.length;
-                const data = guides.slice((page - 1) * perPage, page * perPage);
-
-                return { data, total };
             }
+            guides.sort((a: any, b: any) => {
+                if (a[field] < b[field]) return order === 'ASC' ? -1 : 1;
+                if (a[field] > b[field]) return order === 'ASC' ? 1 : -1;
+                return 0;
+            });
+
+            const total = guides.length;
+            const data = guides.slice((page - 1) * perPage, page * perPage);
+
+            return { data, total };
+        }
 
         if (resource === 'pending-verifications') {
-                const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
-                // This URL should already be correct from the previous fix
-                const url = `${API_URL}/api/v1/guides/pending-verifications?page=${page}&per_page=${perPage}`;
+            const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
+            // This URL should already be correct from the previous fix
+            const url = `${API_URL}/api/v1/guides/pending-verifications?page=${page}&per_page=${perPage}`;
 
-                const { json } = await httpClient(url);
+            const { json } = await httpClient(url);
 
-                // --- START: CORRECTED LOGIC ---
+            // --- START: CORRECTED LOGIC ---
 
-                // The API response nests the grouped data inside a 'data' property.
-                const groupedData = json.data || {};
-                let flattenedData: any[] = [];
+            // The API response nests the grouped data inside a 'data' property.
+            const groupedData = json.data || {};
+            let flattenedData: any[] = [];
 
-                // Dynamically loop through all statuses returned by the API (e.g., ACTIVE, KYC_PENDING)
-                for (const status in groupedData) {
-                    // Check to ensure we are not iterating over prototype properties
-                    if (Object.prototype.hasOwnProperty.call(groupedData, status)) {
-                        const guidesForStatus = groupedData[status] || [];
-                        
-                        // Add a 'status' field to each guide. This is crucial for grouping in the UI.
-                        const taggedGuides = guidesForStatus.map((guide: any) => ({
-                            ...guide,
-                            status: status 
-                        }));
+            // Dynamically loop through all statuses returned by the API (e.g., ACTIVE, KYC_PENDING)
+            for (const status in groupedData) {
+                // Check to ensure we are not iterating over prototype properties
+                if (Object.prototype.hasOwnProperty.call(groupedData, status)) {
+                    const guidesForStatus = groupedData[status] || [];
 
-                        // Add the guides for this status to our final flat array
-                        flattenedData = flattenedData.concat(taggedGuides);
-                    }
+                    // Add a 'status' field to each guide. This is crucial for grouping in the UI.
+                    const taggedGuides = guidesForStatus.map((guide: any) => ({
+                        ...guide,
+                        status: status
+                    }));
+
+                    // Add the guides for this status to our final flat array
+                    flattenedData = flattenedData.concat(taggedGuides);
                 }
-                
-                // Return the final flat array and its total count, as react-admin expects.
-                return {
-                    data: flattenedData,
-                    total: flattenedData.length,
-                };
-                // --- END: CORRECTED LOGIC ---
             }
-        
-            if (resource === 'customers') {
-                const { page, perPage } = params.pagination || { page: 1, perPage: 25 };
-                const { customer_id, phone_number, profile_name, from_date, to_date } = params.filter;
 
-                console.log('Customer filters - customer_id:', customer_id, 'phone_number:', phone_number, 'profile_name:', profile_name, 'from_date:', from_date, 'to_date:', to_date);
+            // Return the final flat array and its total count, as react-admin expects.
+            return {
+                data: flattenedData,
+                total: flattenedData.length,
+            };
+            // --- END: CORRECTED LOGIC ---
+        }
 
-                // Handle exact customer ID search using dedicated endpoint
-                if (customer_id) {
-                    console.log('Using dedicated customer endpoint for ID:', customer_id);
+        if (resource === 'customers') {
+            const { page, perPage } = params.pagination || { page: 1, perPage: 25 };
+            const { customer_id, phone_number, profile_name, from_date, to_date } = params.filter;
 
-                    try {
-                        const { json } = await httpClient(`${API_URL}/api/v1/customers/${customer_id}`);
-                        console.log('Customer by ID response:', json);
+            console.log('Customer filters - customer_id:', customer_id, 'phone_number:', phone_number, 'profile_name:', profile_name, 'from_date:', from_date, 'to_date:', to_date);
 
-                        const transformedCustomer = transformCustomer(json);
-                        console.log('Transformed customer:', transformedCustomer);
+            // Handle exact customer ID search using dedicated endpoint
+            if (customer_id) {
+                console.log('Using dedicated customer endpoint for ID:', customer_id);
 
-                        return {
-                            data: transformedCustomer ? [transformedCustomer] : [],
-                            total: 1,
-                        };
-                    } catch (error) {
-                        console.log('Customer not found with ID:', customer_id);
-                        return {
-                            data: [],
-                            total: 0,
-                        };
-                    }
+                try {
+                    const { json } = await httpClient(`${API_URL}/api/v1/customers/${customer_id}`);
+                    console.log('Customer by ID response:', json);
+
+                    const transformedCustomer = transformCustomer(json);
+                    console.log('Transformed customer:', transformedCustomer);
+
+                    return {
+                        data: transformedCustomer ? [transformedCustomer] : [],
+                        total: 1,
+                    };
+                } catch (error) {
+                    console.log('Customer not found with ID:', customer_id);
+                    return {
+                        data: [],
+                        total: 0,
+                    };
                 }
+            }
 
-                // Handle phone number and profile name search using list endpoint
-                const queryParams = new URLSearchParams({
-                    page: page.toString(),
-                    per_page: perPage.toString(),
-                });
+            // Handle phone number and profile name search using list endpoint
+            const queryParams = new URLSearchParams({
+                page: page.toString(),
+                per_page: perPage.toString(),
+            });
 
-                // Add phone number filter
-                if (phone_number) {
-                    queryParams.append('phone_number', phone_number.trim());
-                    console.log('Searching by phone_number:', phone_number.trim());
-                }
+            // Add phone number filter
+            if (phone_number) {
+                queryParams.append('phone_number', phone_number.trim());
+                console.log('Searching by phone_number:', phone_number.trim());
+            }
 
-                // Add profile name filter
-                if (profile_name) {
-                    queryParams.append('profile_name', profile_name.trim());
-                    console.log('Searching by profile_name:', profile_name.trim());
-                }
+            // Add profile name filter
+            if (profile_name) {
+                queryParams.append('profile_name', profile_name.trim());
+                console.log('Searching by profile_name:', profile_name.trim());
+            }
 
-                // Add date filters with timezone awareness
-                if (from_date) {
-                    // Convert to ISO 8601 format
-                    const fromDateTime = new Date(`${from_date}T00:00:00`).toISOString();
-                    queryParams.append('from_date', fromDateTime);
-                    console.log('Added from_date filter:', fromDateTime);
-                }
+            // Add date filters with timezone awareness
+            if (from_date) {
+                // Convert to ISO 8601 format
+                const fromDateTime = new Date(`${from_date}T00:00:00`).toISOString();
+                queryParams.append('from_date', fromDateTime);
+                console.log('Added from_date filter:', fromDateTime);
+            }
 
-                if (to_date) {
-                    // Convert to ISO 8601 format
-                    const toDateTime = new Date(`${to_date}T23:59:59`).toISOString();
-                    queryParams.append('to_date', toDateTime);
-                    console.log('Added to_date filter:', toDateTime);
-                }
+            if (to_date) {
+                // Convert to ISO 8601 format
+                const toDateTime = new Date(`${to_date}T23:59:59`).toISOString();
+                queryParams.append('to_date', toDateTime);
+                console.log('Added to_date filter:', toDateTime);
+            }
 
-                const url = `${API_URL}/api/v1/customers/?${queryParams.toString()}`;
-                console.log('Customer search - URL:', url);
+            const url = `${API_URL}/api/v1/customers/?${queryParams.toString()}`;
+            console.log('Customer search - URL:', url);
 
-                const { json } = await httpClient(url);
-                console.log('Customer search - Response:', json);
+            const { json } = await httpClient(url);
+            console.log('Customer search - Response:', json);
 
-                // Handle the response
-                let customers = json.customers || [];
-                console.log('Server returned customers count:', customers.length);
+            // Handle the response
+            let customers = json.customers || [];
+            console.log('Server returned customers count:', customers.length);
 
-                const processedCustomers = customers.map(transformCustomer).filter(Boolean);
-                console.log('Processed customers count:', processedCustomers.length);
+            const processedCustomers = customers.map(transformCustomer).filter(Boolean);
+            console.log('Processed customers count:', processedCustomers.length);
 
-                // Use the total from API response - it's now accurate!
-                let total = json.total || 0;
+            // Use the total from API response - it's now accurate!
+            let total = json.total || 0;
 
-                console.log('Customer total calculation:', {
-                    api_total: json.total,
-                    final_total: total,
-                    page,
-                    perPage,
-                    processed_customers_count: processedCustomers.length,
-                    has_filters: !!(customer_id || phone_number || profile_name || from_date || to_date)
-                });
+            console.log('Customer total calculation:', {
+                api_total: json.total,
+                final_total: total,
+                page,
+                perPage,
+                processed_customers_count: processedCustomers.length,
+                has_filters: !!(customer_id || phone_number || profile_name || from_date || to_date)
+            });
 
-                // Only use estimation if API total is genuinely 0 (fallback)
-                if (total === 0 && customers.length > 0 && !customer_id && !phone_number && !profile_name && !from_date && !to_date) {
-                    console.log('API returned total=0, using customer count as fallback');
-                    total = customers.length;
-                }
+            // Only use estimation if API total is genuinely 0 (fallback)
+            if (total === 0 && customers.length > 0 && !customer_id && !phone_number && !profile_name && !from_date && !to_date) {
+                console.log('API returned total=0, using customer count as fallback');
+                total = customers.length;
+            }
 
-                console.log('Customers total calculation:', {
-                    final_total: total,
-                    page,
-                    perPage,
-                    processed_customers_count: processedCustomers.length,
-                    has_filters: !!(customer_id || phone_number || profile_name || from_date || to_date)
-                });
+            console.log('Customers total calculation:', {
+                final_total: total,
+                page,
+                perPage,
+                processed_customers_count: processedCustomers.length,
+                has_filters: !!(customer_id || phone_number || profile_name || from_date || to_date)
+            });
 
-                return {
-                    data: processedCustomers,
-                    total: total,
-                };
+            return {
+                data: processedCustomers,
+                total: total,
+            };
         }
         if (resource === 'consultations') {
             const { page, perPage } = params.pagination || { page: 1, perPage: 25 };
@@ -515,7 +515,7 @@ export const dataProvider: DataProvider = {
             };
         }
 
-     
+
         if (resource === 'orders') {
             // const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
             const customerId = params.filter.customerId;
@@ -824,11 +824,40 @@ export const dataProvider: DataProvider = {
                 throw error;
             }
         }
-            throw new Error(`Unsupported resource for getList: ${resource}`);
+        if (resource === 'videos') {
+            const { json } = await httpClient(`${AUTH_API_URL}/superadmin/media?type=video`);
+
+            const mediaList = json.data || [];
+            const transformedMedia = mediaList.map((m: any) => ({
+                ...m,
+                id: m.id,
+            }));
+
+            // Apply pagination
+            const { page = 1, perPage = 25 } = params.pagination ?? {};
+            const total = transformedMedia.length;
+            const data = transformedMedia.slice((page - 1) * perPage, page * perPage);
+
+            return { data, total };
+        }
+        if (resource === 'stories') {
+            const { json } = await httpClient(`${AUTH_API_URL}/superadmin/media`);
+
+            const mediaList = (json.data || []).filter((m: any) => m.purpose === 'story');
+            const transformedMedia = mediaList.map((m: any) => ({ ...m, id: m.id }));
+
+            const { page = 1, perPage = 25 } = params.pagination ?? {};
+            const total = transformedMedia.length;
+            const data = transformedMedia.slice((page - 1) * perPage, page * perPage);
+
+            return { data, total };
+        }
+
+        throw new Error(`Unsupported resource for getList: ${resource}`);
 
     },
 
-     create: async (resource, params) => {
+    create: async (resource, params) => {
         if (resource === 'guides') {
             // --- FIX #2: Remove the incorrect payload transformation ---
             // The form data already has the correct field names like "full_name".
@@ -842,8 +871,8 @@ export const dataProvider: DataProvider = {
                 body: JSON.stringify(apiPayload)
             });
 
-            return { 
-                data: { ...json, id: json.guide_id } 
+            return {
+                data: { ...json, id: json.guide_id }
             };
         }
 
@@ -866,7 +895,7 @@ export const dataProvider: DataProvider = {
                 data: { ...json, id: json.customer_id }
             };
         }
-            
+
         if (resource === 'orders') {
             const { customerId, ...rest } = params.data;
             if (!customerId) throw new Error('Customer ID is required to create an order.');
@@ -957,37 +986,48 @@ export const dataProvider: DataProvider = {
             };
         }
 
+        if (resource === 'videos') {
+            // VideoCreate handles the upload flow directly via httpClient.
+            // This is a no-op fallback; the actual create is done in VideoCreate.tsx.
+            return { data: { ...params.data, id: params.data.id || 0 } };
+        }
+        if (resource === 'stories') {
+            // StoryCreate handles the upload flow directly via httpClient.
+            return { data: { ...params.data, id: params.data.id || 0 } };
+        }
+
         throw new Error(`Unsupported resource: ${resource}`);
     },
     update: async (resource, params) => {
-         if (resource === 'guides') {
+        if (resource === 'guides') {
             const url = `${API_URL}/api/v1/guides/${params.id}`;
             const { json } = await httpClient(url, {
                 method: 'PATCH',
                 body: JSON.stringify(params.data),
             });
-            return { data: transformGuide(json) };        }
+            return { data: transformGuide(json) };
+        }
         if (resource === 'admin-users') {
-             const url = `${API_URL}/api/v1/admin-users/${params.id}`;
+            const url = `${API_URL}/api/v1/admin-users/${params.id}`;
 
-             // Add +91 prefix to phone_number if not already present (for consistency)
-             const modifiedData = {
-                 ...params.data,
-                 phone_number: params.data.phone_number && !params.data.phone_number.startsWith('+91')
-                     ? `+91${params.data.phone_number}`
-                     : params.data.phone_number
-             };
+            // Add +91 prefix to phone_number if not already present (for consistency)
+            const modifiedData = {
+                ...params.data,
+                phone_number: params.data.phone_number && !params.data.phone_number.startsWith('+91')
+                    ? `+91${params.data.phone_number}`
+                    : params.data.phone_number
+            };
 
-             const { json } = await httpClient(url, {
+            const { json } = await httpClient(url, {
                 method: 'PATCH', // PATCH is suitable for updating parts of a resource
                 body: JSON.stringify(modifiedData),
-             });
-             return { data: { ...json, id: json.id } };
+            });
+            return { data: { ...json, id: json.id } };
         }
-       
+
 
         return Promise.resolve({ data: { ...params.data, id: params.id } }) as any;
-        
+
     },
 
     getOne: async (resource, params) => {
@@ -1019,7 +1059,7 @@ export const dataProvider: DataProvider = {
             // CHANGED: Fetch a single customer from the API
             const url = `${API_URL}/api/v1/customers/${params.id}`;
             const { json } = await httpClient(url);
-            
+
             // Use the same transformation for consistency
             const transformedData = transformCustomer(json);
 
@@ -1064,6 +1104,31 @@ export const dataProvider: DataProvider = {
                 console.error('Error fetching offer:', error);
                 throw error;
             }
+        }
+
+        if (resource === 'videos') {
+            const { json } = await httpClient(`${AUTH_API_URL}/superadmin/media?type=video`);
+
+            const mediaList = json.data || [];
+            const media = mediaList.find((m: any) => m.id === parseInt(params.id as string) || m.id === params.id);
+
+            if (!media) {
+                throw new Error(`Video with ID ${params.id} not found`);
+            }
+
+            return { data: { ...media, id: media.id } };
+        }
+        if (resource === 'stories') {
+            const { json } = await httpClient(`${AUTH_API_URL}/superadmin/media`);
+
+            const mediaList = (json.data || []).filter((m: any) => m.purpose === 'story');
+            const media = mediaList.find((m: any) => m.id === parseInt(params.id as string) || m.id === params.id);
+
+            if (!media) {
+                throw new Error(`Story with ID ${params.id} not found`);
+            }
+
+            return { data: { ...media, id: media.id } };
         }
 
         if (resource === 'consultation-orders') {
@@ -1154,19 +1219,19 @@ export const dataProvider: DataProvider = {
     updateMany: async (resource, params) => {
         if (resource === 'guides') {
             const { ids, data } = params;
-            
+
             ids.forEach(id => {
                 const guideIndex = guides.findIndex(g => g.id == id);
                 if (guideIndex > -1) {
                     guides[guideIndex] = { ...guides[guideIndex], ...data };
                 }
             });
-            
+
             return Promise.resolve({ data: ids });
         }
         throw new Error(`Unsupported resource: ${resource}`);
-        },
-    
+    },
+
     custom: async (type: string, resource: string, params: any) => {
         if (resource === 'orders' && type === 'action') {
             const { customerId, orderId, action, data } = params;
@@ -1296,7 +1361,7 @@ export const dataProvider: DataProvider = {
         }
 
         throw new Error(`Unsupported custom action: ${type}`);
-},
+    },
 
     getMany: async () => ({ data: [] }),
     getManyReference: async () => ({ data: [], total: 0 }),
@@ -1309,6 +1374,14 @@ export const dataProvider: DataProvider = {
                 method: 'DELETE',
             });
 
+            return { data: { id } };
+        }
+
+        if (resource === 'videos' || resource === 'stories') {
+            const { id } = params;
+            await httpClient(`${AUTH_API_URL}/superadmin/media/${id}`, {
+                method: 'DELETE',
+            });
             return { data: { id } };
         }
 

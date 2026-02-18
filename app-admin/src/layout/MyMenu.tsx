@@ -13,6 +13,9 @@ import {
     Wallet,
     History,
     RefreshCw,
+    Video,
+    Film,
+    Layers,
 } from 'lucide-react';
 import { Box, Collapse, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
@@ -78,6 +81,7 @@ export const MyMenu = () => {
     const [openGuidesMenu, setOpenGuidesMenu] = useState(false);
     const [openGuideFinancialsMenu, setOpenGuideFinancialsMenu] = useState(false);
     const [openReconciliationMenu, setOpenReconciliationMenu] = useState(false);
+    const [openContentMenu, setOpenContentMenu] = useState(false);
 
     const handleOrdersToggle = () => {
         setOpenOrdersMenu(!openOrdersMenu);
@@ -93,6 +97,10 @@ export const MyMenu = () => {
 
     const handleReconciliationToggle = () => {
         setOpenReconciliationMenu(!openReconciliationMenu);
+    };
+
+    const handleContentToggle = () => {
+        setOpenContentMenu(!openContentMenu);
     };
 
     return (
@@ -134,6 +142,17 @@ export const MyMenu = () => {
             >
                 <Menu.Item to="/guide-earnings" primaryText="Earnings & Wallet" leftIcon={<Wallet />} />
                 <Menu.Item to="/guide-orders" primaryText="Completed Orders" leftIcon={<History />} />
+            </SubMenu>
+
+            {/* Content Submenu (Videos & Stories) */}
+            <SubMenu
+                handleToggle={handleContentToggle}
+                isOpen={openContentMenu}
+                name="Content"
+                icon={<Layers />}
+            >
+                <Menu.Item to="/videos" primaryText="Videos" leftIcon={<Video />} />
+                <Menu.Item to="/stories" primaryText="Stories" leftIcon={<Film />} />
             </SubMenu>
 
             {/* Reconciliation Submenu */}

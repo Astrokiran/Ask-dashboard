@@ -16,6 +16,7 @@ import {
     Video,
     Film,
     Layers,
+    ShoppingBag,
 } from 'lucide-react';
 import { Box, Collapse, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
@@ -111,6 +112,7 @@ export const MyMenu = () => {
             <Menu.Item to="/consultations" primaryText="Consultations" leftIcon={<ClipboardList />} />
             <Menu.Item to="/offers" primaryText="Offers" leftIcon={<Gift />} />
             <Menu.Item to="/notifications" primaryText="Notifications" leftIcon={<FileText />} />
+            <Menu.Item to="/products" primaryText="Products" leftIcon={<ShoppingBag />} />
             {/* Orders Submenu */}
             <SubMenu
                 handleToggle={handleOrdersToggle}

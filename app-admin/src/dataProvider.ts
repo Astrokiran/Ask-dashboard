@@ -855,6 +855,72 @@ export const dataProvider: DataProvider = {
             return { data, total };
         }
 
+        if (resource === 'products') {
+            const { page = 1, perPage = 20 } = params.pagination ?? {};
+            const { field = 'created_at', order = 'DESC' } = params.sort ?? {};
+            const { q, state, collection } = params.filter || {};
+
+            // Use the AUTH_URL environment variable for products API
+            const PRODUCTS_API_BASE = `${API_ROOT_URL}/api/v1/consultation`;
+
+            // Build query parameters
+            const queryParams = new URLSearchParams();
+            queryParams.append('page', page.toString());
+            queryParams.append('page_size', perPage.toString());
+
+            if (state) {
+                queryParams.append('state', state);
+            }
+
+            if (collection) {
+                queryParams.append('collection', collection);
+            }
+
+            const url = `${PRODUCTS_API_BASE}/admin/products?${queryParams.toString()}`;
+
+            try {
+                const { json } = await httpClient(url);
+
+                // The API response structure: { success: true, message: "...", data: { products: [...], total: ..., page: ..., page_size: ... } }
+                const products = json.data?.products || [];
+                const total = json.data?.total || products.length;
+
+                // Apply client-side search filter if q is provided
+                let filteredProducts = products;
+                if (q) {
+                    const searchLower = q.toLowerCase();
+                    filteredProducts = products.filter((product: any) =>
+                        product.name?.toLowerCase().includes(searchLower) ||
+                        product.description?.toLowerCase().includes(searchLower) ||
+                        product.short_description?.toLowerCase().includes(searchLower) ||
+                        product.collection?.toLowerCase().includes(searchLower) ||
+                        product.tags?.some((tag: string) => tag.toLowerCase().includes(searchLower))
+                    );
+                }
+
+                // Sort the products
+                filteredProducts.sort((a: any, b: any) => {
+                    const aVal = a[field];
+                    const bVal = b[field];
+
+                    if (aVal < bVal) return order === 'ASC' ? -1 : 1;
+                    if (aVal > bVal) return order === 'ASC' ? 1 : -1;
+                    return 0;
+                });
+
+                // Apply pagination after filtering and sorting
+                const paginatedProducts = filteredProducts.slice((page - 1) * perPage, page * perPage);
+
+                return {
+                    data: paginatedProducts,
+                    total: q ? filteredProducts.length : total,
+                };
+            } catch (error) {
+                console.error('Error fetching products:', error);
+                throw error;
+            }
+        }
+
         throw new Error(`Unsupported resource for getList: ${resource}`);
 
     },
@@ -998,6 +1064,12 @@ export const dataProvider: DataProvider = {
             return { data: { ...params.data, id: params.data.id || 0 } };
         }
 
+        if (resource === 'products') {
+            // ProductCreate handles the create flow directly via httpClient.
+            // This is a no-op fallback; the actual create is done in ProductCreate.tsx.
+            return { data: { ...params.data, id: params.data.id || 0 } };
+        }
+
         throw new Error(`Unsupported resource: ${resource}`);
     },
     update: async (resource, params) => {
@@ -1027,6 +1099,11 @@ export const dataProvider: DataProvider = {
             return { data: { ...json, id: json.id } };
         }
 
+        if (resource === 'products') {
+            // ProductEdit handles the update flow directly via httpClient.
+            // This is a no-op fallback; the actual update is done in ProductEdit.tsx.
+            return { data: { ...params.data, id: params.id } };
+        }
 
         return Promise.resolve({ data: { ...params.data, id: params.id } }) as any;
 
@@ -1195,6 +1272,24 @@ export const dataProvider: DataProvider = {
                     customer_id: customerId,
                 }
             };
+        }
+
+        if (resource === 'products') {
+            // Use the AUTH_URL environment variable for products API
+            const PRODUCTS_API_BASE = `${API_ROOT_URL}/api/v1/consultation`;
+            const url = `${PRODUCTS_API_BASE}/admin/products/${params.id}`;
+
+            try {
+                const { json } = await httpClient(url);
+
+                // The API response structure: { success: true, message: "...", data: {...} }
+                const product = json.data || {};
+
+                return { data: product };
+            } catch (error) {
+                console.error('Error fetching product:', error);
+                throw error;
+            }
         }
 
         console.error(`getOne not implemented for resource: ${resource}`);
@@ -1382,6 +1477,16 @@ export const dataProvider: DataProvider = {
         if (resource === 'videos' || resource === 'stories') {
             const { id } = params;
             await httpClient(`${API_ROOT_URL}/superadmin/media/${id}`, {
+                method: 'DELETE',
+            });
+            return { data: { id } };
+        }
+
+        if (resource === 'products') {
+            const { id } = params;
+            // Use the AUTH_URL environment variable for products API
+            const PRODUCTS_API_BASE = `${API_ROOT_URL}/api/v1/consultation`;
+            await httpClient(`${PRODUCTS_API_BASE}/admin/products/${id}`, {
                 method: 'DELETE',
             });
             return { data: { id } };

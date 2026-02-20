@@ -25,6 +25,7 @@ import consultations from './Consultations';
 import offers from './offers';
 import videos from './videos';
 import stories from './stories';
+import products from './products';
 import reconciliation, { reconciliationOffers } from './reconciliation';
 
 import {
@@ -37,6 +38,7 @@ import {
     RefreshCw,
     Video,
     BookOpen,
+    ShoppingBag,
 } from 'lucide-react';
 import { OrderList } from './orders/Orders';
 import { PaymentOrderList } from './orders/PaymentOrders';
@@ -110,6 +112,11 @@ const App: React.FC = () => (
                 name="stories"
                 {...stories}
                 icon={BookOpen}
+            />
+            <Resource
+                name="products"
+                {...products}
+                icon={ShoppingBag}
             />
             <Resource
                 name="pending-verifications"

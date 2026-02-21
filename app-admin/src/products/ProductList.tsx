@@ -208,13 +208,13 @@ export const ProductList = () => (
                 },
             }}
         >
-            <ProductImageField label="Image" />
+            <ProductImageField />
             <TextField source="name" label="Product Name" sx={{ fontWeight: 'bold' }} />
-            <ShortDescriptionField label="Description" />
-            <PriceField label="Price" />
+            <ShortDescriptionField />
+            <PriceField />
             <TextField source="collection" label="Collection" />
-            <TagsField label="Tags" />
-            <StateField label="State" />
+            <TagsField />
+            <StateField />
             <DateField source="created_at" label="Created" showTime />
             <EditButton />
             <DeleteButton mutationMode="pessimistic" />

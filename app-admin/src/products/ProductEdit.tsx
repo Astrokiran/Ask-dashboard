@@ -12,8 +12,7 @@ import { httpClient } from '../dataProvider';
 
 // Use the AUTH_URL environment variable for products API
 const AUTH_API_URL = process.env.REACT_APP_AUTH_URL;
-const API_ROOT_URL = AUTH_API_URL?.replace(/\/auth$/, '') || '';
-const PRODUCTS_API_BASE = `${API_ROOT_URL}/api/v1/consultation`;
+const PRODUCTS_API_BASE = `${AUTH_API_URL?.replace(/\/auth$/, '') || ''}/consultation`;
 
 const stateChoices = [
     { id: 'active', name: 'Active' },
@@ -168,7 +167,7 @@ export const ProductEdit = () => {
                     </Typography>
 
                     <Grid container spacing={2}>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <TextInput
                                 source="name"
                                 label="Product Name"
@@ -178,7 +177,7 @@ export const ProductEdit = () => {
                             />
                         </Grid>
 
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <TextInput
                                 source="short_description"
                                 label="Short Description"
@@ -189,7 +188,7 @@ export const ProductEdit = () => {
                             />
                         </Grid>
 
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <TextInput
                                 source="description"
                                 label="Full Description"
@@ -200,7 +199,7 @@ export const ProductEdit = () => {
                             />
                         </Grid>
 
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextInput
                                 source="product_url"
                                 label="Product URL"
@@ -209,7 +208,7 @@ export const ProductEdit = () => {
                             />
                         </Grid>
 
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextInput
                                 source="product_image_url"
                                 label="Product Image URL"
@@ -224,7 +223,7 @@ export const ProductEdit = () => {
                     </Typography>
 
                     <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="price"
                                 label="Price"
@@ -239,7 +238,7 @@ export const ProductEdit = () => {
                             />
                         </Grid>
 
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <NumberInput
                                 source="compare_at_price"
                                 label="Compare at Price"
@@ -259,7 +258,7 @@ export const ProductEdit = () => {
                     </Typography>
 
                     <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <SelectInput
                                 source="collection"
                                 label="Collection"
@@ -269,7 +268,7 @@ export const ProductEdit = () => {
                             />
                         </Grid>
 
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <SelectInput
                                 source="state"
                                 label="State"

@@ -861,7 +861,7 @@ export const dataProvider: DataProvider = {
             const { q, state, collection } = params.filter || {};
 
             // Use the AUTH_URL environment variable for products API
-            const PRODUCTS_API_BASE = `${API_ROOT_URL}/api/v1/consultation`;
+            const PRODUCTS_API_BASE = `${API_ROOT_URL}/consultation`;
 
             // Build query parameters
             const queryParams = new URLSearchParams();
@@ -1276,7 +1276,7 @@ export const dataProvider: DataProvider = {
 
         if (resource === 'products') {
             // Use the AUTH_URL environment variable for products API
-            const PRODUCTS_API_BASE = `${API_ROOT_URL}/api/v1/consultation`;
+            const PRODUCTS_API_BASE = `${API_ROOT_URL}/consultation`;
             const url = `${PRODUCTS_API_BASE}/admin/products/${params.id}`;
 
             try {
@@ -1485,7 +1485,7 @@ export const dataProvider: DataProvider = {
         if (resource === 'products') {
             const { id } = params;
             // Use the AUTH_URL environment variable for products API
-            const PRODUCTS_API_BASE = `${API_ROOT_URL}/api/v1/consultation`;
+            const PRODUCTS_API_BASE = `${API_ROOT_URL}/consultation`;
             await httpClient(`${PRODUCTS_API_BASE}/admin/products/${id}`, {
                 method: 'DELETE',
             });

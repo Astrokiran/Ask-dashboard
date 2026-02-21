@@ -134,7 +134,7 @@ export const ProductCreate = () => {
                 price: parseFloat(formData.price) || 0,
                 compare_at_price: formData.compare_at_price ? parseFloat(formData.compare_at_price) : null,
                 collection: formData.collection || '',
-                tags: cleanedTags,
+                // tags: cleanedTags,  // Commented out for now
                 state: formData.state || 'draft',
             };
 

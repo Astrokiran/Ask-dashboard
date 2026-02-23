@@ -49,6 +49,7 @@ import {
     Download as DownloadIcon,
     ExpandMore as ExpandMoreIcon,
     ExpandLess as ExpandLessIcon,
+    CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { useState } from 'react';
@@ -362,68 +363,211 @@ const ConsultationChatMessages = () => {
 
                 <Collapse in={expanded}>
                     <Box sx={{ mt: 3 }}>
-                        <MuiList sx={{ bgcolor: 'background.paper', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
-                            {messages.map((message: any, index: number) => (
-                                <ListItem
-                                    key={message.message_id || index}
-                                    sx={{
-                                        borderBottom: index < messages.length - 1 ? '1px solid' : 'none',
-                                        borderBottomColor: 'divider',
-                                        bgcolor: message.sender_type === 'customer' ? 'action.hover' : 'background.paper',
-                                        '&:hover': {
-                                            bgcolor: 'action.selected',
-                                        },
-                                        py: 2,
-                                    }}
-                                >
-                                    <ListItemText
-                                        primary={
-                                            <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-                                                <Box display="flex" alignItems="center" gap={1}>
-                                                    <Chip
-                                                        label={message.sender_type === 'customer' ? record.customer_name : record.guide_name}
-                                                        size="small"
-                                                        color={message.sender_type === 'customer' ? 'primary' : 'secondary'}
-                                                        sx={{ fontWeight: 600 }}
-                                                    />
-                                                    {message.type !== 'text' && (
-                                                        <Chip
-                                                            label={message.type}
-                                                            size="small"
-                                                            variant="outlined"
-                                                            sx={{ fontSize: '0.7rem' }}
-                                                        />
-                                                    )}
-                                                </Box>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {new Date(message.timestamp).toLocaleString()}
+                        {/* Chat Container */}
+                        <Box
+                            sx={{
+                                bgcolor: '#e5ddd5',
+                                borderRadius: 2,
+                                p: 2,
+                                minHeight: 400,
+                                maxHeight: 600,
+                                overflowY: 'auto',
+                                backgroundImage: 'linear-gradient(rgba(229,221,213,0.9), rgba(229,221,213,0.9)), url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23d4ccc4\' fill-opacity=\'0.4\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+                            }}
+                        >
+                            {messages.map((message: any, index: number) => {
+                                const isCustomer = message.sender_type === 'customer';
+                                const senderName = message.sender_name || (isCustomer ? record.customer_name : record.guide_name);
+
+                                return (
+                                    <Box
+                                        key={message.message_id || index}
+                                        sx={{
+                                            display: 'flex',
+                                            justifyContent: isCustomer ? 'flex-end' : 'flex-start',
+                                            mb: 2,
+                                        }}
+                                    >
+                                        {/* Avatar for guide */}
+                                        {!isCustomer && (
+                                            <Avatar
+                                                sx={{
+                                                    width: 32,
+                                                    height: 32,
+                                                    mr: 1,
+                                                    bgcolor: 'secondary.main',
+                                                    fontSize: '0.8rem',
+                                                }}
+                                            >
+                                                {senderName?.charAt(0).toUpperCase() || 'G'}
+                                            </Avatar>
+                                        )}
+
+                                        <Box
+                                            sx={{
+                                                maxWidth: '65%',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                            }}
+                                        >
+                                            {/* Sender Name & Time */}
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    justifyContent: isCustomer ? 'flex-end' : 'flex-start',
+                                                    mb: 0.5,
+                                                    px: 1,
+                                                }}
+                                            >
+                                                <Typography
+                                                    variant="caption"
+                                                    sx={{
+                                                        fontWeight: 600,
+                                                        color: isCustomer ? 'primary.main' : 'secondary.main',
+                                                        fontSize: '0.7rem',
+                                                    }}
+                                                >
+                                                    {senderName}
+                                                </Typography>
+                                                <Typography
+                                                    variant="caption"
+                                                    sx={{
+                                                        ml: 1,
+                                                        color: 'text.secondary',
+                                                        fontSize: '0.65rem',
+                                                    }}
+                                                >
+                                                    {new Date(message.timestamp).toLocaleString([], {
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                    })}
                                                 </Typography>
                                             </Box>
-                                        }
-                                        secondary={
-                                            <Box>
+
+                                            {/* Message Bubble */}
+                                            <Box
+                                                sx={{
+                                                    bgcolor: isCustomer ? '#dcf8c6' : 'white',
+                                                    borderRadius: isCustomer ? '8px 0 8px 8px' : '0 8px 8px 8px',
+                                                    p: 2,
+                                                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                                                    position: 'relative',
+                                                }}
+                                            >
+                                                {/* Message Type Badge */}
+                                                {message.type && message.type !== 'text' && (
+                                                    <Chip
+                                                        label={message.type.toUpperCase()}
+                                                        size="small"
+                                                        sx={{
+                                                            fontSize: '0.6rem',
+                                                            height: 18,
+                                                            mb: 0.5,
+                                                            bgcolor: isCustomer ? 'rgba(76, 175, 80, 0.2)' : 'rgba(156, 39, 176, 0.2)',
+                                                            color: isCustomer ? 'primary.dark' : 'secondary.dark',
+                                                        }}
+                                                    />
+                                                )}
+
+                                                {/* Message Content */}
                                                 {message.type === 'image' ? (
                                                     <Box>
-                                                        <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
-                                                            Image: {message.content}
+                                                        <Typography
+                                                            variant="body2"
+                                                            sx={{
+                                                                fontSize: '0.85rem',
+                                                                color: 'text.primary',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: 0.5,
+                                                            }}
+                                                        >
+                                                            <Box component="span" sx={{ fontSize: '1rem' }}>📷</Box>
+                                                            <Box component="span" sx={{ fontWeight: 500 }}>Image:</Box>
+                                                            {message.content}
                                                         </Typography>
                                                     </Box>
                                                 ) : (
-                                                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                                                    <Typography
+                                                        variant="body2"
+                                                        sx={{
+                                                            fontSize: '0.9rem',
+                                                            color: 'text.primary',
+                                                            whiteSpace: 'pre-wrap',
+                                                            wordBreak: 'break-word',
+                                                            lineHeight: 1.5,
+                                                        }}
+                                                    >
                                                         {message.content}
                                                     </Typography>
                                                 )}
+
+                                                {/* Message Status */}
                                                 {message.status && (
-                                                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                                                        Status: {message.status}
-                                                    </Typography>
+                                                    <Box
+                                                        sx={{
+                                                            display: 'flex',
+                                                            justifyContent: 'flex-end',
+                                                            mt: 0.5,
+                                                        }}
+                                                    >
+                                                        <Typography
+                                                            variant="caption"
+                                                            sx={{
+                                                                fontSize: '0.65rem',
+                                                                color: 'text.secondary',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: 0.25,
+                                                            }}
+                                                        >
+                                                            {message.status === 'sent' && <Box component="span" sx={{ color: '#4CAF50' }}>✓✓</Box>}
+                                                            {message.status === 'delivered' && <Box component="span" sx={{ color: '#4CAF50' }}>✓✓</Box>}
+                                                            {message.status === 'read' && <Box component="span" sx={{ color: '#4CAF50' }}>✓✓</Box>}
+                                                            {message.status !== 'sent' && message.status !== 'delivered' && message.status !== 'read' && (
+                                                                <Box component="span">{message.status}</Box>
+                                                            )}
+                                                        </Typography>
+                                                    </Box>
+                                                )}
+
+                                                {/* Message tail for customer */}
+                                                {isCustomer && (
+                                                    <Box
+                                                        sx={{
+                                                            position: 'absolute',
+                                                            right: -8,
+                                                            top: 0,
+                                                            width: 0,
+                                                            height: 0,
+                                                            borderTop: '8px solid #dcf8c6',
+                                                            borderRight: '8px solid transparent',
+                                                        }}
+                                                    />
+                                                )}
+
+                                                {/* Message tail for guide */}
+                                                {!isCustomer && (
+                                                    <Box
+                                                        sx={{
+                                                            position: 'absolute',
+                                                            left: -8,
+                                                            top: 0,
+                                                            width: 0,
+                                                            height: 0,
+                                                            borderTop: '8px solid white',
+                                                            borderLeft: '8px solid transparent',
+                                                        }}
+                                                    />
                                                 )}
                                             </Box>
-                                        }
-                                    />
-                                </ListItem>
-                            ))}
-                        </MuiList>
+                                        </Box>
+                                    </Box>
+                                );
+                            })}
+                        </Box>
                     </Box>
                 </Collapse>
             </CardContent>

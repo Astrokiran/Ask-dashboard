@@ -1148,13 +1148,25 @@ export const dataProvider: DataProvider = {
             return { data: transformedData };
         }
         if (resource === 'consultations') {
-            // This assumes you will create a `getOne` endpoint in your Go service
-            const url = `${API_URL}/api/v1/consultations/${params.id}`;
+            // Use the admin endpoint for consultation details
+            // The endpoint is at /auth/api/v1/consultation/admin/consultations/{id}
+            // AUTH_API_URL is https://devazstg.astrokiran.com/auth/api/v1/auth
+            // We need to replace /auth at the end with /api/v1/consultation/admin/consultations/{id}
+            const baseUrl = AUTH_API_URL?.replace(/\/auth$/, '') || 'https://devazstg.astrokiran.com/auth/api/v1';
+            const url = `${baseUrl}/consultation/admin/consultations/${params.id}`;
+            console.log('Fetching consultation details from:', url);
             const { json } = await httpClient(url);
 
-            // Assuming the getOne response is { success: true, data: { ...consultation } }
+            console.log('Consultation details response:', json);
+
+            // The API response is { success: true, message: "...", data: { ...consultation } }
+            // Map consultation_id to id for react-admin
+            const consultationData = json.data || {};
             return {
-                data: json.data,
+                data: {
+                    ...consultationData,
+                    id: consultationData.consultation_id || params.id,
+                },
             };
         }
         if (resource === 'offers') {

@@ -474,20 +474,58 @@ const ConsultationChatMessages = () => {
                                                 {/* Message Content */}
                                                 {message.type === 'image' ? (
                                                     <Box>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                fontSize: '0.85rem',
-                                                                color: 'text.primary',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: 0.5,
-                                                            }}
-                                                        >
-                                                            <Box component="span" sx={{ fontSize: '1rem' }}>📷</Box>
-                                                            <Box component="span" sx={{ fontWeight: 500 }}>Image:</Box>
-                                                            {message.content}
-                                                        </Typography>
+                                                        {/* Display actual image if imageUrl is available */}
+                                                        {message.imageUrl || message.image_url ? (
+                                                            <Box>
+                                                                <Box
+                                                                    component="img"
+                                                                    src={message.imageUrl || message.image_url}
+                                                                    alt={message.content || 'Image'}
+                                                                    sx={{
+                                                                        maxWidth: '100%',
+                                                                        maxHeight: '250px',
+                                                                        borderRadius: 1,
+                                                                        mb: 1,
+                                                                        cursor: 'pointer',
+                                                                        '&:hover': {
+                                                                            opacity: 0.9,
+                                                                        }
+                                                                    }}
+                                                                    onClick={(e) => {
+                                                                        // Open image in new tab on click
+                                                                        window.open(message.imageUrl || message.image_url, '_blank');
+                                                                    }}
+                                                                />
+                                                                {message.content && (
+                                                                    <Typography
+                                                                        variant="caption"
+                                                                        sx={{
+                                                                            fontSize: '0.75rem',
+                                                                            color: 'text.secondary',
+                                                                            fontStyle: 'italic',
+                                                                        }}
+                                                                    >
+                                                                        {message.content}
+                                                                    </Typography>
+                                                                )}
+                                                            </Box>
+                                                        ) : (
+                                                            // Fallback if no imageUrl
+                                                            <Typography
+                                                                variant="body2"
+                                                                sx={{
+                                                                    fontSize: '0.85rem',
+                                                                    color: 'text.primary',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: 0.5,
+                                                                }}
+                                                            >
+                                                                <Box component="span" sx={{ fontSize: '1rem' }}>📷</Box>
+                                                                <Box component="span" sx={{ fontWeight: 500 }}>Image:</Box>
+                                                                {message.content}
+                                                            </Typography>
+                                                        )}
                                                     </Box>
                                                 ) : (
                                                     <Typography

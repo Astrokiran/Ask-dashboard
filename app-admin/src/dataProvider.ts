@@ -470,8 +470,10 @@ export const dataProvider: DataProvider = {
                 queryParams.append('end_date', endDateTime);
             }
 
-            // Use the correct admin API endpoint
-            const url = `${API_URL}/api/v1/consultations/?${queryParams.toString()}`;
+            // Use the correct admin API endpoint for consultations list
+            // The endpoint is at /auth/api/v1/consultation/admin/consultations
+            const baseUrl = AUTH_API_URL?.replace(/\/auth$/, '') || 'https://devazstg.astrokiran.com/auth/api/v1';
+            const url = `${baseUrl}/consultation/admin/consultations?${queryParams.toString()}`;
             console.log('Consultations URL with filters:', url);
 
             const { json } = await httpClient(url);
@@ -494,6 +496,10 @@ export const dataProvider: DataProvider = {
                 // Response with items array
                 consultations = json.data.items;
                 total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || consultations.length;
+            } else if (json.data && json.data.consultations && Array.isArray(json.data.consultations)) {
+                // Response with consultations array
+                consultations = json.data.consultations;
+                total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || consultations.length;
             } else if (Array.isArray(json.data.data)) {
                 // Direct array response
                 consultations = json.data;
@@ -504,15 +510,21 @@ export const dataProvider: DataProvider = {
                 total = 0;
             }
 
+            // Map consultation_id to id for react-admin
+            const mappedConsultations = consultations.map((consultation: any) => ({
+                ...consultation,
+                id: consultation.consultation_id || consultation.id,
+            }));
+
             console.log('Processed consultations:', {
-                total: consultations.length,
+                total: mappedConsultations.length,
                 totalRecords: total,
                 currentPage: page,
                 perPage
             });
 
             return {
-                data: consultations,
+                data: mappedConsultations,
                 total: total,
             };
         }

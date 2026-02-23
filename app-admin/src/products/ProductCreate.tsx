@@ -34,27 +34,23 @@ const collectionChoices = [
     { id: 'other', name: 'Other' },
 ];
 
-// Custom Tags Input Component that integrates with react-admin form
-const TagsInput = ({ source, onChange }: { source: string; onChange: (tags: string[]) => void }) => {
-    const [inputValue, setInputValue] = useState('');
+// Custom Tags Input Component
+const TagsInput = ({ source }: { source: string }) => {
     const [tags, setTags] = useState<string[]>([]);
+    const [inputValue, setInputValue] = useState('');
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && inputValue.trim()) {
             e.preventDefault();
             if (!tags.includes(inputValue.trim())) {
-                const newTags = [...tags, inputValue.trim()];
-                setTags(newTags);
-                onChange(newTags);
+                setTags([...tags, inputValue.trim()]);
             }
             setInputValue('');
         }
     };
 
     const handleDeleteTag = (tagToDelete: string) => {
-        const newTags = tags.filter(tag => tag !== tagToDelete);
-        setTags(newTags);
-        onChange(newTags);
+        setTags(tags.filter(tag => tag !== tagToDelete));
     };
 
     return (
@@ -111,6 +107,8 @@ const TagsInput = ({ source, onChange }: { source: string; onChange: (tags: stri
             <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5, display: 'block' }}>
                 Press Enter to add a tag
             </Typography>
+            {/* Hidden input to store tags in form data */}
+            <input type="hidden" name={source} value={JSON.stringify(tags)} />
         </Box>
     );
 };
@@ -118,10 +116,14 @@ const TagsInput = ({ source, onChange }: { source: string; onChange: (tags: stri
 export const ProductCreate = () => {
     const notify = useNotify();
     const redirect = useRedirect();
-    const [tags, setTags] = useState<string[]>([]);
 
     const handleSubmit = async (formData: any) => {
         try {
+            // Parse tags from JSON string if they're stored as string
+            const tags = typeof formData.tags === 'string'
+                ? JSON.parse(formData.tags)
+                : formData.tags || [];
+
             // Clean up the tags array (remove empty strings)
             const cleanedTags = tags.filter((tag: string) => tag.trim() !== '');
 
@@ -137,8 +139,6 @@ export const ProductCreate = () => {
                 tags: cleanedTags,
                 state: formData.state || 'draft',
             };
-
-            console.log('Creating product with payload:', JSON.stringify(payload, null, 2));
 
             await httpClient(`${PRODUCTS_API_BASE}/admin/products`, {
                 method: 'POST',
@@ -281,7 +281,7 @@ export const ProductCreate = () => {
 
                     <Card variant="outlined" sx={{ mb: 2 }}>
                         <CardContent>
-                            <TagsInput source="tags" onChange={setTags} />
+                            <TagsInput source="tags" />
                             <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
                                 Add relevant tags for better searchability (e.g., rudraksha, meditation, spiritual)
                             </Typography>

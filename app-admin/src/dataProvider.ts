@@ -470,7 +470,7 @@ export const dataProvider: DataProvider = {
                 queryParams.append('end_date', endDateTime);
             }
 
-            // Use the correct admin API endpoint
+            // Use the correct admin API endpoint for consultations list
             const url = `${API_URL}/api/v1/consultations/?${queryParams.toString()}`;
             console.log('Consultations URL with filters:', url);
 
@@ -485,34 +485,44 @@ export const dataProvider: DataProvider = {
             if (json.data && Array.isArray(json.data)) {
                 // Direct array response
                 consultations = json.data;
-                total = json.pagination?.total || json.total || consultations.length;
+                total = json.pagination?.total || json.pagination?.totalItems || json.total || json.data.total || consultations.length;
             } else if (json.data && json.data.data && Array.isArray(json.data.data)) {
                 // Nested response with data.data
                 consultations = json.data.data;
-                total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || consultations.length;
+                total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || json.data.total || consultations.length;
             } else if (json.data && json.data.items && Array.isArray(json.data.items)) {
                 // Response with items array
                 consultations = json.data.items;
-                total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || consultations.length;
+                total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || json.data.total || consultations.length;
+            } else if (json.data && json.data.consultations && Array.isArray(json.data.consultations)) {
+                // Response with consultations array
+                consultations = json.data.consultations;
+                total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || json.data.total || consultations.length;
             } else if (Array.isArray(json.data.data)) {
                 // Direct array response
                 consultations = json.data;
-                total = json.pagination?.total || json.total || consultations.length;
+                total = json.pagination?.total || json.pagination?.totalItems || json.total || json.data.total || consultations.length;
             } else {
                 console.warn('Unexpected API response structure:', json);
                 consultations = [];
                 total = 0;
             }
 
+            // Map consultation_id to id for react-admin
+            const mappedConsultations = consultations.map((consultation: any) => ({
+                ...consultation,
+                id: consultation.consultation_id || consultation.id,
+            }));
+
             console.log('Processed consultations:', {
-                total: consultations.length,
+                total: mappedConsultations.length,
                 totalRecords: total,
                 currentPage: page,
                 perPage
             });
 
             return {
-                data: consultations,
+                data: mappedConsultations,
                 total: total,
             };
         }
@@ -1148,13 +1158,25 @@ export const dataProvider: DataProvider = {
             return { data: transformedData };
         }
         if (resource === 'consultations') {
-            // This assumes you will create a `getOne` endpoint in your Go service
-            const url = `${API_URL}/api/v1/consultations/${params.id}`;
+            // Use the admin endpoint for consultation details
+            // The endpoint is at /auth/api/v1/consultation/admin/consultations/{id}
+            // AUTH_API_URL is https://devazstg.astrokiran.com/auth/api/v1/auth
+            // We need to replace /auth at the end with /api/v1/consultation/admin/consultations/{id}
+            const baseUrl = AUTH_API_URL?.replace(/\/auth$/, '') || 'https://devazstg.astrokiran.com/auth/api/v1';
+            const url = `${baseUrl}/consultation/admin/consultations/${params.id}`;
+            console.log('Fetching consultation details from:', url);
             const { json } = await httpClient(url);
 
-            // Assuming the getOne response is { success: true, data: { ...consultation } }
+            console.log('Consultation details response:', json);
+
+            // The API response is { success: true, message: "...", data: { ...consultation } }
+            // Map consultation_id to id for react-admin
+            const consultationData = json.data || {};
             return {
-                data: json.data,
+                data: {
+                    ...consultationData,
+                    id: consultationData.consultation_id || params.id,
+                },
             };
         }
         if (resource === 'offers') {

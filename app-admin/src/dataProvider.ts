@@ -1162,7 +1162,7 @@ export const dataProvider: DataProvider = {
             // The endpoint is at /auth/api/v1/consultation/admin/consultations/{id}
             // AUTH_API_URL is https://devazstg.astrokiran.com/auth/api/v1/auth
             // We need to replace /auth at the end with /api/v1/consultation/admin/consultations/{id}
-            const baseUrl = AUTH_API_URL?.replace(/\/auth$/, '') || 'https://devazstg.astrokiran.com/auth/api/v1';
+            const baseUrl = AUTH_API_URL?.replace(/\/auth$/, '') || 'https://askapp.astrokiran.com/api/v1';
             const url = `${baseUrl}/consultation/admin/consultations/${params.id}`;
             console.log('Fetching consultation details from:', url);
             const { json } = await httpClient(url);

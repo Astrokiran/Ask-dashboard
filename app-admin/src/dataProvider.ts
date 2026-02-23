@@ -471,9 +471,7 @@ export const dataProvider: DataProvider = {
             }
 
             // Use the correct admin API endpoint for consultations list
-            // The endpoint is at /auth/api/v1/consultation/admin/consultations
-            const baseUrl = AUTH_API_URL?.replace(/\/auth$/, '') || 'https://devazstg.astrokiran.com/auth/api/v1';
-            const url = `${baseUrl}/consultation/admin/consultations?${queryParams.toString()}`;
+            const url = `${API_URL}/api/v1/consultations/?${queryParams.toString()}`;
             console.log('Consultations URL with filters:', url);
 
             const { json } = await httpClient(url);
@@ -487,23 +485,23 @@ export const dataProvider: DataProvider = {
             if (json.data && Array.isArray(json.data)) {
                 // Direct array response
                 consultations = json.data;
-                total = json.pagination?.total || json.total || consultations.length;
+                total = json.pagination?.total || json.pagination?.totalItems || json.total || json.data.total || consultations.length;
             } else if (json.data && json.data.data && Array.isArray(json.data.data)) {
                 // Nested response with data.data
                 consultations = json.data.data;
-                total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || consultations.length;
+                total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || json.data.total || consultations.length;
             } else if (json.data && json.data.items && Array.isArray(json.data.items)) {
                 // Response with items array
                 consultations = json.data.items;
-                total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || consultations.length;
+                total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || json.data.total || consultations.length;
             } else if (json.data && json.data.consultations && Array.isArray(json.data.consultations)) {
                 // Response with consultations array
                 consultations = json.data.consultations;
-                total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || consultations.length;
+                total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || json.data.total || consultations.length;
             } else if (Array.isArray(json.data.data)) {
                 // Direct array response
                 consultations = json.data;
-                total = json.pagination?.total || json.total || consultations.length;
+                total = json.pagination?.total || json.pagination?.totalItems || json.total || json.data.total || consultations.length;
             } else {
                 console.warn('Unexpected API response structure:', json);
                 consultations = [];

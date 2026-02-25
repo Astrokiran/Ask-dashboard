@@ -1510,6 +1510,15 @@ export const dataProvider: DataProvider = {
         throw new Error(`Unsupported custom action: ${type}`);
     },
 
+    getOne: async (resource, params) => {
+        if (resource === 'admin-users') {
+            const url = `${API_URL}/api/v1/admin-users/${params.id}`;
+            const { json } = await httpClient(url);
+            return { data: json };
+        }
+        return Promise.reject(new Error(`Unsupported resource for getOne: ${resource}`));
+    },
+
     getMany: async () => ({ data: [] }),
     getManyReference: async () => ({ data: [], total: 0 }),
     delete: async (resource, params) => {

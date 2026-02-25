@@ -1342,6 +1342,12 @@ export const dataProvider: DataProvider = {
             }
         }
 
+        if (resource === 'admin-users') {
+            const url = `${API_URL}/api/v1/admin-users/${params.id}`;
+            const { json } = await httpClient(url);
+            return { data: json };
+        }
+
         console.error(`getOne not implemented for resource: ${resource}`);
         return Promise.reject(new Error(`Unsupported resource: ${resource}`));
     },
@@ -1508,15 +1514,6 @@ export const dataProvider: DataProvider = {
         }
 
         throw new Error(`Unsupported custom action: ${type}`);
-    },
-
-    getOne: async (resource, params) => {
-        if (resource === 'admin-users') {
-            const url = `${API_URL}/api/v1/admin-users/${params.id}`;
-            const { json } = await httpClient(url);
-            return { data: json };
-        }
-        return Promise.reject(new Error(`Unsupported resource for getOne: ${resource}`));
     },
 
     getMany: async () => ({ data: [] }),

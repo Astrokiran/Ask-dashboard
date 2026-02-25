@@ -404,7 +404,7 @@ export const dataProvider: DataProvider = {
         if (resource === 'consultations') {
             const { page, perPage } = params.pagination || { page: 1, perPage: 25 };
             // Destructure the filters for cleaner access
-            const { q, status, guide_id, customer_id, id, date_from, date_to } = params.filter;
+            const { q, status, guide_id, customer_id, id, date_from, date_to, mode, category } = params.filter;
 
             console.log('Consultations filters received:', params.filter);
 
@@ -470,7 +470,17 @@ export const dataProvider: DataProvider = {
                 queryParams.append('end_date', endDateTime);
             }
 
-            // Use the correct admin API endpoint
+            // Add mode filter
+            if (mode) {
+                queryParams.append('mode', mode);
+            }
+
+            // Add category filter
+            if (category) {
+                queryParams.append('category', category);
+            }
+
+            // Use the correct admin API endpoint for consultations list
             const url = `${API_URL}/api/v1/consultations/?${queryParams.toString()}`;
             console.log('Consultations URL with filters:', url);
 
@@ -485,34 +495,44 @@ export const dataProvider: DataProvider = {
             if (json.data && Array.isArray(json.data)) {
                 // Direct array response
                 consultations = json.data;
-                total = json.pagination?.total || json.total || consultations.length;
+                total = json.pagination?.total || json.pagination?.totalItems || json.total || json.data.total || consultations.length;
             } else if (json.data && json.data.data && Array.isArray(json.data.data)) {
                 // Nested response with data.data
                 consultations = json.data.data;
-                total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || consultations.length;
+                total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || json.data.total || consultations.length;
             } else if (json.data && json.data.items && Array.isArray(json.data.items)) {
                 // Response with items array
                 consultations = json.data.items;
-                total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || consultations.length;
+                total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || json.data.total || consultations.length;
+            } else if (json.data && json.data.consultations && Array.isArray(json.data.consultations)) {
+                // Response with consultations array
+                consultations = json.data.consultations;
+                total = json.data.pagination?.total || json.data.pagination?.totalItems || json.total || json.data.total || consultations.length;
             } else if (Array.isArray(json.data.data)) {
                 // Direct array response
                 consultations = json.data;
-                total = json.pagination?.total || json.total || consultations.length;
+                total = json.pagination?.total || json.pagination?.totalItems || json.total || json.data.total || consultations.length;
             } else {
                 console.warn('Unexpected API response structure:', json);
                 consultations = [];
                 total = 0;
             }
 
+            // Map consultation_id to id for react-admin
+            const mappedConsultations = consultations.map((consultation: any) => ({
+                ...consultation,
+                id: consultation.consultation_id || consultation.id,
+            }));
+
             console.log('Processed consultations:', {
-                total: consultations.length,
+                total: mappedConsultations.length,
                 totalRecords: total,
                 currentPage: page,
                 perPage
             });
 
             return {
-                data: consultations,
+                data: mappedConsultations,
                 total: total,
             };
         }
@@ -855,6 +875,72 @@ export const dataProvider: DataProvider = {
             return { data, total };
         }
 
+        if (resource === 'products') {
+            const { page = 1, perPage = 20 } = params.pagination ?? {};
+            const { field = 'created_at', order = 'DESC' } = params.sort ?? {};
+            const { q, state, collection } = params.filter || {};
+
+            // Use the AUTH_URL environment variable for products API
+            const PRODUCTS_API_BASE = `${API_ROOT_URL}/consultation`;
+
+            // Build query parameters
+            const queryParams = new URLSearchParams();
+            queryParams.append('page', page.toString());
+            queryParams.append('page_size', perPage.toString());
+
+            if (state) {
+                queryParams.append('state', state);
+            }
+
+            if (collection) {
+                queryParams.append('collection', collection);
+            }
+
+            const url = `${PRODUCTS_API_BASE}/admin/products?${queryParams.toString()}`;
+
+            try {
+                const { json } = await httpClient(url);
+
+                // The API response structure: { success: true, message: "...", data: { products: [...], total: ..., page: ..., page_size: ... } }
+                const products = json.data?.products || [];
+                const total = json.data?.total || products.length;
+
+                // Apply client-side search filter if q is provided
+                let filteredProducts = products;
+                if (q) {
+                    const searchLower = q.toLowerCase();
+                    filteredProducts = products.filter((product: any) =>
+                        product.name?.toLowerCase().includes(searchLower) ||
+                        product.description?.toLowerCase().includes(searchLower) ||
+                        product.short_description?.toLowerCase().includes(searchLower) ||
+                        product.collection?.toLowerCase().includes(searchLower) ||
+                        product.tags?.some((tag: string) => tag.toLowerCase().includes(searchLower))
+                    );
+                }
+
+                // Sort the products
+                filteredProducts.sort((a: any, b: any) => {
+                    const aVal = a[field];
+                    const bVal = b[field];
+
+                    if (aVal < bVal) return order === 'ASC' ? -1 : 1;
+                    if (aVal > bVal) return order === 'ASC' ? 1 : -1;
+                    return 0;
+                });
+
+                // Apply pagination after filtering and sorting
+                const paginatedProducts = filteredProducts.slice((page - 1) * perPage, page * perPage);
+
+                return {
+                    data: paginatedProducts,
+                    total: q ? filteredProducts.length : total,
+                };
+            } catch (error) {
+                console.error('Error fetching products:', error);
+                throw error;
+            }
+        }
+
         throw new Error(`Unsupported resource for getList: ${resource}`);
 
     },
@@ -998,6 +1084,12 @@ export const dataProvider: DataProvider = {
             return { data: { ...params.data, id: params.data.id || 0 } };
         }
 
+        if (resource === 'products') {
+            // ProductCreate handles the create flow directly via httpClient.
+            // This is a no-op fallback; the actual create is done in ProductCreate.tsx.
+            return { data: { ...params.data, id: params.data.id || 0 } };
+        }
+
         throw new Error(`Unsupported resource: ${resource}`);
     },
     update: async (resource, params) => {
@@ -1045,7 +1137,12 @@ export const dataProvider: DataProvider = {
             // Transform back the media to match frontend expected format
             const transformedMedia = { ...json.data, id: json.data.id };
             return { data: transformedMedia };
+        } if (resource === 'products') {
+            // ProductEdit handles the update flow directly via httpClient.
+            // This is a no-op fallback; the actual update is done in ProductEdit.tsx.
+            return { data: { ...params.data, id: params.id } };
         }
+
         return Promise.resolve({ data: { ...params.data, id: params.id } }) as any;
 
     },
@@ -1089,13 +1186,25 @@ export const dataProvider: DataProvider = {
             return { data: transformedData };
         }
         if (resource === 'consultations') {
-            // This assumes you will create a `getOne` endpoint in your Go service
-            const url = `${API_URL}/api/v1/consultations/${params.id}`;
+            // Use the admin endpoint for consultation details
+            // The endpoint is at /auth/api/v1/consultation/admin/consultations/{id}
+            // AUTH_API_URL is https://devazstg.astrokiran.com/auth/api/v1/auth
+            // We need to replace /auth at the end with /api/v1/consultation/admin/consultations/{id}
+            const baseUrl = AUTH_API_URL?.replace(/\/auth$/, '') || 'https://devazstg.astrokiran.com/auth/api/v1';
+            const url = `${baseUrl}/consultation/admin/consultations/${params.id}`;
+            console.log('Fetching consultation details from:', url);
             const { json } = await httpClient(url);
 
-            // Assuming the getOne response is { success: true, data: { ...consultation } }
+            console.log('Consultation details response:', json);
+
+            // The API response is { success: true, message: "...", data: { ...consultation } }
+            // Map consultation_id to id for react-admin
+            const consultationData = json.data || {};
             return {
-                data: json.data,
+                data: {
+                    ...consultationData,
+                    id: consultationData.consultation_id || params.id,
+                },
             };
         }
         if (resource === 'offers') {
@@ -1213,6 +1322,24 @@ export const dataProvider: DataProvider = {
                     customer_id: customerId,
                 }
             };
+        }
+
+        if (resource === 'products') {
+            // Use the AUTH_URL environment variable for products API
+            const PRODUCTS_API_BASE = `${API_ROOT_URL}/consultation`;
+            const url = `${PRODUCTS_API_BASE}/admin/products/${params.id}`;
+
+            try {
+                const { json } = await httpClient(url);
+
+                // The API response structure: { success: true, message: "...", data: {...} }
+                const product = json.data || {};
+
+                return { data: product };
+            } catch (error) {
+                console.error('Error fetching product:', error);
+                throw error;
+            }
         }
 
         console.error(`getOne not implemented for resource: ${resource}`);
@@ -1400,6 +1527,16 @@ export const dataProvider: DataProvider = {
         if (resource === 'videos' || resource === 'stories') {
             const { id } = params;
             await httpClient(`${API_ROOT_URL}/superadmin/media/${id}`, {
+                method: 'DELETE',
+            });
+            return { data: { id } };
+        }
+
+        if (resource === 'products') {
+            const { id } = params;
+            // Use the AUTH_URL environment variable for products API
+            const PRODUCTS_API_BASE = `${API_ROOT_URL}/consultation`;
+            await httpClient(`${PRODUCTS_API_BASE}/admin/products/${id}`, {
                 method: 'DELETE',
             });
             return { data: { id } };

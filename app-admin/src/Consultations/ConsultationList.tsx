@@ -15,10 +15,12 @@ import {
     DateField,
     useListContext,
     useDataProvider,
+    RecordContextProvider,
 } from 'react-admin';
 import { Chip } from '@mui/material';
 import { Box, Typography, Paper, Grid, styled } from '@mui/material';
 import { useState, useEffect } from 'react';
+import { WebRTCCallButton } from '../components/WebRTCCallButton';
 
 // --- Reusable StatusField Component ---
 // This component renders the colorful status chip.
@@ -47,6 +49,18 @@ const consultationFilters = [
         { id: 'completed', name: 'Completed' },
         { id: 'cancelled', name: 'Cancelled' },
         { id: 'failed', name: 'Failed' },
+    ]} />,
+    <SelectInput key="mode" source="mode" label="Mode" choices={[
+        { id: 'chat', name: 'Chat' },
+        { id: 'call', name: 'Call' },
+        { id: 'video', name: 'Video' },
+    ]} />,
+    <SelectInput key="category" source="category" label="Category" choices={[
+        { id: 'astrology', name: 'Astrology' },
+        { id: 'vastu', name: 'Vastu' },
+        { id: 'numerology', name: 'Numerology' },
+        { id: 'palmistry', name: 'Palmistry' },
+        { id: 'tarot', name: 'Tarot' },
     ]} />,
     <TextInput key="id" label="Consultation ID (Exact)" source="id" placeholder="Enter consultation ID (e.g., 123)" />,
     <TextInput key="guide_id" label="Filter by Guide ID" source="guide_id" />,
@@ -129,6 +143,12 @@ const TotalConsultationsCount = ({ currentFilters }: { currentFilters: any }) =>
                 if (currentFilters.id) {
                     filterParams.consultation_id = currentFilters.id;
                 }
+                if (currentFilters.mode) {
+                    filterParams.mode = currentFilters.mode;
+                }
+                if (currentFilters.category) {
+                    filterParams.category = currentFilters.category;
+                }
 
                 // Create a unique key for this filter combination to ensure proper re-fetch
                 const filterKey = JSON.stringify(filterParams);
@@ -178,6 +198,8 @@ const TotalConsultationsCount = ({ currentFilters }: { currentFilters: any }) =>
             <Typography variant="caption" color="textSecondary" display="block">
                 {currentFilters.q && `Search: ${currentFilters.q}`}
                 {currentFilters.status && ` | Status: ${currentFilters.status.toUpperCase()}`}
+                {currentFilters.mode && ` | Mode: ${currentFilters.mode}`}
+                {currentFilters.category && ` | Category: ${currentFilters.category}`}
                 {currentFilters.date_from && currentFilters.date_to && ` | Date: ${currentFilters.date_from} to ${currentFilters.date_to}`}
                 {currentFilters.guide_id && ` | Guide ID: ${currentFilters.guide_id}`}
                 {currentFilters.customer_id && ` | Customer ID: ${currentFilters.customer_id}`}
@@ -205,6 +227,26 @@ const ConsultationListContent = (props: any) => {
                     render={(record: any) => <StatusField record={record} />}
                 />
                 <TextField source='mode' label='Mode' />
+
+                {/* WebRTC Call Button */}
+                <FunctionField
+                    label="Call"
+                    render={(record: any) => {
+                        // Try to get customer phone from different possible fields
+                        const phoneNumber = record.customer_phone || record.phone || record.customer_phone_number;
+                        if (!phoneNumber) {
+                            return <span style={{ color: '#999', fontSize: '12px' }}>No phone</span>;
+                        }
+                        return (
+                            <WebRTCCallButton
+                                phoneNumber={phoneNumber}
+                                customerName={record.customer_name}
+                                consultationId={record.id}
+                                label="📞 Call"
+                            />
+                        );
+                    }}
+                />
 
                 <DateField source="requested_at" label="Requested At" showTime />
             </Datagrid>

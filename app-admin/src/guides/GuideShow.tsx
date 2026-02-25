@@ -36,6 +36,7 @@ import {
     AlertTitle,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { WebRTCCallButton } from '../components/WebRTCCallButton';
 
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -579,7 +580,18 @@ const GuideShowView = () => {
                         <CardContent>
                             <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
                                 <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
-                                    <DetailItem label="Phone">{record.phone_number}</DetailItem>
+                                    <DetailItem label="Phone">
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            {record.phone_number}
+                                            {record.phone_number && (
+                                                <WebRTCCallButton
+                                                    phoneNumber={record.phone_number}
+                                                    customerName={record.full_name}
+                                                    label="📞 Call"
+                                                />
+                                            )}
+                                        </Box>
+                                    </DetailItem>
                                 </Box>
                                 <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
                                     <DetailItem label="Email Address">{record.email || 'Not provided'}</DetailItem>

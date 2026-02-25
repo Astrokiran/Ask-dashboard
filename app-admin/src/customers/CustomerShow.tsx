@@ -40,6 +40,7 @@ import {
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { FormEvent, useState, useEffect } from 'react';
 import { httpClient } from '../dataProvider';
+import { WebRTCCallButton } from '../components/WebRTCCallButton';
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -1444,6 +1445,377 @@ const CustomerOrders = ({ customerId }: { customerId: number }) => {
     );
 };
 
+// --- Customer Consultations Component with Chat/Recordings ---
+const CustomerConsultations = ({ customerId, customerName }: { customerId: number; customerName?: string }) => {
+    const [consultations, setConsultations] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [selectedConsultation, setSelectedConsultation] = useState<any>(null);
+    const [showChatDialog, setShowChatDialog] = useState(false);
+
+    useEffect(() => {
+        if (!customerId) return;
+        setIsLoading(true);
+
+        // Use the AUTH_API_URL for consultation admin endpoint
+        const AUTH_API_URL = process.env.REACT_APP_AUTH_URL;
+        const baseUrl = AUTH_API_URL?.replace(/\/auth$/, '') || 'https://devazstg.astrokiran.com/auth/api/v1';
+
+        // Fetch consultations for this customer using the admin endpoint
+        httpClient(`${baseUrl}/consultation/admin/consultations?customer_id=${customerId}`)
+            .then(({ json }) => {
+                console.log('Customer consultations response:', json);
+
+                // Handle different response structures
+                let consultationData = [];
+
+                if (json.data && Array.isArray(json.data)) {
+                    consultationData = json.data;
+                } else if (json.data && json.data.data && Array.isArray(json.data.data)) {
+                    consultationData = json.data.data;
+                } else if (json.data && json.data.consultations && Array.isArray(json.data.consultations)) {
+                    consultationData = json.data.consultations;
+                } else if (json.data && json.data.items && Array.isArray(json.data.items)) {
+                    consultationData = json.data.items;
+                }
+
+                // Map consultation_id to id
+                const mappedConsultations = consultationData.map((c: any) => ({
+                    ...c,
+                    id: c.consultation_id || c.id,
+                }));
+
+                setConsultations(mappedConsultations);
+            })
+            .catch((error) => {
+                console.error('Error fetching consultations:', error);
+                setConsultations([]);
+            })
+            .finally(() => setIsLoading(false));
+    }, [customerId]);
+
+    const handleConsultationClick = async (consultationId: number) => {
+        try {
+            // Use the AUTH_API_URL for consultation admin endpoint
+            const AUTH_API_URL = process.env.REACT_APP_AUTH_URL;
+            const baseUrl = AUTH_API_URL?.replace(/\/auth$/, '') || 'https://devazstg.astrokiran.com/auth/api/v1';
+
+            // Fetch detailed consultation information including chat/recordings
+            const response = await httpClient(`${baseUrl}/consultation/admin/consultations/${consultationId}`);
+            console.log('Consultation details response:', response.json);
+            setSelectedConsultation(response.json.data);
+            setShowChatDialog(true);
+        } catch (error) {
+            console.error('Error fetching consultation details:', error);
+        }
+    };
+
+    // Get status color
+    const getStatusColor = (status: string) => {
+        const colors: { [key: string]: string } = {
+            completed: '#4caf50',
+            in_progress: '#2196f3',
+            requested: '#ff9800',
+            cancelled: '#f44336',
+            failed: '#f44336',
+            guide_rejected: '#9c27b0',
+            rejected: '#9c27b0',
+        };
+        return colors[status?.toLowerCase()] || 'default';
+    };
+
+    // Get mode icon
+    const getModeIcon = (mode: string) => {
+        switch (mode?.toLowerCase()) {
+            case 'chat': return '💬';
+            case 'voice': return '📞';
+            case 'video': return '📹';
+            default: return '📅';
+        }
+    };
+
+    return (
+        <Box>
+            {/* Consultations List */}
+            <TableContainer component={Box} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden', mb: 2 }}>
+                <Table sx={{ minWidth: 600 }}>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Consultation ID</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Mode</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Guide</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Date</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Action</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {isLoading ? (
+                            <TableRow><TableCell colSpan={6} align="center">Loading consultations...</TableCell></TableRow>
+                        ) : consultations.length > 0 ? (
+                            consultations.map((consultation: any) => (
+                                <TableRow key={consultation.consultation_id || consultation.id} hover>
+                                    <TableCell component="th" scope="row">
+                                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                            #{consultation.consultation_id || consultation.id}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                            <span>{getModeIcon(consultation.mode)}</span>
+                                            <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+                                                {consultation.mode}
+                                            </Typography>
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography variant="body2">{consultation.guide_name || 'N/A'}</Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Chip
+                                            label={consultation.state?.replace(/_/g, ' ').toUpperCase() || 'N/A'}
+                                            size="small"
+                                            sx={{
+                                                bgcolor: getStatusColor(consultation.state),
+                                                color: 'white',
+                                                fontWeight: 600,
+                                                fontSize: '0.7rem',
+                                            }}
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography variant="body2">
+                                            {consultation.requested_at ? new Date(consultation.requested_at).toLocaleDateString() : 'N/A'}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            onClick={() => handleConsultationClick(consultation.consultation_id || consultation.id)}
+                                        >
+                                            View Details
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow><TableCell colSpan={6} align="center">No consultations found.</TableCell></TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+
+            {/* Consultation Details Dialog with Chat/Recordings */}
+            <Dialog
+                open={showChatDialog}
+                onClose={() => setShowChatDialog(false)}
+                maxWidth="lg"
+                fullWidth
+                PaperProps={{
+                    sx: { height: '80vh', maxHeight: '80vh' }
+                }}
+            >
+                <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
+                    <Box>
+                        <Typography variant="h6">
+                            Consultation #{selectedConsultation?.consultation_id || selectedConsultation?.id}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            {selectedConsultation?.mode === 'chat' ? 'Chat Messages' :
+                             selectedConsultation?.mode === 'voice' ? 'Voice Recording' :
+                             selectedConsultation?.mode === 'video' ? 'Video Recording' : 'Consultation Details'}
+                        </Typography>
+                    </Box>
+                    <IconButton onClick={() => setShowChatDialog(false)}>
+                        <span style={{ fontSize: '1.5rem' }}>✕</span>
+                    </IconButton>
+                </DialogTitle>
+
+                <DialogContent sx={{ p: 0 }}>
+                    {selectedConsultation?.mode === 'chat' && selectedConsultation.chat_messages ? (
+                        /* Chat Messages View */
+                        <Box
+                            sx={{
+                                bgcolor: '#e5ddd5',
+                                height: '100%',
+                                p: 2,
+                                overflowY: 'auto',
+                                backgroundImage: 'linear-gradient(rgba(229,221,213,0.9), rgba(229,221,213,0.9))',
+                            }}
+                        >
+                            {selectedConsultation.chat_messages.map((message: any, index: number) => {
+                                const isCustomer = message.sender_type === 'customer';
+
+                                return (
+                                    <Box
+                                        key={message.message_id || index}
+                                        sx={{
+                                            display: 'flex',
+                                            justifyContent: isCustomer ? 'flex-end' : 'flex-start',
+                                            mb: 2,
+                                        }}
+                                    >
+                                        <Box sx={{ maxWidth: '65%' }}>
+                                            {/* Sender Name & Time */}
+                                            <Box sx={{ display: 'flex', justifyContent: isCustomer ? 'flex-end' : 'flex-start', mb: 0.5, px: 1 }}>
+                                                <Typography
+                                                    variant="caption"
+                                                    sx={{
+                                                        fontWeight: 600,
+                                                        color: isCustomer ? 'primary.main' : 'secondary.main',
+                                                        fontSize: '0.7rem',
+                                                    }}
+                                                >
+                                                    {message.sender_name || (isCustomer ? customerName : selectedConsultation.guide_name)}
+                                                </Typography>
+                                                <Typography variant="caption" sx={{ ml: 1, color: 'text.secondary', fontSize: '0.65rem' }}>
+                                                    {new Date(message.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                </Typography>
+                                            </Box>
+
+                                            {/* Message Bubble */}
+                                            <Box
+                                                sx={{
+                                                    bgcolor: isCustomer ? '#dcf8c6' : 'white',
+                                                    borderRadius: isCustomer ? '8px 0 8px 8px' : '0 8px 8px 8px',
+                                                    p: 2,
+                                                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                                                }}
+                                            >
+                                                {message.type === 'image' ? (
+                                                    <Box>
+                                                        {/* Display actual image if imageUrl is available */}
+                                                        {message.imageUrl || message.image_url ? (
+                                                            <Box>
+                                                                <Box
+                                                                    component="img"
+                                                                    src={message.imageUrl || message.image_url}
+                                                                    alt={message.content || 'Image'}
+                                                                    sx={{
+                                                                        maxWidth: '100%',
+                                                                        maxHeight: '250px',
+                                                                        borderRadius: 1,
+                                                                        mb: 1,
+                                                                        cursor: 'pointer',
+                                                                        '&:hover': {
+                                                                            opacity: 0.9,
+                                                                        }
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        // Open image in new tab on click
+                                                                        window.open(message.imageUrl || message.image_url, '_blank');
+                                                                    }}
+                                                                />
+                                                                {message.content && (
+                                                                    <Typography
+                                                                        variant="caption"
+                                                                        sx={{
+                                                                            fontSize: '0.75rem',
+                                                                            color: 'text.secondary',
+                                                                            fontStyle: 'italic',
+                                                                        }}
+                                                                    >
+                                                                        {message.content}
+                                                                    </Typography>
+                                                                )}
+                                                            </Box>
+                                                        ) : (
+                                                            // Fallback if no imageUrl
+                                                            <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
+                                                                📷 <strong>Image:</strong> {message.content}
+                                                            </Typography>
+                                                        )}
+                                                    </Box>
+                                                ) : (
+                                                    <Typography variant="body2" sx={{ fontSize: '0.9rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                                                        {message.content}
+                                                    </Typography>
+                                                )}
+                                                {message.status && (
+                                                    <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'text.secondary', mt: 0.5, display: 'block' }}>
+                                                        ✓ {message.status}
+                                                    </Typography>
+                                                )}
+                                            </Box>
+                                        </Box>
+                                    </Box>
+                                );
+                            })}
+                        </Box>
+                    ) : selectedConsultation?.mode && (selectedConsultation.mode === 'voice' || selectedConsultation.mode === 'video') ? (
+                        /* Voice/Video Recordings View */
+                        <Box sx={{ p: 3 }}>
+                            {selectedConsultation.recordings?.recording_urls && selectedConsultation.recordings.recording_urls.length > 0 ? (
+                                <Box>
+                                    {selectedConsultation.cloud_recording_session_id && (
+                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                            Session ID: {selectedConsultation.cloud_recording_session_id}
+                                        </Typography>
+                                    )}
+                                    {selectedConsultation.recordings.recording_urls.map((recording: any, index: number) => (
+                                        <Box
+                                            key={index}
+                                            sx={{
+                                                mb: 2,
+                                                p: 2,
+                                                border: '1px solid',
+                                                borderColor: 'divider',
+                                                borderRadius: 2,
+                                                bgcolor: 'background.paper',
+                                            }}
+                                        >
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+                                                Recording {index + 1}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                                {recording.file_name || `Recording ${index + 1}`}
+                                            </Typography>
+                                            <Box display="flex" gap={1}>
+                                                <Button
+                                                    variant="contained"
+                                                    size="small"
+                                                    href={recording.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    ▶ Play
+                                                </Button>
+                                                <Button
+                                                    variant="outlined"
+                                                    size="small"
+                                                    href={recording.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    download
+                                                >
+                                                    ⬇ Download
+                                                </Button>
+                                            </Box>
+                                        </Box>
+                                    ))}
+                                </Box>
+                            ) : (
+                                <Box sx={{ textAlign: 'center', py: 4 }}>
+                                    <Typography variant="body1" color="text.secondary">
+                                        No recordings available for this consultation
+                                    </Typography>
+                                </Box>
+                            )}
+                        </Box>
+                    ) : (
+                        /* Other consultation types - show basic info */
+                        <Box sx={{ p: 3 }}>
+                            <Typography variant="body1" color="text.secondary">
+                                No detailed view available for this consultation type.
+                            </Typography>
+                        </Box>
+                    )}
+                </DialogContent>
+            </Dialog>
+        </Box>
+    );
+};
+
 // --- QR Code Payment Order Component ---
 const QRCodePaymentOrder = ({ customerId, customerPhone }: { customerId: number; customerPhone: string }) => {
     const [amount, setAmount] = useState('25');
@@ -2069,7 +2441,16 @@ const CustomerShowView = () => {
                             <Typography variant="subtitle2" color="textSecondary" fontWeight="-semibold">
                                 Primary Phone
                             </Typography>
-                            <TextField source="phone" />
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <TextField source="phone" />
+                                {record?.phone && (
+                                    <WebRTCCallButton
+                                        phoneNumber={record.phone}
+                                        customerName={record.name}
+                                        label="📞 Call"
+                                    />
+                                )}
+                            </Box>
                         </Box>
 
                         <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
@@ -2108,6 +2489,15 @@ const CustomerShowView = () => {
                 defaultOpen={false}
             >
                 <CustomerOrders customerId={customerIdAsNumber} />
+            </CollapsibleSection>
+
+            {/* Collapsible Consultations with Chat/Recordings Section */}
+            <CollapsibleSection
+                title="Consultation History (Chat & Recordings)"
+                icon={<span>💬</span>}
+                defaultOpen={false}
+            >
+                <CustomerConsultations customerId={customerIdAsNumber} customerName={record.name} />
             </CollapsibleSection>
 
             {/* Collapsible Payment Orders Section */}

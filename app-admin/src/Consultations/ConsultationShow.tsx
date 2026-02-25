@@ -7,6 +7,7 @@ import {
     NumberField,
     FunctionField,
     useRedirect,
+    useRecordContext,
 } from 'react-admin';
 import {
     Chip,
@@ -18,6 +19,13 @@ import {
     Divider,
     Avatar,
     Stack,
+    Button,
+    List as MuiList,
+    ListItem,
+    ListItemText,
+    Paper,
+    IconButton,
+    Collapse,
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import {
@@ -34,8 +42,17 @@ import {
     Schedule as ScheduleIcon,
     AttachMoney as MoneyIcon,
     Settings as SettingsIcon,
+    Videocam as VideocamIcon,
+    Mic as MicIcon,
+    Chat as ChatIcon,
+    PlayArrow as PlayArrowIcon,
+    Download as DownloadIcon,
+    ExpandMore as ExpandMoreIcon,
+    ExpandLess as ExpandLessIcon,
+    CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
+import { useState } from 'react';
 
 // Styled card with header feel
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -66,6 +83,7 @@ const StatusField = ({ record }: { record?: any }) => {
         failed: { bgcolor: 'rgba(211, 47, 47, 0.15)', color: '#d32f2f' },
         customer_join_timeout: { bgcolor: 'rgba(183, 28, 28, 0.15)', color: '#b71c1c' },
         rejected: { bgcolor: 'rgba(123, 31, 162, 0.15)', color: '#7b1fa2' },
+        guide_rejected: { bgcolor: 'rgba(123, 31, 162, 0.15)', color: '#7b1fa2' },
         expired: { bgcolor: 'rgba(251, 140, 0, 0.15)', color: '#fb8c00' },
     };
     return (
@@ -156,6 +174,445 @@ const ClickableGuideId = ({ guideId }: { guideId: number }) => {
     );
 };
 
+// Recordings Component for Voice/Video consultations
+const ConsultationRecordings = () => {
+    const record = useRecordContext();
+    const [expanded, setExpanded] = useState(true);
+
+    if (!record) return null;
+
+    const recordings = record.recordings?.recording_urls;
+
+    // Only show recordings section if mode is voice or video and recordings exist
+    if (record.mode !== 'voice' && record.mode !== 'video') return null;
+    if (!recordings || recordings.length === 0) {
+        return (
+            <StyledCard>
+                <CardContent>
+                    <SectionHeader>
+                        <Avatar sx={{ bgcolor: record.mode === 'voice' ? 'secondary.main' : 'primary.main' }}>
+                            {record.mode === 'voice' ? <MicIcon fontSize="small" /> : <VideocamIcon fontSize="small" />}
+                        </Avatar>
+                        <Typography variant="h6">
+                            {record.mode === 'voice' ? 'Voice Recording' : 'Video Recording'}
+                        </Typography>
+                    </SectionHeader>
+                    <Box sx={{ p: 3, textAlign: 'center', bgcolor: 'background.paper', borderRadius: 2 }}>
+                        <Typography variant="body1" color="text.secondary">
+                            No recordings available for this consultation
+                        </Typography>
+                    </Box>
+                </CardContent>
+            </StyledCard>
+        );
+    }
+
+    return (
+        <StyledCard>
+            <CardContent>
+                <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <SectionHeader sx={{ mb: 0, pb: 0, borderBottom: 'none' }}>
+                        <Avatar sx={{ bgcolor: record.mode === 'voice' ? 'secondary.main' : 'primary.main' }}>
+                            {record.mode === 'voice' ? <MicIcon fontSize="small" /> : <VideocamIcon fontSize="small" />}
+                        </Avatar>
+                        <Typography variant="h6">
+                            {record.mode === 'voice' ? 'Voice Recordings' : 'Video Recordings'}
+                        </Typography>
+                    </SectionHeader>
+                    <IconButton onClick={() => setExpanded(!expanded)}>
+                        {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </IconButton>
+                </Box>
+
+                <Collapse in={expanded}>
+                    <Box sx={{ mt: 3 }}>
+                        {record.cloud_recording_session_id && (
+                            <Box sx={{ mb: 2 }}>
+                                <Typography variant="body2" color="text.secondary">
+                                    Session ID: {record.cloud_recording_session_id}
+                                </Typography>
+                            </Box>
+                        )}
+
+                        {recordings.map((recording: any, index: number) => (
+                            <Box
+                                key={index}
+                                sx={{
+                                    mb: 2,
+                                    p: 2,
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    borderRadius: 2,
+                                    bgcolor: 'background.paper',
+                                    '&:hover': {
+                                        boxShadow: 2,
+                                    }
+                                }}
+                            >
+                                <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                        Recording {index + 1}
+                                    </Typography>
+                                    <Chip
+                                        label={recording.recording_type || record.mode}
+                                        size="small"
+                                        sx={{ bgcolor: record.mode === 'voice' ? 'secondary.light' : 'primary.light', color: 'white' }}
+                                    />
+                                </Box>
+
+                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontSize: '0.8rem' }}>
+                                    {recording.file_name || `Recording ${index + 1}`}
+                                </Typography>
+
+                                {recording.expires_at && (
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                                        Expires: {new Date(recording.expires_at).toLocaleString()}
+                                    </Typography>
+                                )}
+
+                                <Box display="flex" gap={1}>
+                                    <Button
+                                        variant="contained"
+                                        size="small"
+                                        startIcon={<PlayArrowIcon />}
+                                        href={recording.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        Play
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        startIcon={<DownloadIcon />}
+                                        href={recording.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        download
+                                    >
+                                        Download
+                                    </Button>
+                                </Box>
+                            </Box>
+                        ))}
+
+                        {record.cloud_recording_started_at && (
+                            <Box sx={{ mt: 2, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
+                                <Typography variant="caption" color="text.secondary">
+                                    Recording started: {new Date(record.cloud_recording_started_at).toLocaleString()}
+                                </Typography>
+                                <br />
+                                <Typography variant="caption" color="text.secondary">
+                                    Recording stopped: {new Date(record.cloud_recording_stopped_at).toLocaleString()}
+                                </Typography>
+                            </Box>
+                        )}
+                    </Box>
+                </Collapse>
+            </CardContent>
+        </StyledCard>
+    );
+};
+
+// Chat Messages Component for Chat consultations
+const ConsultationChatMessages = () => {
+    const record = useRecordContext();
+    const [expanded, setExpanded] = useState(true);
+
+    if (!record) return null;
+
+    const messages = record.chat_messages || [];
+
+    // Only show chat section if mode is chat
+    if (record.mode !== 'chat') return null;
+
+    if (messages.length === 0) {
+        return (
+            <StyledCard>
+                <CardContent>
+                    <SectionHeader>
+                        <Avatar sx={{ bgcolor: 'info.main' }}>
+                            <ChatIcon fontSize="small" />
+                        </Avatar>
+                        <Typography variant="h6">Chat Messages</Typography>
+                    </SectionHeader>
+                    <Box sx={{ p: 3, textAlign: 'center', bgcolor: 'background.paper', borderRadius: 2 }}>
+                        <Typography variant="body1" color="text.secondary">
+                            No messages available for this consultation
+                        </Typography>
+                    </Box>
+                </CardContent>
+            </StyledCard>
+        );
+    }
+
+    return (
+        <StyledCard>
+            <CardContent>
+                <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <SectionHeader sx={{ mb: 0, pb: 0, borderBottom: 'none' }}>
+                        <Avatar sx={{ bgcolor: 'info.main' }}>
+                            <ChatIcon fontSize="small" />
+                        </Avatar>
+                        <Typography variant="h6">Chat Messages ({record.total_chat_messages || messages.length})</Typography>
+                    </SectionHeader>
+                    <IconButton onClick={() => setExpanded(!expanded)}>
+                        {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </IconButton>
+                </Box>
+
+                <Collapse in={expanded}>
+                    <Box sx={{ mt: 3 }}>
+                        {/* Chat Container */}
+                        <Box
+                            sx={{
+                                bgcolor: '#e5ddd5',
+                                borderRadius: 2,
+                                p: 2,
+                                minHeight: 400,
+                                maxHeight: 600,
+                                overflowY: 'auto',
+                                backgroundImage: 'linear-gradient(rgba(229,221,213,0.9), rgba(229,221,213,0.9)), url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23d4ccc4\' fill-opacity=\'0.4\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+                            }}
+                        >
+                            {messages.map((message: any, index: number) => {
+                                const isCustomer = message.sender_type === 'customer';
+                                const senderName = message.sender_name || (isCustomer ? record.customer_name : record.guide_name);
+
+                                return (
+                                    <Box
+                                        key={message.message_id || index}
+                                        sx={{
+                                            display: 'flex',
+                                            justifyContent: isCustomer ? 'flex-end' : 'flex-start',
+                                            mb: 2,
+                                        }}
+                                    >
+                                        {/* Avatar for guide */}
+                                        {!isCustomer && (
+                                            <Avatar
+                                                sx={{
+                                                    width: 32,
+                                                    height: 32,
+                                                    mr: 1,
+                                                    bgcolor: 'secondary.main',
+                                                    fontSize: '0.8rem',
+                                                }}
+                                            >
+                                                {senderName?.charAt(0).toUpperCase() || 'G'}
+                                            </Avatar>
+                                        )}
+
+                                        <Box
+                                            sx={{
+                                                maxWidth: '65%',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                            }}
+                                        >
+                                            {/* Sender Name & Time */}
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    justifyContent: isCustomer ? 'flex-end' : 'flex-start',
+                                                    mb: 0.5,
+                                                    px: 1,
+                                                }}
+                                            >
+                                                <Typography
+                                                    variant="caption"
+                                                    sx={{
+                                                        fontWeight: 600,
+                                                        color: isCustomer ? 'primary.main' : 'secondary.main',
+                                                        fontSize: '0.7rem',
+                                                    }}
+                                                >
+                                                    {senderName}
+                                                </Typography>
+                                                <Typography
+                                                    variant="caption"
+                                                    sx={{
+                                                        ml: 1,
+                                                        color: 'text.secondary',
+                                                        fontSize: '0.65rem',
+                                                    }}
+                                                >
+                                                    {new Date(message.timestamp).toLocaleString([], {
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                    })}
+                                                </Typography>
+                                            </Box>
+
+                                            {/* Message Bubble */}
+                                            <Box
+                                                sx={{
+                                                    bgcolor: isCustomer ? '#dcf8c6' : 'white',
+                                                    borderRadius: isCustomer ? '8px 0 8px 8px' : '0 8px 8px 8px',
+                                                    p: 2,
+                                                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                                                    position: 'relative',
+                                                }}
+                                            >
+                                                {/* Message Type Badge */}
+                                                {message.type && message.type !== 'text' && (
+                                                    <Chip
+                                                        label={message.type.toUpperCase()}
+                                                        size="small"
+                                                        sx={{
+                                                            fontSize: '0.6rem',
+                                                            height: 18,
+                                                            mb: 0.5,
+                                                            bgcolor: isCustomer ? 'rgba(76, 175, 80, 0.2)' : 'rgba(156, 39, 176, 0.2)',
+                                                            color: isCustomer ? 'primary.dark' : 'secondary.dark',
+                                                        }}
+                                                    />
+                                                )}
+
+                                                {/* Message Content */}
+                                                {message.type === 'image' ? (
+                                                    <Box>
+                                                        {/* Display actual image if imageUrl is available */}
+                                                        {message.imageUrl || message.image_url ? (
+                                                            <Box>
+                                                                <Box
+                                                                    component="img"
+                                                                    src={message.imageUrl || message.image_url}
+                                                                    alt={message.content || 'Image'}
+                                                                    sx={{
+                                                                        maxWidth: '100%',
+                                                                        maxHeight: '250px',
+                                                                        borderRadius: 1,
+                                                                        mb: 1,
+                                                                        cursor: 'pointer',
+                                                                        '&:hover': {
+                                                                            opacity: 0.9,
+                                                                        }
+                                                                    }}
+                                                                    onClick={(e) => {
+                                                                        // Open image in new tab on click
+                                                                        window.open(message.imageUrl || message.image_url, '_blank');
+                                                                    }}
+                                                                />
+                                                                {message.content && (
+                                                                    <Typography
+                                                                        variant="caption"
+                                                                        sx={{
+                                                                            fontSize: '0.75rem',
+                                                                            color: 'text.secondary',
+                                                                            fontStyle: 'italic',
+                                                                        }}
+                                                                    >
+                                                                        {message.content}
+                                                                    </Typography>
+                                                                )}
+                                                            </Box>
+                                                        ) : (
+                                                            // Fallback if no imageUrl
+                                                            <Typography
+                                                                variant="body2"
+                                                                sx={{
+                                                                    fontSize: '0.85rem',
+                                                                    color: 'text.primary',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: 0.5,
+                                                                }}
+                                                            >
+                                                                <Box component="span" sx={{ fontSize: '1rem' }}>📷</Box>
+                                                                <Box component="span" sx={{ fontWeight: 500 }}>Image:</Box>
+                                                                {message.content}
+                                                            </Typography>
+                                                        )}
+                                                    </Box>
+                                                ) : (
+                                                    <Typography
+                                                        variant="body2"
+                                                        sx={{
+                                                            fontSize: '0.9rem',
+                                                            color: 'text.primary',
+                                                            whiteSpace: 'pre-wrap',
+                                                            wordBreak: 'break-word',
+                                                            lineHeight: 1.5,
+                                                        }}
+                                                    >
+                                                        {message.content}
+                                                    </Typography>
+                                                )}
+
+                                                {/* Message Status */}
+                                                {message.status && (
+                                                    <Box
+                                                        sx={{
+                                                            display: 'flex',
+                                                            justifyContent: 'flex-end',
+                                                            mt: 0.5,
+                                                        }}
+                                                    >
+                                                        <Typography
+                                                            variant="caption"
+                                                            sx={{
+                                                                fontSize: '0.65rem',
+                                                                color: 'text.secondary',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: 0.25,
+                                                            }}
+                                                        >
+                                                            {message.status === 'sent' && <Box component="span" sx={{ color: '#4CAF50' }}>✓✓</Box>}
+                                                            {message.status === 'delivered' && <Box component="span" sx={{ color: '#4CAF50' }}>✓✓</Box>}
+                                                            {message.status === 'read' && <Box component="span" sx={{ color: '#4CAF50' }}>✓✓</Box>}
+                                                            {message.status !== 'sent' && message.status !== 'delivered' && message.status !== 'read' && (
+                                                                <Box component="span">{message.status}</Box>
+                                                            )}
+                                                        </Typography>
+                                                    </Box>
+                                                )}
+
+                                                {/* Message tail for customer */}
+                                                {isCustomer && (
+                                                    <Box
+                                                        sx={{
+                                                            position: 'absolute',
+                                                            right: -8,
+                                                            top: 0,
+                                                            width: 0,
+                                                            height: 0,
+                                                            borderTop: '8px solid #dcf8c6',
+                                                            borderRight: '8px solid transparent',
+                                                        }}
+                                                    />
+                                                )}
+
+                                                {/* Message tail for guide */}
+                                                {!isCustomer && (
+                                                    <Box
+                                                        sx={{
+                                                            position: 'absolute',
+                                                            left: -8,
+                                                            top: 0,
+                                                            width: 0,
+                                                            height: 0,
+                                                            borderTop: '8px solid white',
+                                                            borderLeft: '8px solid transparent',
+                                                        }}
+                                                    />
+                                                )}
+                                            </Box>
+                                        </Box>
+                                    </Box>
+                                );
+                            })}
+                        </Box>
+                    </Box>
+                </Collapse>
+            </CardContent>
+        </StyledCard>
+    );
+};
+
 export const ConsultationShow = () => (
     <Show title="Consultation Details">
         <SimpleShowLayout>
@@ -179,7 +636,7 @@ export const ConsultationShow = () => (
                                                 Consultation ID
                                             </Typography>
                                             <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                                {record.id || 'N/A'}
+                                                {record.consultation_id || record.id || 'N/A'}
                                             </Typography>
                                         </Box>
                                     )}
@@ -206,9 +663,14 @@ export const ConsultationShow = () => (
                                             <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
                                                 Consultation Mode
                                             </Typography>
-                                            <Typography variant="body1" sx={{ fontWeight: 500, textTransform: 'capitalize' }}>
-                                                {record.mode || 'N/A'}
-                                            </Typography>
+                                            <Box display="flex" alignItems="center" gap={1}>
+                                                {record.mode === 'voice' && <MicIcon fontSize="small" color="secondary" />}
+                                                {record.mode === 'video' && <VideocamIcon fontSize="small" color="primary" />}
+                                                {record.mode === 'chat' && <ChatIcon fontSize="small" color="info" />}
+                                                <Typography variant="body1" sx={{ fontWeight: 500, textTransform: 'capitalize' }}>
+                                                    {record.mode || 'N/A'}
+                                                </Typography>
+                                            </Box>
                                         </Box>
                                     )}
                                 />
@@ -223,6 +685,72 @@ export const ConsultationShow = () => (
                                             </Typography>
                                             <Typography variant="body1" sx={{ fontWeight: 500, textTransform: 'capitalize' }}>
                                                 {record.category || 'N/A'}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                />
+                            </Box>
+                        </Box>
+
+                        {/* Additional consultation details */}
+                        <Box display="flex" flexWrap="wrap" gap={2} mt={2}>
+                            <Box flex="1" minWidth={{ xs: '100%', sm: 'calc(50% - 8px)' }}>
+                                <FunctionField
+                                    label="Source"
+                                    render={(record: any) => (
+                                        <Box>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
+                                                Source
+                                            </Typography>
+                                            <Typography variant="body1" sx={{ fontWeight: 500, textTransform: 'capitalize' }}>
+                                                {record.source || 'N/A'}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                />
+                            </Box>
+                            <Box flex="1" minWidth={{ xs: '100%', sm: 'calc(50% - 8px)' }}>
+                                <FunctionField
+                                    label="Order ID"
+                                    render={(record: any) => (
+                                        <Box>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
+                                                Order ID
+                                            </Typography>
+                                            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                                {record.order_id || 'N/A'}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                />
+                            </Box>
+                            <Box flex="1" minWidth={{ xs: '100%', sm: 'calc(50% - 8px)' }}>
+                                <FunctionField
+                                    label="Quick Connect"
+                                    render={(record: any) => (
+                                        <Box>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
+                                                Quick Connect Request
+                                            </Typography>
+                                            <Chip
+                                                label={record.is_quick_connect_request ? 'Yes' : 'No'}
+                                                size="small"
+                                                color={record.is_quick_connect_request ? 'primary' : 'default'}
+                                            />
+                                        </Box>
+                                    )}
+                                />
+                            </Box>
+                            <Box flex="1" minWidth={{ xs: '100%', sm: 'calc(50% - 8px)' }}>
+                                <FunctionField
+                                    label="Max Duration"
+                                    render={(record: any) => (
+                                        <Box>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
+                                                Max Call Duration
+                                            </Typography>
+                                            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                                {record.max_call_duration_minutes ? `${record.max_call_duration_minutes} min` : 'N/A'}
                                             </Typography>
                                         </Box>
                                     )}
@@ -413,9 +941,15 @@ export const ConsultationShow = () => (
                                         let borderColor = 'success.light';
                                         let bgColor = 'success.main';
 
-                                        // Only calculate duration for completed consultations
-                                        // Calculate from requested_at to completed_at
-                                        if (record.state === 'completed' && record.completed_at && record.requested_at) {
+                                        // Use call_duration_seconds from API if available
+                                        if (record.call_duration_seconds !== undefined && record.call_duration_seconds !== null) {
+                                            const durationMinutes = Math.round(record.call_duration_seconds / 60);
+                                            const durationSeconds = record.call_duration_seconds % 60;
+                                            durationText = durationMinutes > 0
+                                                ? `${durationMinutes}m ${durationSeconds}s`
+                                                : `${durationSeconds}s`;
+                                        } else if (record.state === 'completed' && record.completed_at && record.requested_at) {
+                                            // Fallback: calculate from requested_at to completed_at
                                             const start = new Date(record.requested_at);
                                             const end = new Date(record.completed_at);
                                             const duration = Math.round((end.getTime() - start.getTime()) / 1000 / 60);
@@ -434,7 +968,7 @@ export const ConsultationShow = () => (
                                                     borderColor: borderColor,
                                                     borderRadius: 3,
                                                     bgcolor: bgColor === 'success.main' ? 'background.paper' : bgColor,
-                                                    opacity: record.state === 'completed' ? 1 : 0.7,
+                                                    opacity: (record.state === 'completed' || record.call_duration_seconds > 0) ? 1 : 0.7,
                                                     textAlign: 'center',
                                                     transition: 'all 0.3s ease',
                                                     '&:hover': {
@@ -443,11 +977,11 @@ export const ConsultationShow = () => (
                                                     }
                                                 }}
                                             >
-                                                <Typography variant="h4" color={record.state === 'completed' ? 'success.main' : 'text.secondary'} sx={{ fontWeight: 'bold', mb: 1 }}>
+                                                <Typography variant="h4" color={(record.state === 'completed' || record.call_duration_seconds > 0) ? 'success.main' : 'text.secondary'} sx={{ fontWeight: 'bold', mb: 1 }}>
                                                     {durationText}
                                                 </Typography>
                                                 <Typography variant="body2" color="text.secondary">
-                                                    Duration
+                                                    Call Duration
                                                 </Typography>
                                             </Box>
                                         );
@@ -463,12 +997,16 @@ export const ConsultationShow = () => (
                                         let borderColor = 'warning.light';
                                         let bgColor = 'warning.main';
 
-                                        // Only calculate earnings for completed consultations
-                                        // Calculate from requested_at to completed_at
-                                        if (record.state === 'completed' && record.completed_at && record.requested_at) {
+                                        // Calculate earnings based on actual call duration
+                                        if (record.call_duration_seconds !== undefined && record.call_duration_seconds !== null && record.call_duration_seconds > 0) {
+                                            const durationMinutes = Math.ceil(record.call_duration_seconds / 60); // Round up for billing
+                                            const earnings = durationMinutes * (record.base_rate_per_minute || 0);
+                                            totalEarnings = earnings.toFixed(2);
+                                        } else if (record.state === 'completed' && record.completed_at && record.requested_at) {
+                                            // Fallback: calculate from requested_at to completed_at
                                             const start = new Date(record.requested_at);
                                             const end = new Date(record.completed_at);
-                                            const duration = Math.round((end.getTime() - start.getTime()) / 1000 / 60);
+                                            const duration = Math.ceil((end.getTime() - start.getTime()) / 1000 / 60);
                                             const earnings = duration * (record.base_rate_per_minute || 0);
                                             totalEarnings = earnings.toFixed(2);
                                         } else {
@@ -485,7 +1023,7 @@ export const ConsultationShow = () => (
                                                     borderColor: borderColor,
                                                     borderRadius: 3,
                                                     bgcolor: bgColor === 'warning.main' ? 'background.paper' : bgColor,
-                                                    opacity: record.state === 'completed' ? 1 : 0.7,
+                                                    opacity: (record.state === 'completed' || record.call_duration_seconds > 0) ? 1 : 0.7,
                                                     textAlign: 'center',
                                                     transition: 'all 0.3s ease',
                                                     '&:hover': {
@@ -494,7 +1032,7 @@ export const ConsultationShow = () => (
                                                     }
                                                 }}
                                             >
-                                                <Typography variant="h4" color={record.state === 'completed' ? 'warning.main' : 'text.secondary'} sx={{ fontWeight: 'bold', mb: 1 }}>
+                                                <Typography variant="h4" color={(record.state === 'completed' || record.call_duration_seconds > 0) ? 'warning.main' : 'text.secondary'} sx={{ fontWeight: 'bold', mb: 1 }}>
                                                     {totalEarnings}
                                                 </Typography>
                                                 <Typography variant="body2" color="text.secondary">
@@ -516,6 +1054,60 @@ export const ConsultationShow = () => (
                         </Box>
                     </CardContent>
                 </StyledCard>
+
+                {/* Refund Information */}
+                <StyledCard>
+                    <CardContent>
+                        <SectionHeader>
+                            <Avatar sx={{ bgcolor: 'warning.main' }}>
+                                <MoneyIcon fontSize="small" />
+                            </Avatar>
+                            <Typography variant="h6">Refund Information</Typography>
+                        </SectionHeader>
+                        <Box display="flex" flexWrap="wrap" gap={2}>
+                            <Box flex="1" minWidth={{ xs: '100%', sm: 'calc(50% - 8px)' }}>
+                                <FunctionField
+                                    label="Is Refundable"
+                                    render={(record: any) => (
+                                        <Box>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
+                                                Is Refundable
+                                            </Typography>
+                                            <Chip
+                                                label={record.is_refundable ? 'Yes' : 'No'}
+                                                size="small"
+                                                color={record.is_refundable ? 'success' : 'default'}
+                                                sx={{ fontWeight: 600 }}
+                                            />
+                                        </Box>
+                                    )}
+                                />
+                            </Box>
+                            <Box flex="1" minWidth={{ xs: '100%', sm: 'calc(50% - 8px)' }}>
+                                <FunctionField
+                                    label="Is Refunded"
+                                    render={(record: any) => (
+                                        <Box>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
+                                                Is Refunded
+                                            </Typography>
+                                            <Chip
+                                                label={record.is_refunded ? 'Yes' : 'No'}
+                                                size="small"
+                                                color={record.is_refunded ? 'success' : 'default'}
+                                                sx={{ fontWeight: 600 }}
+                                            />
+                                        </Box>
+                                    )}
+                                />
+                            </Box>
+                        </Box>
+                    </CardContent>
+                </StyledCard>
+
+                {/* Recordings/Chat Section - Dynamic based on mode */}
+                <ConsultationRecordings />
+                <ConsultationChatMessages />
 
                 {/* Financials
                 <StyledCard>

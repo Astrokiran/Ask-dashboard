@@ -404,7 +404,7 @@ export const dataProvider: DataProvider = {
         if (resource === 'consultations') {
             const { page, perPage } = params.pagination || { page: 1, perPage: 25 };
             // Destructure the filters for cleaner access
-            const { q, status, guide_id, customer_id, id, date_from, date_to } = params.filter;
+            const { q, status, guide_id, customer_id, id, date_from, date_to, mode, category } = params.filter;
 
             console.log('Consultations filters received:', params.filter);
 
@@ -468,6 +468,16 @@ export const dataProvider: DataProvider = {
                 // Create date at end of day (23:59:59) in user's local timezone
                 const endDateTime = new Date(`${date_to}T23:59:59`).toISOString();
                 queryParams.append('end_date', endDateTime);
+            }
+
+            // Add mode filter
+            if (mode) {
+                queryParams.append('mode', mode);
+            }
+
+            // Add category filter
+            if (category) {
+                queryParams.append('category', category);
             }
 
             // Use the correct admin API endpoint for consultations list

@@ -1104,17 +1104,18 @@ export const dataProvider: DataProvider = {
         if (resource === 'admin-users') {
             const url = `${API_URL}/api/v1/admin-users/${params.id}`;
 
-            // Add +91 prefix to phone_number if not already present (for consistency)
-            const modifiedData = {
-                ...params.data,
-                phone_number: params.data.phone_number && !params.data.phone_number.startsWith('+91')
-                    ? `+91${params.data.phone_number}`
-                    : params.data.phone_number
-            };
+            // Only send editable fields - exclude read-only fields
+            const updatePayload: any = {};
+            if (params.data.name !== undefined) updatePayload.name = params.data.name;
+            if (params.data.email !== undefined) updatePayload.email = params.data.email;
+            if (params.data.department !== undefined) updatePayload.department = params.data.department;
+            if (params.data.notes !== undefined) updatePayload.notes = params.data.notes;
+            if (params.data.exotel_user_id !== undefined) updatePayload.exotel_user_id = params.data.exotel_user_id;
+            if (params.data.job_title !== undefined) updatePayload.job_title = params.data.job_title;
 
             const { json } = await httpClient(url, {
-                method: 'PATCH', // PATCH is suitable for updating parts of a resource
-                body: JSON.stringify(modifiedData),
+                method: 'PATCH',
+                body: JSON.stringify(updatePayload),
             });
             return { data: { ...json, id: json.id } };
         }

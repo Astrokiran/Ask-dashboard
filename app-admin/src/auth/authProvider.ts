@@ -67,6 +67,8 @@ export const httpClient = async (url: string, options: fetchUtils.Options = {}) 
 
 export const authProvider: AuthProvider = {
     login: async ({ phone, otp, otpRequestId }) => {
+        // Trim phone number to remove any whitespace
+        phone = phone.trim();
         const request = new Request(`${AUTH_API_URL}/otp/validate`, {
             method: 'POST',
             body: JSON.stringify({
@@ -103,7 +105,8 @@ export const authProvider: AuthProvider = {
             // Build the URL using REACT_APP_AUTH_URL from env
             const authUrl = process.env.REACT_APP_AUTH_URL || '';
             const baseUrl = authUrl.replace(/\/auth$/, ''); // Remove trailing /auth if present
-            const exotelConfigUrl = `${baseUrl}/customers/admin/exotel-config`;
+            // Pass admin's phone number as query parameter - backend will return unique user_id
+            const exotelConfigUrl = `${baseUrl}/customers/admin/exotel-config?phone_number=${phone}`;
 
             const exotelRequest = new Request(exotelConfigUrl, {
                 method: 'GET',
@@ -116,11 +119,11 @@ export const authProvider: AuthProvider = {
             const exotelResponse = await fetch(exotelRequest);
             if (exotelResponse.ok) {
                 const exotelData = await exotelResponse.json();
-                if (exotelData.success && exotelData.exotel_app_token) {
-                    // Hardcode the user ID as ashish
+                if (exotelData.exotel_app_token && exotelData.exotel_user_id) {
+                    // Use exotel_user_id returned from backend
                     const config = {
                         appToken: exotelData.exotel_app_token,
-                        userId: 'ashish'
+                        userId: exotelData.exotel_user_id
                     };
                     console.log('[AuthProvider] Exotel config received:', { ...config, appToken: '***' });
                     localStorage.setItem('exotel_config', JSON.stringify(config));

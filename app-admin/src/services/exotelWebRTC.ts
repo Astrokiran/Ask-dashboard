@@ -90,11 +90,17 @@ class ExotelWebRTCService {
       throw new Error('Not authenticated. Please login first.');
     }
 
+    // Get admin's phone number from localStorage user object
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    const phoneNumber = user?.phone_number?.trim();
+
     // Build the URL using REACT_APP_AUTH_URL from env
     const authUrl = process.env.REACT_APP_AUTH_URL || '';
     // Replace /auth at the end with empty string to get the base URL
     const baseUrl = authUrl.replace(/\/auth$/, '') || '';
-    const exotelConfigUrl = `${baseUrl}/customers/admin/exotel-config`;
+    // Pass admin's phone number as query parameter - backend will return unique user_id
+    const exotelConfigUrl = `${baseUrl}/customers/admin/exotel-config?phone_number=${phoneNumber}`;
 
     console.log('[ExotelWebRTC] Fetching config from:', exotelConfigUrl);
 
@@ -115,14 +121,14 @@ class ExotelWebRTCService {
 
     const data = await response.json();
 
-    if (!data.success || !data.exotel_app_token) {
+    if (!data.exotel_app_token || !data.exotel_user_id) {
       throw new Error('Invalid Exotel configuration received from server');
     }
 
-    // Hardcode the user ID as ashish
+    // Use exotel_user_id returned from backend
     return {
       appToken: data.exotel_app_token,
-      userId: 'ashish'
+      userId: data.exotel_user_id
     };
   }
 

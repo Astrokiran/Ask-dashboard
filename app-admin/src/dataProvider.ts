@@ -1026,8 +1026,26 @@ export const dataProvider: DataProvider = {
             });
             return { data: { ...json, id: json.id } };
         }
+        if (resource === 'stories') {
+            const url = `${API_ROOT_URL}/superadmin/media/${params.id}`;
 
+            // We only need to send the exact fields that changed or we can just send the relevant ones
+            const updatePayload: any = {};
 
+            if (params.data.title !== undefined) updatePayload.title = params.data.title;
+            if (params.data.status !== undefined) updatePayload.status = params.data.status;
+            if (params.data.sort_order !== undefined) updatePayload.sort_order = params.data.sort_order;
+            if (params.data.metadata !== undefined) updatePayload.metadata = params.data.metadata;
+
+            const { json } = await httpClient(url, {
+                method: 'PATCH',
+                body: JSON.stringify(updatePayload),
+            });
+
+            // Transform back the media to match frontend expected format
+            const transformedMedia = { ...json.data, id: json.data.id };
+            return { data: transformedMedia };
+        }
         return Promise.resolve({ data: { ...params.data, id: params.id } }) as any;
 
     },

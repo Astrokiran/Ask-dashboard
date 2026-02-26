@@ -1104,14 +1104,14 @@ export const dataProvider: DataProvider = {
         if (resource === 'admin-users') {
             const url = `${API_URL}/api/v1/admin-users/${params.id}`;
 
-            // Only send editable fields - exclude read-only fields
+            // Only send editable fields - exclude read-only fields and null values
             const updatePayload: any = {};
-            if (params.data.name !== undefined) updatePayload.name = params.data.name;
-            if (params.data.email !== undefined) updatePayload.email = params.data.email;
-            if (params.data.department !== undefined) updatePayload.department = params.data.department;
-            if (params.data.notes !== undefined) updatePayload.notes = params.data.notes;
-            if (params.data.exotel_user_id !== undefined) updatePayload.exotel_user_id = params.data.exotel_user_id;
-            if (params.data.job_title !== undefined) updatePayload.job_title = params.data.job_title;
+            if (params.data.name !== undefined && params.data.name !== null) updatePayload.name = params.data.name;
+            if (params.data.email !== undefined && params.data.email !== null) updatePayload.email = params.data.email;
+            if (params.data.department !== undefined && params.data.department !== null) updatePayload.department = params.data.department;
+            if (params.data.notes !== undefined && params.data.notes !== null) updatePayload.notes = params.data.notes;
+            if (params.data.exotel_user_id !== undefined && params.data.exotel_user_id !== null) updatePayload.exotel_user_id = params.data.exotel_user_id;
+            if (params.data.job_title !== undefined && params.data.job_title !== null) updatePayload.job_title = params.data.job_title;
 
             const { json } = await httpClient(url, {
                 method: 'PATCH',

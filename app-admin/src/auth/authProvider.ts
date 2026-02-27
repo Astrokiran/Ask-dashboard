@@ -102,17 +102,16 @@ export const authProvider: AuthProvider = {
         // Fetch Exotel configuration after successful login
         try {
             console.log('[AuthProvider] Fetching Exotel configuration...');
-            // Build the URL using REACT_APP_AUTH_URL from env
-            const authUrl = process.env.REACT_APP_AUTH_URL || '';
-            const baseUrl = authUrl.replace(/\/auth$/, ''); // Remove trailing /auth if present
-            // Pass admin's phone number as query parameter - backend will return unique user_id
-            const exotelConfigUrl = `${baseUrl}/customers/admin/exotel-config?phone_number=${phone}`;
+            // Use API_URL from env for exotel-config endpoint
+            const apiUrl = process.env.REACT_APP_API_URL || '';
+            const exotelConfigUrl = `${apiUrl}/api/v1/admin-users/exotel-config?phone_number=${phone}`;
 
             const exotelRequest = new Request(exotelConfigUrl, {
                 method: 'GET',
                 headers: new Headers({
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${data.access_token}`
+                    'Authorization': `Bearer ${data.access_token}`,
+                    'x-internal-api-key': 'dummy_service_secret'
                 }),
             });
 

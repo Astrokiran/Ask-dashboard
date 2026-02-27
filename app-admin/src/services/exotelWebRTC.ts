@@ -95,12 +95,13 @@ class ExotelWebRTCService {
     const user = userStr ? JSON.parse(userStr) : null;
     const phoneNumber = user?.phone_number?.trim();
 
-    // Build the URL using REACT_APP_AUTH_URL from env
-    const authUrl = process.env.REACT_APP_AUTH_URL || '';
-    // Replace /auth at the end with empty string to get the base URL
-    const baseUrl = authUrl.replace(/\/auth$/, '') || '';
-    // Pass admin's phone number as query parameter - backend will return unique user_id
-    const exotelConfigUrl = `${baseUrl}/customers/admin/exotel-config?phone_number=${phoneNumber}`;
+    if (!phoneNumber) {
+      throw new Error('Phone number not found. Please login again.');
+    }
+
+    // Use API_URL from env for exotel-config endpoint
+    const apiUrl = process.env.REACT_APP_API_URL || '';
+    const exotelConfigUrl = `${apiUrl}/api/v1/admin-users/exotel-config?phone_number=${phoneNumber}`;
 
     console.log('[ExotelWebRTC] Fetching config from:', exotelConfigUrl);
 
@@ -108,7 +109,8 @@ class ExotelWebRTCService {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
+        'Authorization': `Bearer ${accessToken}`,
+        'x-internal-api-key': 'dummy_service_secret'
       }
     });
 

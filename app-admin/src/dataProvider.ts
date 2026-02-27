@@ -415,9 +415,8 @@ export const dataProvider: DataProvider = {
             if (min_real_cash !== undefined && min_real_cash !== '') {
                 queryParams.append('min_real_cash', min_real_cash.toString());
             }
-
             // Hardcoded for testing
-            const url = `https://devazstg.astrokiran.com/auth/api/pixel-admin/api/v1/customers/mvu?${queryParams.toString()}`;
+            const url = `${API_URL}/api/v1/customers/mvu?${queryParams.toString()}`;
             console.log('MVU customers - URL:', url);
 
             const { json } = await httpClient(url);
@@ -1246,9 +1245,8 @@ export const dataProvider: DataProvider = {
         if (resource === 'consultations') {
             // Use the admin endpoint for consultation details
             // The endpoint is at /auth/api/v1/consultation/admin/consultations/{id}
-            // AUTH_API_URL is https://devazstg.astrokiran.com/auth/api/v1/auth
             // We need to replace /auth at the end with /api/v1/consultation/admin/consultations/{id}
-            const baseUrl = AUTH_API_URL?.replace(/\/auth$/, '') || 'https://devazstg.astrokiran.com/auth/api/v1';
+            const baseUrl = AUTH_API_URL?.replace(/\/auth$/, '') || '';
             const url = `${baseUrl}/consultation/admin/consultations/${params.id}`;
             console.log('Fetching consultation details from:', url);
             const { json } = await httpClient(url);

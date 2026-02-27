@@ -1458,7 +1458,7 @@ const CustomerConsultations = ({ customerId, customerName }: { customerId: numbe
 
         // Use the AUTH_API_URL for consultation admin endpoint
         const AUTH_API_URL = process.env.REACT_APP_AUTH_URL;
-        const baseUrl = AUTH_API_URL?.replace(/\/auth$/, '') || 'https://devazstg.astrokiran.com/auth/api/v1';
+        const baseUrl = AUTH_API_URL?.replace(/\/auth$/, '') || '';
 
         // Fetch consultations for this customer using the admin endpoint
         httpClient(`${baseUrl}/consultation/admin/consultations?customer_id=${customerId}`)
@@ -1497,7 +1497,7 @@ const CustomerConsultations = ({ customerId, customerName }: { customerId: numbe
         try {
             // Use the AUTH_API_URL for consultation admin endpoint
             const AUTH_API_URL = process.env.REACT_APP_AUTH_URL;
-            const baseUrl = AUTH_API_URL?.replace(/\/auth$/, '') || 'https://devazstg.astrokiran.com/auth/api/v1';
+            const baseUrl = AUTH_API_URL?.replace(/\/auth$/, '') || '';
 
             // Fetch detailed consultation information including chat/recordings
             const response = await httpClient(`${baseUrl}/consultation/admin/consultations/${consultationId}`);

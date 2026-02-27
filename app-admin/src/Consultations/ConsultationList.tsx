@@ -62,6 +62,14 @@ const consultationFilters = [
         { id: 'palmistry', name: 'Palmistry' },
         { id: 'tarot', name: 'Tarot' },
     ]} />,
+    <SelectInput key="promotional" source="promotional" label="Promotional" choices={[
+        { id: 'true', name: 'Promotional' },
+        { id: 'false', name: 'Non-Promotional' },
+    ]} />,
+    <SelectInput key="free" source="free" label="Consultation Type" choices={[
+        { id: 'true', name: 'Free' },
+        { id: 'false', name: 'Paid' },
+    ]} />,
     <TextInput key="id" label="Consultation ID (Exact)" source="id" placeholder="Enter consultation ID (e.g., 123)" />,
     <TextInput key="guide_id" label="Filter by Guide ID" source="guide_id" />,
     <TextInput key="customer_id" label="Filter by Customer ID" source="customer_id" />,
@@ -149,6 +157,12 @@ const TotalConsultationsCount = ({ currentFilters }: { currentFilters: any }) =>
                 if (currentFilters.category) {
                     filterParams.category = currentFilters.category;
                 }
+                if (currentFilters.promotional !== undefined && currentFilters.promotional !== '') {
+                    filterParams.promotional = currentFilters.promotional;
+                }
+                if (currentFilters.free !== undefined && currentFilters.free !== '') {
+                    filterParams.free = currentFilters.free;
+                }
 
                 // Create a unique key for this filter combination to ensure proper re-fetch
                 const filterKey = JSON.stringify(filterParams);
@@ -200,6 +214,8 @@ const TotalConsultationsCount = ({ currentFilters }: { currentFilters: any }) =>
                 {currentFilters.status && ` | Status: ${currentFilters.status.toUpperCase()}`}
                 {currentFilters.mode && ` | Mode: ${currentFilters.mode}`}
                 {currentFilters.category && ` | Category: ${currentFilters.category}`}
+                {currentFilters.promotional && ` | Promotional: ${currentFilters.promotional === 'true' ? 'Yes' : 'No'}`}
+                {currentFilters.free && ` | Type: ${currentFilters.free === 'true' ? 'Free' : 'Paid'}`}
                 {currentFilters.date_from && currentFilters.date_to && ` | Date: ${currentFilters.date_from} to ${currentFilters.date_to}`}
                 {currentFilters.guide_id && ` | Guide ID: ${currentFilters.guide_id}`}
                 {currentFilters.customer_id && ` | Customer ID: ${currentFilters.customer_id}`}

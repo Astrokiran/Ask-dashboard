@@ -109,6 +109,7 @@ export const MyMenu = () => {
             <Menu.DashboardItem />
             <Menu.Item to="/admin-users" primaryText="Admin Users" leftIcon={<UserCircle />} />
             <Menu.Item to="/customers" primaryText="Customers" leftIcon={<Users />} />
+            <Menu.Item to="/mvu" primaryText="MVU Customers" leftIcon={<Wallet />} />
             <Menu.Item to="/consultations" primaryText="Consultations" leftIcon={<ClipboardList />} />
             <Menu.Item to="/offers" primaryText="Offers" leftIcon={<Gift />} />
             <Menu.Item to="/notifications" primaryText="Notifications" leftIcon={<FileText />} />

@@ -404,7 +404,7 @@ export const dataProvider: DataProvider = {
         if (resource === 'consultations') {
             const { page, perPage } = params.pagination || { page: 1, perPage: 25 };
             // Destructure the filters for cleaner access
-            const { q, status, guide_id, customer_id, id, date_from, date_to } = params.filter;
+            const { q, status, guide_id, customer_id, id, date_from, date_to, mode, category } = params.filter;
 
             console.log('Consultations filters received:', params.filter);
 
@@ -468,6 +468,16 @@ export const dataProvider: DataProvider = {
                 // Create date at end of day (23:59:59) in user's local timezone
                 const endDateTime = new Date(`${date_to}T23:59:59`).toISOString();
                 queryParams.append('end_date', endDateTime);
+            }
+
+            // Add mode filter
+            if (mode) {
+                queryParams.append('mode', mode);
+            }
+
+            // Add category filter
+            if (category) {
+                queryParams.append('category', category);
             }
 
             // Use the correct admin API endpoint for consultations list
@@ -1094,22 +1104,41 @@ export const dataProvider: DataProvider = {
         if (resource === 'admin-users') {
             const url = `${API_URL}/api/v1/admin-users/${params.id}`;
 
-            // Add +91 prefix to phone_number if not already present (for consistency)
-            const modifiedData = {
-                ...params.data,
-                phone_number: params.data.phone_number && !params.data.phone_number.startsWith('+91')
-                    ? `+91${params.data.phone_number}`
-                    : params.data.phone_number
-            };
+            // Only send editable fields - exclude read-only fields and null values
+            const updatePayload: any = {};
+            if (params.data.name !== undefined && params.data.name !== null) updatePayload.name = params.data.name;
+            if (params.data.email !== undefined && params.data.email !== null) updatePayload.email = params.data.email;
+            if (params.data.department !== undefined && params.data.department !== null) updatePayload.department = params.data.department;
+            if (params.data.notes !== undefined && params.data.notes !== null) updatePayload.notes = params.data.notes;
+            if (params.data.exotel_user_id !== undefined && params.data.exotel_user_id !== null) updatePayload.exotel_user_id = params.data.exotel_user_id;
+            if (params.data.job_title !== undefined && params.data.job_title !== null) updatePayload.job_title = params.data.job_title;
 
             const { json } = await httpClient(url, {
-                method: 'PATCH', // PATCH is suitable for updating parts of a resource
-                body: JSON.stringify(modifiedData),
+                method: 'PATCH',
+                body: JSON.stringify(updatePayload),
             });
             return { data: { ...json, id: json.id } };
         }
+        if (resource === 'stories') {
+            const url = `${API_ROOT_URL}/superadmin/media/${params.id}`;
 
-        if (resource === 'products') {
+            // We only need to send the exact fields that changed or we can just send the relevant ones
+            const updatePayload: any = {};
+
+            if (params.data.title !== undefined) updatePayload.title = params.data.title;
+            if (params.data.status !== undefined) updatePayload.status = params.data.status;
+            if (params.data.sort_order !== undefined) updatePayload.sort_order = params.data.sort_order;
+            if (params.data.metadata !== undefined) updatePayload.metadata = params.data.metadata;
+
+            const { json } = await httpClient(url, {
+                method: 'PATCH',
+                body: JSON.stringify(updatePayload),
+            });
+
+            // Transform back the media to match frontend expected format
+            const transformedMedia = { ...json.data, id: json.data.id };
+            return { data: transformedMedia };
+        } if (resource === 'products') {
             // ProductEdit handles the update flow directly via httpClient.
             // This is a no-op fallback; the actual update is done in ProductEdit.tsx.
             return { data: { ...params.data, id: params.id } };
@@ -1312,6 +1341,12 @@ export const dataProvider: DataProvider = {
                 console.error('Error fetching product:', error);
                 throw error;
             }
+        }
+
+        if (resource === 'admin-users') {
+            const url = `${API_URL}/api/v1/admin-users/${params.id}`;
+            const { json } = await httpClient(url);
+            return { data: json };
         }
 
         console.error(`getOne not implemented for resource: ${resource}`);

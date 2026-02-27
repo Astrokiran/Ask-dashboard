@@ -40,6 +40,7 @@ import {
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { FormEvent, useState, useEffect } from 'react';
 import { httpClient } from '../dataProvider';
+import { WebRTCCallButton } from '../components/WebRTCCallButton';
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -2440,7 +2441,16 @@ const CustomerShowView = () => {
                             <Typography variant="subtitle2" color="textSecondary" fontWeight="-semibold">
                                 Primary Phone
                             </Typography>
-                            <TextField source="phone" />
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <TextField source="phone" />
+                                {record?.phone && (
+                                    <WebRTCCallButton
+                                        phoneNumber={record.phone}
+                                        customerName={record.name}
+                                        label="📞 Call"
+                                    />
+                                )}
+                            </Box>
                         </Box>
 
                         <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>

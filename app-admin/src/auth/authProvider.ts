@@ -67,6 +67,8 @@ export const httpClient = async (url: string, options: fetchUtils.Options = {}) 
 
 export const authProvider: AuthProvider = {
     login: async ({ phone, otp, otpRequestId }) => {
+        // Trim phone number to remove any whitespace
+        phone = phone.trim();
         const request = new Request(`${AUTH_API_URL}/otp/validate`, {
             method: 'POST',
             body: JSON.stringify({
@@ -92,15 +94,57 @@ export const authProvider: AuthProvider = {
         const userToStore = {
             id: data.auth_user_id,
             fullName: 'Admin User',
-            phone_number: phone, 
-            status: 'Verified' 
+            phone_number: phone,
+            status: 'Verified'
         };
         localStorage.setItem('user', JSON.stringify(userToStore));
-                return Promise.resolve();
+
+        // Fetch Exotel configuration after successful login
+        try {
+            console.log('[AuthProvider] Fetching Exotel configuration...');
+            // Use API_URL from env for exotel-config endpoint
+            const apiUrl = process.env.REACT_APP_API_URL || '';
+            const exotelConfigUrl = `${apiUrl}/api/v1/admin-users/exotel-config?phone_number=${phone}`;
+
+            const exotelRequest = new Request(exotelConfigUrl, {
+                method: 'GET',
+                headers: new Headers({
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${data.access_token}`,
+                    'x-internal-api-key': 'dummy_service_secret'
+                }),
+            });
+
+            const exotelResponse = await fetch(exotelRequest);
+            if (exotelResponse.ok) {
+                const exotelData = await exotelResponse.json();
+                if (exotelData.exotel_app_token && exotelData.exotel_user_id) {
+                    // Use exotel_user_id returned from backend
+                    const config = {
+                        appToken: exotelData.exotel_app_token,
+                        userId: exotelData.exotel_user_id
+                    };
+                    console.log('[AuthProvider] Exotel config received:', { ...config, appToken: '***' });
+                    localStorage.setItem('exotel_config', JSON.stringify(config));
+                } else {
+                    console.warn('[AuthProvider] Invalid Exotel config response');
+                }
+            } else {
+                console.warn('[AuthProvider] Failed to fetch Exotel config');
+            }
+        } catch (error) {
+            console.warn('[AuthProvider] Error fetching Exotel config:', error);
+        }
+
+        return Promise.resolve();
     },
 
     logout: () => {
         localStorage.clear();
+        // Also cleanup WebRTC service
+        if (typeof window !== 'undefined' && (window as any).exotelWebRTCService) {
+            (window as any).exotelWebRTCService.cleanup();
+        }
         return Promise.resolve();
     },
 

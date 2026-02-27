@@ -35,6 +35,7 @@ export const AdminUserList = () => (
             <TextField source="name" />
             <EmailField source="email" />
             <TextField source="phone_number" label="Phone Number" />
+            <TextField source="exotel_user_id" label="Exotel User ID" />
             <TextField source="department" />
             <BooleanField source="is_active" label="Active" />
             <DateField source="created_at" label="Created On" showTime />
@@ -63,6 +64,7 @@ export const AdminUserCreate = () => (
                     <TextInput source="department" fullWidth />
                 </Box>
             </Box>
+            <TextInput source="exotel_user_id" label="Exotel User ID" helperText="Unique user ID for Exotel WebRTC calls" fullWidth />
             <TextInput source="notes" multiline resettable fullWidth />
         </SimpleForm>
     </Create>
@@ -88,6 +90,7 @@ export const AdminUserEdit = () => (
                     <TextInput source="name" validate={required()} fullWidth />
                     <TextInput source="email" type="email" validate={[required(), email()]} fullWidth />
                     <TextInput source="department" fullWidth />
+                    <TextInput source="exotel_user_id" label="Exotel User ID" helperText="Unique user ID for Exotel WebRTC calls" fullWidth />
                     <TextInput source="notes" multiline resettable fullWidth />
                     <BooleanInput source="is_active" label="Is this user active?" />
                 </Grid>

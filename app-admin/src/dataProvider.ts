@@ -401,10 +401,56 @@ export const dataProvider: DataProvider = {
                 total: total,
             };
         }
+
+        if (resource === 'mvu') {
+            const { page, perPage } = params.pagination || { page: 1, perPage: 25 };
+            const { min_real_cash = 50 } = params.filter || {};
+
+            const queryParams = new URLSearchParams({
+                page: page.toString(),
+                limit: perPage.toString(),
+            });
+
+            // Add min_real_cash filter
+            if (min_real_cash !== undefined && min_real_cash !== '') {
+                queryParams.append('min_real_cash', min_real_cash.toString());
+            }
+            // Hardcoded for testing
+            const url = `${API_URL}/api/v1/customers/mvu?${queryParams.toString()}`;
+            console.log('MVU customers - URL:', url);
+
+            const { json } = await httpClient(url);
+            console.log('MVU customers - Response:', json);
+
+            // Handle the response
+            const users = json.users || [];
+            const pagination = json.pagination || { total_items: 0 };
+
+            const transformedUsers = users.map((user: any) => ({
+                id: user.user_id,
+                user_id: user.user_id,
+                phone_number: user.phone_number,
+                email: user.email,
+                name: user.name,
+                real_cash: user.real_cash,
+                virtual_cash: user.virtual_cash,
+                cumulative_sum: user.cumulative_sum,
+                recharge_count: user.recharge_count,
+                created_at: user.created_at,
+                last_login: user.last_login,
+                last_consultation: user.last_consultation,
+            }));
+
+            return {
+                data: transformedUsers,
+                total: pagination.total_items || 0,
+            };
+        }
+
         if (resource === 'consultations') {
             const { page, perPage } = params.pagination || { page: 1, perPage: 25 };
             // Destructure the filters for cleaner access
-            const { q, status, guide_id, customer_id, id, date_from, date_to, mode, category } = params.filter;
+            const { q, status, guide_id, customer_id, id, date_from, date_to, mode, category, promotional, free } = params.filter;
 
             console.log('Consultations filters received:', params.filter);
 
@@ -478,6 +524,16 @@ export const dataProvider: DataProvider = {
             // Add category filter
             if (category) {
                 queryParams.append('category', category);
+            }
+
+            // Add promotional filter (true/false as strings from SelectInput)
+            if (promotional !== undefined && promotional !== '') {
+                queryParams.append('promotional', promotional);
+            }
+
+            // Add free filter (true/false as strings from SelectInput)
+            if (free !== undefined && free !== '') {
+                queryParams.append('free', free);
             }
 
             // Use the correct admin API endpoint for consultations list
@@ -1189,9 +1245,8 @@ export const dataProvider: DataProvider = {
         if (resource === 'consultations') {
             // Use the admin endpoint for consultation details
             // The endpoint is at /auth/api/v1/consultation/admin/consultations/{id}
-            // AUTH_API_URL is https://devazstg.astrokiran.com/auth/api/v1/auth
             // We need to replace /auth at the end with /api/v1/consultation/admin/consultations/{id}
-            const baseUrl = AUTH_API_URL?.replace(/\/auth$/, '') || 'https://askapp.astrokiran.com/api/v1';
+            const baseUrl = AUTH_API_URL?.replace(/\/auth$/, '') || '';
             const url = `${baseUrl}/consultation/admin/consultations/${params.id}`;
             console.log('Fetching consultation details from:', url);
             const { json } = await httpClient(url);

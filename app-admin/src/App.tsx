@@ -21,6 +21,7 @@ import { BulkNotificationPage } from './notifications/BulkNotificationPage';
 // Import the resource objects
 import guides from './guides';
 import customers from './customers';
+import mvu from './mvu';
 import consultations from './Consultations';
 import offers from './offers';
 import videos from './videos';
@@ -39,6 +40,7 @@ import {
     Video,
     BookOpen,
     ShoppingBag,
+    Wallet,
 } from 'lucide-react';
 import { OrderList } from './orders/Orders';
 import { PaymentOrderList } from './orders/PaymentOrders';
@@ -82,6 +84,11 @@ const App: React.FC = () => (
                 name="customers"
                 {...customers}
                 icon={Users}
+            />
+            <Resource
+                name="mvu"
+                {...mvu}
+                icon={Wallet}
             />
             <Resource
                 name="consultations"

@@ -516,9 +516,10 @@ export const dataProvider: DataProvider = {
                 queryParams.append('end_date', endDateTime);
             }
 
-            // Add mode filter
+            // Add mode filter (map 'call' to 'voice' for API)
             if (mode) {
-                queryParams.append('mode', mode);
+                const modeValue = mode === 'call' ? 'voice' : mode;
+                queryParams.append('mode', modeValue);
             }
 
             // Add category filter

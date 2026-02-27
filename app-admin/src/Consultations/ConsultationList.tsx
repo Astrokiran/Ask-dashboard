@@ -152,7 +152,8 @@ const TotalConsultationsCount = ({ currentFilters }: { currentFilters: any }) =>
                     filterParams.consultation_id = currentFilters.id;
                 }
                 if (currentFilters.mode) {
-                    filterParams.mode = currentFilters.mode;
+                    // Map 'call' to 'voice' for API
+                    filterParams.mode = currentFilters.mode === 'call' ? 'voice' : currentFilters.mode;
                 }
                 if (currentFilters.category) {
                     filterParams.category = currentFilters.category;

@@ -2462,6 +2462,15 @@ const CustomerShowView = () => {
 
                         <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
                             <Typography variant="subtitle2" color="textSecondary" fontWeight="-semibold">
+                                X Auth ID
+                            </Typography>
+                            <Typography variant="body1">
+                                {xAuthId || 'N/A'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                            <Typography variant="subtitle2" color="textSecondary" fontWeight="-semibold">
                                 Customer Since
                             </Typography>
                             <DateField source="created_at" showTime />

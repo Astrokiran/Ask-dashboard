@@ -941,19 +941,19 @@ export const ConsultationShow = () => (
                                         let borderColor = 'success.light';
                                         let bgColor = 'success.main';
 
-                                        // Use call_duration_seconds from API if available
-                                        if (record.call_duration_seconds !== undefined && record.call_duration_seconds !== null) {
+                                        // Use call_duration_seconds from API if available and greater than 0
+                                        if (record.call_duration_seconds !== undefined && record.call_duration_seconds !== null && record.call_duration_seconds > 0) {
                                             const durationMinutes = Math.round(record.call_duration_seconds / 60);
                                             const durationSeconds = record.call_duration_seconds % 60;
                                             durationText = durationMinutes > 0
                                                 ? `${durationMinutes}m ${durationSeconds}s`
                                                 : `${durationSeconds}s`;
-                                        } else if (record.state === 'completed' && record.completed_at && record.requested_at) {
-                                            // Fallback: calculate from requested_at to completed_at
-                                            const start = new Date(record.requested_at);
+                                        } else if (record.state === 'completed' && record.completed_at && record.accepted_at) {
+                                            // For completed consultations: calculate from accepted_at to completed_at
+                                            const start = new Date(record.accepted_at);
                                             const end = new Date(record.completed_at);
-                                            const duration = Math.round((end.getTime() - start.getTime()) / 1000 / 60);
-                                            durationText = `${duration} min`;
+                                            const durationMinutes = Math.ceil((end.getTime() - start.getTime()) / 1000 / 60);
+                                            durationText = `${durationMinutes} min`;
                                         } else {
                                             // For non-completed states, show N/A with different styling
                                             borderColor = 'divider';
@@ -999,7 +999,7 @@ export const ConsultationShow = () => (
 
                                         // Calculate earnings based on actual call duration
                                         if (record.call_duration_seconds !== undefined && record.call_duration_seconds !== null && record.call_duration_seconds > 0) {
-                                            const durationMinutes = Math.ceil(record.call_duration_seconds / 60); // Round up for billing
+                                            const durationMinutes = Math.round(record.call_duration_seconds / 60);
                                             const earnings = durationMinutes * (record.base_rate_per_minute || 0);
                                             totalEarnings = earnings.toFixed(2);
                                         } else if (record.state === 'completed' && record.completed_at && record.requested_at) {

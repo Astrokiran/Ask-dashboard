@@ -17,6 +17,7 @@ import {
     Film,
     Layers,
     ShoppingBag,
+    TrendingUp,
 } from 'lucide-react';
 import { Box, Collapse, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
@@ -66,7 +67,7 @@ const SubMenu = ({
                 <Box
                     component="div"
                     sx={{
-                        paddingLeft: sidebarIsOpen ? 4 : 2, // Indent the submenu items
+                        paddingLeft: sidebarIsOpen ? 4 : 2, // Indent submenu items
                     }}
                 >
                     {children}
@@ -114,6 +115,7 @@ export const MyMenu = () => {
             <Menu.Item to="/offers" primaryText="Offers" leftIcon={<Gift />} />
             <Menu.Item to="/notifications" primaryText="Notifications" leftIcon={<FileText />} />
             <Menu.Item to="/products" primaryText="Products" leftIcon={<ShoppingBag />} />
+            <Menu.Item to="/guide-conversion-rates" primaryText="Guide Conversion Rates" leftIcon={<TrendingUp />} />
             {/* Orders Submenu */}
             <SubMenu
                 handleToggle={handleOrdersToggle}

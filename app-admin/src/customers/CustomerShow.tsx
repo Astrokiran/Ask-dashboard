@@ -395,7 +395,7 @@ const CustomerPaymentOrders = ({ customerId }: { customerId: number }) => {
         const failed = orders.filter(order => order.status?.toLowerCase() === 'failed').length;
         const pending = orders.filter(order => order.status?.toLowerCase() === 'pending').length;
 
-        const totalAmount = orders.reduce((sum, order) => sum + (parseFloat(order.amount || '0')), 0);
+        // Only successful payment amounts should be included in total
         const successfulAmount = orders
             .filter(order => order.status?.toLowerCase() === 'successful')
             .reduce((sum, order) => sum + (parseFloat(order.amount || '0')), 0);
@@ -408,7 +408,6 @@ const CustomerPaymentOrders = ({ customerId }: { customerId: number }) => {
             successfulPercentage: orders.length > 0 ? ((successful / orders.length) * 100).toFixed(1) : '0',
             failedPercentage: orders.length > 0 ? ((failed / orders.length) * 100).toFixed(1) : '0',
             pendingPercentage: orders.length > 0 ? ((pending / orders.length) * 100).toFixed(1) : '0',
-            totalAmount,
             successfulAmount
         };
     };
@@ -584,10 +583,10 @@ const CustomerPaymentOrders = ({ customerId }: { customerId: number }) => {
                                 }}
                             >
                                 <Typography variant="h4" fontWeight="bold" color="primary.main">
-                                    ₹{stats.totalAmount.toFixed(2)}
+                                    ₹{stats.successfulAmount.toFixed(2)}
                                 </Typography>
                                 <Typography variant="caption" color="textSecondary" fontWeight="medium">
-                                    Total Amount (All Orders)
+                                    Total Amount (Successful Orders)
                                 </Typography>
                             </Paper>
                         </Box>

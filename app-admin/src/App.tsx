@@ -17,6 +17,7 @@ import GuideEarnings from './guides/GuideEarnings';
 import GuideOrders from './guides/GuideOrders';
 import { BulkNotificationPage } from './notifications/BulkNotificationPage';
 import { WhatsAppSettingsPage } from './notifications/WhatsAppSettingsPage';
+import { GuideConversionRates } from './guides/GuideConversionRates';
 
 
 // Import the resource objects
@@ -148,6 +149,7 @@ const App: React.FC = () => (
                 <Route path="/guide-orders" element={<GuideOrders />} />
                 <Route path="/notifications" element={<BulkNotificationPage />} />
                 <Route path="/whatsapp-settings" element={<WhatsAppSettingsPage />} />
+                <Route path="/guide-conversion-rates" element={<GuideConversionRates />} />
             </CustomRoutes>
         </Admin>
     </ThemeSyncWrapper>

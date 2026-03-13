@@ -18,6 +18,7 @@ import {
     Layers,
     ShoppingBag,
     MessageSquare,
+    TrendingUp,
 } from 'lucide-react';
 import { Box, Collapse, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
@@ -67,7 +68,7 @@ const SubMenu = ({
                 <Box
                     component="div"
                     sx={{
-                        paddingLeft: sidebarIsOpen ? 4 : 2, // Indent the submenu items
+                        paddingLeft: sidebarIsOpen ? 4 : 2, // Indent submenu items
                     }}
                 >
                     {children}
@@ -130,6 +131,7 @@ export const MyMenu = () => {
                 <Menu.Item to="/notifications" primaryText="Bulk Notifications" leftIcon={<FileText />} />
                 <Menu.Item to="/whatsapp-settings" primaryText="WhatsApp Settings" leftIcon={<MessageSquare />} />
             </SubMenu>
+            <Menu.Item to="/guide-conversion-rates" primaryText="Guide Conversion Rates" leftIcon={<TrendingUp />} />
             {/* Orders Submenu */}
             <SubMenu
                 handleToggle={handleOrdersToggle}

@@ -34,7 +34,10 @@ const StatusField = ({ record }: { record?: any }) => {
         completed: { bgcolor: 'rgba(56, 142, 60, 0.1)', color: '#388e3c' },
         cancelled: { bgcolor: 'rgba(109, 109, 109, 0.1)', color: '#6d6d6d' },
         failed: { bgcolor: 'rgba(211, 47, 47, 0.1)', color: '#d32f2f' },
-        // Add any other states from your API here
+        customer_rejected: { bgcolor: 'rgba(220, 53, 69, 0.1)', color: '#e74c3c' },
+        guide_rejected: { bgcolor: 'rgba(183, 28, 28, 0.1)', color: '#ef4444' },
+        customer_join_timeout: { bgcolor: 'rgba(251, 146, 60, 0.1)', color: '#fb923c' },
+        request_expired: { bgcolor: 'rgba(156, 39, 176, 0.1)', color: '#9c27b0' },
     };
     return <Chip label={status} sx={{ ...statusStyles[status], fontWeight: 500, textTransform: 'capitalize' }} />;
 };
@@ -49,6 +52,10 @@ const consultationFilters = [
         { id: 'completed', name: 'Completed' },
         { id: 'cancelled', name: 'Cancelled' },
         { id: 'failed', name: 'Failed' },
+        { id: 'customer_rejected', name: 'Customer Rejected' },
+        { id: 'guide_rejected', name: 'Guide Rejected' },
+        { id: 'customer_join_timeout', name: 'Customer Join Timeout' },
+        { id: 'request_expired', name: 'Request Expired' },
     ]} />,
     <SelectInput key="mode" source="mode" label="Mode" choices={[
         { id: 'chat', name: 'Chat' },

@@ -6,6 +6,7 @@ import {
     TopToolbar,
     FilterButton,
     NumberInput,
+    SelectInput,
     DateField,
     Datagrid,
     TextField,
@@ -13,6 +14,7 @@ import {
     FunctionField,
     Pagination,
     PaginationActions,
+    useTranslate,
 } from 'react-admin';
 import { Box, Chip, Button, Typography } from '@mui/material';
 import { ArrowRight } from 'lucide-react';
@@ -25,6 +27,17 @@ const mvuFilters = [
         defaultValue={50}
         min={0}
         step={1}
+    />,
+    <SelectInput
+        label="Days Since Last Consultation"
+        source="days_since_consultation"
+        choices={[
+            { id: 'all', name: 'All' },
+            { id: '0-3', name: '0-3 days' },
+            { id: '0-6', name: '0-6 days' },
+            { id: '0-10', name: '0-10 days' },
+        ]}
+        alwaysOn
     />,
 ];
 
@@ -71,13 +84,34 @@ const getDaysSinceConsultation = (consultation: any): { days: number; text: stri
 };
 
 const MvuListView = () => {
-    const { data, isLoading, total } = useListContext();
+    const { data, isLoading, total, filterValues } = useListContext();
     if (isLoading) return <div>Loading...</div>;
     if (!data) return null;
+
+    // Client-side filter for days since consultation
+    const filteredData = React.useMemo(() => {
+        const daysFilter = filterValues?.days_since_consultation;
+        if (!daysFilter || daysFilter === 'all') return data;
+
+        const [minDays, maxDays] = daysFilter.split('-').map(Number);
+
+        return data.filter((record: any) => {
+            if (!record.last_consultation) return false;
+
+            const referenceDate = record.last_consultation.completed_at || record.last_consultation.created_at;
+            const consultationDate = new Date(referenceDate);
+            const today = new Date();
+            const diffTime = Math.abs(today.getTime() - consultationDate.getTime());
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            return diffDays >= minDays && diffDays <= maxDays;
+        });
+    }, [data, filterValues?.days_since_consultation]);
 
     return (
         <>
             <Datagrid
+                data={filteredData}
                 bulkActionButtons={false}
                 sx={{
                     '& .RaDatagrid-headerCell': {
@@ -153,7 +187,9 @@ const MvuListView = () => {
             </Datagrid>
             <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="body2" color="text.secondary">
-                    Total MVU Customers: <strong>{total}</strong>
+                    {filteredData.length === data.length
+                        ? `Total MVU Customers: ${total}`
+                        : `Showing ${filteredData.length} of ${total} MVU Customers`}
                 </Typography>
                 <Pagination />
             </Box>

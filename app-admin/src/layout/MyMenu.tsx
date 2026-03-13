@@ -17,6 +17,7 @@ import {
     Film,
     Layers,
     ShoppingBag,
+    MessageSquare,
     TrendingUp,
 } from 'lucide-react';
 import { Box, Collapse, ListItemIcon, ListItemText, Typography } from '@mui/material';
@@ -84,6 +85,7 @@ export const MyMenu = () => {
     const [openGuideFinancialsMenu, setOpenGuideFinancialsMenu] = useState(false);
     const [openReconciliationMenu, setOpenReconciliationMenu] = useState(false);
     const [openContentMenu, setOpenContentMenu] = useState(false);
+    const [openNotificationsMenu, setOpenNotificationsMenu] = useState(false);
 
     const handleOrdersToggle = () => {
         setOpenOrdersMenu(!openOrdersMenu);
@@ -105,6 +107,10 @@ export const MyMenu = () => {
         setOpenContentMenu(!openContentMenu);
     };
 
+    const handleNotificationsToggle = () => {
+        setOpenNotificationsMenu(!openNotificationsMenu);
+    };
+
     return (
         <Menu>
             <Menu.DashboardItem />
@@ -113,8 +119,18 @@ export const MyMenu = () => {
             <Menu.Item to="/mvu" primaryText="MVU Customers" leftIcon={<Wallet />} />
             <Menu.Item to="/consultations" primaryText="Consultations" leftIcon={<ClipboardList />} />
             <Menu.Item to="/offers" primaryText="Offers" leftIcon={<Gift />} />
-            <Menu.Item to="/notifications" primaryText="Notifications" leftIcon={<FileText />} />
             <Menu.Item to="/products" primaryText="Products" leftIcon={<ShoppingBag />} />
+
+            {/* Notifications Submenu */}
+            <SubMenu
+                handleToggle={handleNotificationsToggle}
+                isOpen={openNotificationsMenu}
+                name="Notifications"
+                icon={<FileText />}
+            >
+                <Menu.Item to="/notifications" primaryText="Bulk Notifications" leftIcon={<FileText />} />
+                <Menu.Item to="/whatsapp-settings" primaryText="WhatsApp Settings" leftIcon={<MessageSquare />} />
+            </SubMenu>
             <Menu.Item to="/guide-conversion-rates" primaryText="Guide Conversion Rates" leftIcon={<TrendingUp />} />
             {/* Orders Submenu */}
             <SubMenu

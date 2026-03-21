@@ -18,6 +18,7 @@ import GuideOrders from './guides/GuideOrders';
 import { BulkNotificationPage } from './notifications/BulkNotificationPage';
 import { WhatsAppSettingsPage } from './notifications/WhatsAppSettingsPage';
 import { GuideConversionRates } from './guides/GuideConversionRates';
+import { GuidePerformanceStats } from './guides/GuidePerformanceStats';
 
 
 // Import the resource objects
@@ -150,6 +151,7 @@ const App: React.FC = () => (
                 <Route path="/notifications" element={<BulkNotificationPage />} />
                 <Route path="/whatsapp-settings" element={<WhatsAppSettingsPage />} />
                 <Route path="/guide-conversion-rates" element={<GuideConversionRates />} />
+                <Route path="/guide-performance-stats" element={<GuidePerformanceStats />} />
             </CustomRoutes>
         </Admin>
     </ThemeSyncWrapper>

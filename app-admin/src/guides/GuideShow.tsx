@@ -273,8 +273,9 @@ const GuidePerformanceSection = () => {
     }, [record?.id]);
 
     useEffect(() => {
-        fetchPerformance(startDate, endDate);
-    }, [fetchPerformance, startDate, endDate]);
+        // Only fetch initial data on mount, not when dates change
+        fetchPerformance('', '');
+    }, [fetchPerformance]);
 
     const handleDateFilter = () => {
         fetchPerformance(startDate, endDate);

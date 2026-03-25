@@ -17,6 +17,8 @@ import GuideEarnings from './guides/GuideEarnings';
 import GuideOrders from './guides/GuideOrders';
 import { BulkNotificationPage } from './notifications/BulkNotificationPage';
 import { WhatsAppSettingsPage } from './notifications/WhatsAppSettingsPage';
+import { CampaignsPage } from './notifications/CampaignsPage';
+import { CampaignDetailPage } from './notifications/CampaignDetailPage';
 import { GuideConversionRates } from './guides/GuideConversionRates';
 import { GuidePerformanceStats } from './guides/GuidePerformanceStats';
 
@@ -150,6 +152,8 @@ const App: React.FC = () => (
                 <Route path="/guide-orders" element={<GuideOrders />} />
                 <Route path="/notifications" element={<BulkNotificationPage />} />
                 <Route path="/whatsapp-settings" element={<WhatsAppSettingsPage />} />
+                <Route path="/campaigns" element={<CampaignsPage />} />
+                <Route path="/campaigns/:id" element={<CampaignDetailPage />} />
                 <Route path="/guide-conversion-rates" element={<GuideConversionRates />} />
                 <Route path="/guide-performance-stats" element={<GuidePerformanceStats />} />
             </CustomRoutes>

@@ -19,6 +19,7 @@ import {
     ShoppingBag,
     MessageSquare,
     TrendingUp,
+    Megaphone,
 } from 'lucide-react';
 import { Box, Collapse, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
@@ -135,6 +136,7 @@ export const MyMenu = () => {
                 icon={<FileText />}
             >
                 <Menu.Item to="/notifications" primaryText="Bulk Notifications" leftIcon={<FileText />} />
+                <Menu.Item to="/campaigns" primaryText="Campaigns" leftIcon={<Megaphone />} />
                 <Menu.Item to="/whatsapp-settings" primaryText="WhatsApp Settings" leftIcon={<MessageSquare />} />
             </SubMenu>
             {/* Guide Stats Submenu */}

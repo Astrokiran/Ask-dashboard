@@ -2255,9 +2255,86 @@ const CustomerConsultations = ({ customerId, customerName }: { customerId: numbe
                                                         )}
                                                     </Box>
                                                 ) : (
-                                                    <Typography variant="body2" sx={{ fontSize: '0.9rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                                                        {message.content}
-                                                    </Typography>
+                                                    <>
+                                                        <Typography variant="body2" sx={{ fontSize: '0.9rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                                                            {message.content}
+                                                        </Typography>
+
+                                                        {/* Display Recommended Remedies/Products */}
+                                                        {message.recommended_remedies && message.recommended_remedies.length > 0 && (
+                                                            <Box sx={{ mt: 2 }}>
+                                                                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block', color: 'primary.main' }}>
+                                                                    🛍️ Recommended Remedies:
+                                                                </Typography>
+                                                                {message.recommended_remedies.map((remedy: any, idx: number) => (
+                                                                    <Box
+                                                                        key={idx}
+                                                                        sx={{
+                                                                            mt: 1.5,
+                                                                            p: 1.5,
+                                                                            border: 1,
+                                                                            borderColor: 'divider',
+                                                                            borderRadius: 1,
+                                                                            bgcolor: 'background.paper',
+                                                                            display: 'flex',
+                                                                            gap: 1.5,
+                                                                            alignItems: 'flex-start',
+                                                                        }}
+                                                                    >
+                                                                        {/* Product Image */}
+                                                                        {remedy.product_image && (
+                                                                            <Box
+                                                                                component="img"
+                                                                                src={remedy.product_image}
+                                                                                alt={remedy.product_name}
+                                                                                sx={{
+                                                                                    width: 80,
+                                                                                    height: 80,
+                                                                                    objectFit: 'cover',
+                                                                                    borderRadius: 1,
+                                                                                    flexShrink: 0,
+                                                                                    cursor: 'pointer',
+                                                                                    '&:hover': {
+                                                                                        opacity: 0.9,
+                                                                                    }
+                                                                                }}
+                                                                                onClick={() => window.open(remedy.product_url, '_blank')}
+                                                                            />
+                                                                        )}
+
+                                                                        {/* Product Details */}
+                                                                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                                                                                {remedy.product_name}
+                                                                            </Typography>
+                                                                            {remedy.product_description && (
+                                                                                <Typography variant="caption" sx={{ display: 'block', mb: 1, color: 'text.secondary' }}>
+                                                                                    {remedy.product_description}
+                                                                                </Typography>
+                                                                            )}
+                                                                            {remedy.product_price && (
+                                                                                <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main', mb: 1 }}>
+                                                                                    ₹{remedy.product_price}
+                                                                                </Typography>
+                                                                            )}
+                                                                            {remedy.product_url && (
+                                                                                <Button
+                                                                                    size="small"
+                                                                                    variant="outlined"
+                                                                                    href={remedy.product_url}
+                                                                                    target="_blank"
+                                                                                    rel="noopener noreferrer"
+                                                                                    sx={{ fontSize: '0.75rem', py: 0.5 }}
+                                                                                >
+                                                                                    View Product
+                                                                                </Button>
+                                                                            )}
+                                                                        </Box>
+                                                                    </Box>
+                                                                ))}
+                                                            </Box>
+                                                        )}
+                                                    </>
                                                 )}
                                                 {message.status && (
                                                     <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'text.secondary', mt: 0.5, display: 'block' }}>

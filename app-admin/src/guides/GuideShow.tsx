@@ -66,6 +66,9 @@ import { PhoneCall, Users, UserCheck, TrendingUp, AlertCircle, MessageSquare, Lo
 
 
 const API_URL = process.env.REACT_APP_API_URL;
+const CONSULTATION_BASE_URL = process.env.REACT_APP_CONSULTATION_BASE_URL ||
+    API_URL?.replace('/pixel-admin', '/v1') ||
+    'https://devazstg.astrokiran.com/auth/api/v1';
 
 // --- Reusable UI Components ---
 
@@ -191,7 +194,7 @@ const FollowUpMessagesSection = () => {
 
         setLoading(true);
         try {
-            let url = `https://devazstg.astrokiran.com/auth/api/v1/consultation/admin/followup-messages?guide_id=${record.id}&page=${page}&page_size=${pageSize}`;
+            let url = `${CONSULTATION_BASE_URL}/consultation/admin/followup-messages?guide_id=${record.id}&page=${page}&page_size=${pageSize}`;
 
             // Add filters to URL
             if (customerIdFilter.trim()) {

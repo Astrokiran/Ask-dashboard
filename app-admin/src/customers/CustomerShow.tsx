@@ -42,11 +42,14 @@ import {
 } from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import React, { FormEvent, useState, useEffect } from 'react';
-import { MessageSquare, Loader2, Filter, X, Bot } from 'lucide-react';
+import { MessageSquare, Loader2, Filter, X, Bot, Bell } from 'lucide-react';
 import { httpClient } from '../dataProvider';
 import { WebRTCCallButton } from '../components/WebRTCCallButton';
 
 const API_URL = process.env.REACT_APP_API_URL;
+const CONSULTATION_BASE_URL = process.env.REACT_APP_CONSULTATION_BASE_URL ||
+    API_URL?.replace('/pixel-admin', '/v1') ||
+    'https://devazstg.astrokiran.com/auth/api/v1';
 
 const CreateProfileForm = ({ onSave, saving }: { onSave: (data: any) => void; saving: boolean }) => {
     const [name, setName] = useState('');
@@ -770,7 +773,7 @@ const AssistantChatMessagesSection = () => {
 
         setLoading(true);
         try {
-            let url = `https://devazstg.astrokiran.com/auth/api/v1/consultation/admin/assistant-chat?customer_id=${record.id}&page=${page}&page_size=${pageSize}`;
+            let url = `${CONSULTATION_BASE_URL}/consultation/admin/assistant-chat?customer_id=${record.id}&page=${page}&page_size=${pageSize}`;
 
             // Add filters to URL
             if (guideIdFilter.trim()) {
@@ -2860,7 +2863,7 @@ const WhatsAppConsultation = ({ customerId, xAuthId, profiles }: { customerId: n
 
         try {
             const token = localStorage.getItem('access_token');
-            const url = `${API_URL}/api/v1/consultations/whatsapp`;
+            const url = `${CONSULTATION_BASE_URL}/consultations/whatsapp`;
 
             const payload = {
                 customer_id: customerId,
@@ -3022,8 +3025,130 @@ const WhatsAppConsultation = ({ customerId, xAuthId, profiles }: { customerId: n
     );
 };
 
+// --- Push Notification Dialog Component ---
+const PushNotificationDialog = ({ open, onClose, customerXAuthId, customerName }: {
+    open: boolean;
+    onClose: () => void;
+    customerXAuthId: number;
+    customerName: string;
+}) => {
+    const [title, setTitle] = useState('');
+    const [message, setMessage] = useState('');
+    const [sending, setSending] = useState(false);
+    const notify = useNotify();
+
+    const handleSendNotification = async () => {
+        if (!title.trim() || !message.trim()) {
+            notify('Please provide both title and message', { type: 'warning' });
+            return;
+        }
+
+        setSending(true);
+        try {
+            const token = localStorage.getItem('access_token');
+            const url = `${API_URL}/notifications/push`;
+
+            const payload = {
+                customer_x_auth_id: customerXAuthId,
+                title: title.trim(),
+                body: message.trim(),
+                priority: 'transactional'
+            };
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Auth-User-ID': 'admin',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                notify(`Notification sent successfully! Event ID: ${data.data?.event_id || 'N/A'}`, { type: 'success' });
+                setTitle('');
+                setMessage('');
+                onClose();
+            } else {
+                const errorMsg = data.message || data.error || 'Failed to send notification';
+                notify(`Error: ${errorMsg}`, { type: 'error' });
+            }
+        } catch (err: any) {
+            console.error('Error sending notification:', err);
+            const errorMsg = err.message || 'Network error occurred';
+            notify(`Error: ${errorMsg}`, { type: 'error' });
+        } finally {
+            setSending(false);
+        }
+    };
+
+    const handleClose = () => {
+        if (!sending) {
+            setTitle('');
+            setMessage('');
+            onClose();
+        }
+    };
+
+    return (
+        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+            <DialogTitle>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Bell size={20} />
+                    <Typography variant="h6">Send Push Notification</Typography>
+                </Box>
+            </DialogTitle>
+            <DialogContent>
+                <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="textSecondary">
+                        Send a push notification to <strong>{customerName}</strong> (X Auth ID: {customerXAuthId})
+                    </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+                    <MuiTextField
+                        label="Notification Title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        fullWidth
+                        placeholder="Enter notification title"
+                        disabled={sending}
+                        autoFocus
+                    />
+                    <MuiTextField
+                        label="Notification Message"
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        fullWidth
+                        multiline
+                        rows={4}
+                        placeholder="Enter notification message"
+                        disabled={sending}
+                    />
+                </Box>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={handleClose} disabled={sending}>
+                    Cancel
+                </Button>
+                <Button
+                    onClick={handleSendNotification}
+                    variant="contained"
+                    disabled={sending || !title.trim() || !message.trim()}
+                    startIcon={sending ? <Loader2 className="animate-spin" size={16} /> : <Bell size={16} />}
+                >
+                    {sending ? 'Sending...' : 'Send Notification'}
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
+};
+
 const CustomerShowView = () => {
     const record = useRecordContext();
+    const [notifyDialogOpen, setNotifyDialogOpen] = useState(false);
 
     // The component will now only render when 'record' is available.
     if (!record) return null;
@@ -3038,8 +3163,17 @@ const CustomerShowView = () => {
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <Card>
                 <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                         <Typography variant="h5">Customer Overview</Typography>
+                        <Button
+                            variant="contained"
+                            startIcon={<Bell size={16} />}
+                            onClick={() => setNotifyDialogOpen(true)}
+                            disabled={!xAuthId}
+                            color="primary"
+                        >
+                            Send Notification
+                        </Button>
                     </Box>
                     <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", p: 2 }}>
                         <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
@@ -3149,6 +3283,14 @@ const CustomerShowView = () => {
                     />
                 </CollapsibleSection>
             )}
+
+            {/* Push Notification Dialog */}
+            <PushNotificationDialog
+                open={notifyDialogOpen}
+                onClose={() => setNotifyDialogOpen(false)}
+                customerXAuthId={xAuthId}
+                customerName={record.name}
+            />
         </Box>
     );
 };

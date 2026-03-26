@@ -43,7 +43,18 @@ interface AudienceParams {
 
 interface PushData {
     screen?: string;
+    deep_link?: string;
     [key: string]: string | number | undefined;
+}
+
+interface MessageVariant {
+    title: string;
+    body: string;
+}
+
+interface MessageVariants {
+    variant_key: string;
+    variants: Record<string, MessageVariant>;
 }
 
 interface Campaign {
@@ -55,6 +66,7 @@ interface Campaign {
     push_title: string;
     push_body: string;
     push_data: PushData;
+    message_variants?: MessageVariants;
     schedule: string;
     cooldown_hours: number;
     max_daily_sends: number;
@@ -233,6 +245,14 @@ export const CampaignsPage = () => {
     const [newFieldKey, setNewFieldKey] = useState('');
     const [newFieldValue, setNewFieldValue] = useState('');
 
+    // Message variants state
+    const [useMessageVariants, setUseMessageVariants] = useState(false);
+    const [variantKey, setVariantKey] = useState('');
+    const [variants, setVariants] = useState<Record<string, MessageVariant>>({});
+    const [newVariantName, setNewVariantName] = useState('');
+    const [newVariantTitle, setNewVariantTitle] = useState('');
+    const [newVariantBody, setNewVariantBody] = useState('');
+
     useEffect(() => {
         fetchStats();
         fetchCampaigns();
@@ -297,7 +317,7 @@ export const CampaignsPage = () => {
 
         setSaving(true);
         try {
-            const payload = {
+            const payload: any = {
                 name: campaign.name.trim(),
                 description: campaign.description.trim(),
                 audience_type: campaign.audience_type,
@@ -309,6 +329,14 @@ export const CampaignsPage = () => {
                 cooldown_hours: Number(campaign.cooldown_hours),
                 max_daily_sends: Number(campaign.max_daily_sends),
             };
+
+            // Add message variants if enabled
+            if (useMessageVariants && variantKey && Object.keys(variants).length > 0) {
+                payload.message_variants = {
+                    variant_key: variantKey,
+                    variants: variants,
+                };
+            }
 
             await httpClient(`${API_URL}/api/v1/notifications/campaigns`, {
                 method: 'POST',
@@ -356,6 +384,12 @@ export const CampaignsPage = () => {
         setCustomFields([]);
         setNewFieldKey('');
         setNewFieldValue('');
+        setUseMessageVariants(false);
+        setVariantKey('');
+        setVariants({});
+        setNewVariantName('');
+        setNewVariantTitle('');
+        setNewVariantBody('');
     };
 
     const handleAudienceTypeChange = (audienceType: string) => {
@@ -413,6 +447,27 @@ export const CampaignsPage = () => {
             ...campaign,
             audience_params: updatedParams,
         });
+    };
+
+    const addVariant = () => {
+        if (newVariantName.trim() && newVariantTitle.trim() && newVariantBody.trim()) {
+            setVariants({
+                ...variants,
+                [newVariantName]: {
+                    title: newVariantTitle.trim(),
+                    body: newVariantBody.trim(),
+                },
+            });
+            setNewVariantName('');
+            setNewVariantTitle('');
+            setNewVariantBody('');
+        }
+    };
+
+    const removeVariant = (variantName: string) => {
+        const updatedVariants = { ...variants };
+        delete updatedVariants[variantName];
+        setVariants(updatedVariants);
     };
 
     const getCronDescription = (cron: string): string => {
@@ -891,6 +946,143 @@ export const CampaignsPage = () => {
                                         </FormControl>
                                     </Grid>
                                 </Grid>
+                            </Paper>
+                        </Grid>
+
+                        {/* Message Variants */}
+                        <Grid size={{ xs: 12 }}>
+                            <Paper sx={{ p: 3, mb: 2 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                                    <Typography variant="h6" gutterBottom sx={{ mb: 0 }}>
+                                        Message Variants
+                                    </Typography>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={useMessageVariants}
+                                                onChange={(e) => setUseMessageVariants(e.target.checked)}
+                                            />
+                                        }
+                                        label="Enable variants"
+                                    />
+                                </Box>
+
+                                {useMessageVariants ? (
+                                    <Box>
+                                        <Alert severity="info" sx={{ mb: 2 }}>
+                                            Create personalized messages based on user attributes (e.g., zodiac sign, location, etc.)
+                                        </Alert>
+
+                                        {/* Variant Key Input */}
+                                        <TextField
+                                            label="Variant Key"
+                                            value={variantKey}
+                                            onChange={(e) => setVariantKey(e.target.value)}
+                                            fullWidth
+                                            placeholder="e.g., zodiac_sign, city, user_type"
+                                            helperText="The user attribute that will determine which variant to send"
+                                            sx={{ mb: 2 }}
+                                        />
+
+                                        {/* Add New Variant */}
+                                        <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1, mb: 2 }}>
+                                            <Typography variant="subtitle2" gutterBottom>
+                                                Add New Variant
+                                            </Typography>
+                                            <Grid container spacing={2}>
+                                                <Grid size={{ xs: 12, md: 3 }}>
+                                                    <TextField
+                                                        label="Variant Name"
+                                                        value={newVariantName}
+                                                        onChange={(e) => setNewVariantName(e.target.value)}
+                                                        fullWidth
+                                                        placeholder="e.g., Aries, Leo, Pisces"
+                                                    />
+                                                </Grid>
+                                                <Grid size={{ xs: 12, md: 4 }}>
+                                                    <TextField
+                                                        label="Variant Title"
+                                                        value={newVariantTitle}
+                                                        onChange={(e) => setNewVariantTitle(e.target.value)}
+                                                        fullWidth
+                                                        placeholder="e.g., 🔥 Your Aries Horoscope"
+                                                    />
+                                                </Grid>
+                                                <Grid size={{ xs: 12, md: 4 }}>
+                                                    <TextField
+                                                        label="Variant Body"
+                                                        value={newVariantBody}
+                                                        onChange={(e) => setNewVariantBody(e.target.value)}
+                                                        fullWidth
+                                                        placeholder="e.g., Hi {{name}}, bold moves await you today!"
+                                                    />
+                                                </Grid>
+                                                <Grid size={{ xs: 12, md: 1 }}>
+                                                    <Button
+                                                        variant="contained"
+                                                        onClick={addVariant}
+                                                        disabled={!newVariantName.trim() || !newVariantTitle.trim() || !newVariantBody.trim()}
+                                                        fullWidth
+                                                        sx={{ height: '56px' }}
+                                                    >
+                                                        <Plus size={16} />
+                                                    </Button>
+                                                </Grid>
+                                            </Grid>
+                                        </Box>
+
+                                        {/* List of Variants */}
+                                        {Object.keys(variants).length > 0 && (
+                                            <Box>
+                                                <Typography variant="subtitle2" gutterBottom>
+                                                    Defined Variants ({Object.keys(variants).length})
+                                                </Typography>
+                                                <Grid container spacing={2}>
+                                                    {Object.entries(variants).map(([variantName, variant]) => (
+                                                        <Grid size={{ xs: 12, md: 6 }} key={variantName}>
+                                                            <Paper
+                                                                sx={{
+                                                                    p: 2,
+                                                                    border: '1px solid',
+                                                                    borderColor: 'primary.main',
+                                                                    bgcolor: 'primary.50',
+                                                                    position: 'relative',
+                                                                }}
+                                                            >
+                                                                <Button
+                                                                    size="small"
+                                                                    onClick={() => removeVariant(variantName)}
+                                                                    sx={{
+                                                                        position: 'absolute',
+                                                                        top: 8,
+                                                                        right: 8,
+                                                                        minWidth: 'auto',
+                                                                        p: 0.5,
+                                                                    }}
+                                                                >
+                                                                    <X size={14} />
+                                                                </Button>
+                                                                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1, pr: 3 }}>
+                                                                    {variantName}
+                                                                </Typography>
+                                                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                                                    <strong>Title:</strong> {variant.title}
+                                                                </Typography>
+                                                                <Typography variant="body2" color="textSecondary">
+                                                                    <strong>Body:</strong> {variant.body}
+                                                                </Typography>
+                                                            </Paper>
+                                                        </Grid>
+                                                    ))}
+                                                </Grid>
+                                            </Box>
+                                        )}
+                                    </Box>
+                                ) : (
+                                    <Alert severity="info">
+                                        Enable message variants to create personalized notifications based on user attributes
+                                    </Alert>
+                                )}
                             </Paper>
                         </Grid>
 

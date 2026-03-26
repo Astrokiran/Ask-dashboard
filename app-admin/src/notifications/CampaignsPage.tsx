@@ -203,6 +203,7 @@ export const CampaignsPage = () => {
         failed_today: 0,
     });
     const [statsLoading, setStatsLoading] = useState(true);
+    const [refreshingHoroscope, setRefreshingHoroscope] = useState(false);
 
     // Form state
     const [campaign, setCampaign] = useState<Campaign>({
@@ -269,6 +270,20 @@ export const CampaignsPage = () => {
             setCampaigns([]);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleRefreshHoroscope = async () => {
+        setRefreshingHoroscope(true);
+        try {
+            await httpClient(`${API_URL}/api/v1/notifications/campaigns/horoscope/refresh`, {
+                method: 'POST',
+            });
+            notify('Horoscope content refreshed successfully', { type: 'success' });
+        } catch (error: any) {
+            notify(`Failed to refresh horoscope: ${error.message}`, { type: 'error' });
+        } finally {
+            setRefreshingHoroscope(false);
         }
     };
 
@@ -476,14 +491,26 @@ export const CampaignsPage = () => {
                             <Activity size={20} />
                             Dashboard Overview
                         </Typography>
-                        <Button
-                            size="small"
-                            onClick={fetchStats}
-                            disabled={statsLoading}
-                            startIcon={statsLoading ? <Loader2 className="animate-spin" size={16} /> : <Activity size={16} />}
-                        >
-                            Refresh Stats
-                        </Button>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                color="secondary"
+                                onClick={handleRefreshHoroscope}
+                                disabled={refreshingHoroscope}
+                                startIcon={refreshingHoroscope ? <Loader2 className="animate-spin" size={16} /> : <Megaphone size={16} />}
+                            >
+                                {refreshingHoroscope ? 'Refreshing...' : 'Refresh Horoscope'}
+                            </Button>
+                            <Button
+                                size="small"
+                                onClick={fetchStats}
+                                disabled={statsLoading}
+                                startIcon={statsLoading ? <Loader2 className="animate-spin" size={16} /> : <Activity size={16} />}
+                            >
+                                Refresh Stats
+                            </Button>
+                        </Box>
                     </Box>
                     {statsLoading ? (
                         <LinearProgress />

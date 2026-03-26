@@ -23,7 +23,7 @@ import {
     MenuItem,
     Pagination,
 } from '@mui/material';
-import { ArrowLeft, Target, Activity, Users, Clock, TrendingUp, AlertCircle, CheckCircle2, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Target, Activity, Users, Clock, TrendingUp, AlertCircle, CheckCircle2, Loader2, ChevronLeft, ChevronRight, Play, RefreshCw } from 'lucide-react';
 import { httpClient } from '../dataProvider';
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -77,6 +77,7 @@ interface Campaign {
     schedule: string;
     cooldown_hours: number;
     max_daily_sends: number;
+    content_source?: string;
     is_active?: boolean;
     created_at?: string;
     updated_at?: string;
@@ -116,6 +117,10 @@ export const CampaignDetailPage = () => {
     const [pendingPage, setPendingPage] = useState(0);
     const [pendingTotalPages, setPendingTotalPages] = useState(0);
     const [pendingTotal, setPendingTotal] = useState(0);
+
+    // Action button states
+    const [triggering, setTriggering] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
 
     // Get campaign ID from URL using React Router
     const { id } = useParams();
@@ -237,6 +242,44 @@ export const CampaignDetailPage = () => {
         }
     };
 
+    const handleTriggerCampaign = async () => {
+        if (!campaignId) return;
+        setTriggering(true);
+        try {
+            await httpClient(`${API_URL}/api/v1/notifications/campaigns/${campaignId}/trigger`, {
+                method: 'POST',
+            });
+            notify('Campaign triggered successfully', { type: 'success' });
+            // Refresh stats after trigger
+            setTimeout(() => {
+                fetchCampaignStats(campaignId);
+                fetchPendingNotifications(campaignId, pendingStatusFilter, 0);
+            }, 3000);
+        } catch (error: any) {
+            notify(`Failed to trigger campaign: ${error.message}`, { type: 'error' });
+        } finally {
+            setTriggering(false);
+        }
+    };
+
+    const handleRefreshHoroscope = async () => {
+        setRefreshing(true);
+        try {
+            await httpClient(`${API_URL}/api/v1/notifications/campaigns/horoscope/refresh`, {
+                method: 'POST',
+            });
+            notify('Horoscope content refreshed successfully', { type: 'success' });
+            // Refresh campaign details to show updated variants
+            if (campaignId) {
+                fetchCampaignDetails(campaignId);
+            }
+        } catch (error: any) {
+            notify(`Failed to refresh horoscope: ${error.message}`, { type: 'error' });
+        } finally {
+            setRefreshing(false);
+        }
+    };
+
     if (loading) {
         return (
             <Card>
@@ -293,9 +336,31 @@ export const CampaignDetailPage = () => {
                             size="medium"
                         />
                     </Typography>
-                    <Typography variant="body1" color="textSecondary">
+                    <Typography variant="body1" color="textSecondary" sx={{ mb: 2 }}>
                         {campaign.description || 'No description provided'}
                     </Typography>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleTriggerCampaign}
+                            disabled={triggering || !campaign.is_active}
+                            startIcon={triggering ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
+                        >
+                            {triggering ? 'Triggering...' : 'Trigger Campaign'}
+                        </Button>
+                        {campaign.content_source === 'horoscope' && (
+                            <Button
+                                variant="outlined"
+                                color="secondary"
+                                onClick={handleRefreshHoroscope}
+                                disabled={refreshing}
+                                startIcon={refreshing ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+                            >
+                                {refreshing ? 'Refreshing...' : 'Refresh Horoscope Content'}
+                            </Button>
+                        )}
+                    </Box>
                 </Box>
 
                 {/* Campaign Info Card */}

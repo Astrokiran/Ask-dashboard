@@ -3045,8 +3045,7 @@ const PushNotificationDialog = ({ open, onClose, customerXAuthId, customerName }
 
         setSending(true);
         try {
-            const token = localStorage.getItem('access_token');
-            const url = `${API_URL}/notifications/push`;
+            const url = `${API_URL}/api/v1/notifications/push`;
 
             const payload = {
                 customer_x_auth_id: customerXAuthId,
@@ -3055,30 +3054,23 @@ const PushNotificationDialog = ({ open, onClose, customerXAuthId, customerName }
                 priority: 'transactional'
             };
 
-            const response = await fetch(url, {
+            const { json } = await httpClient(url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Auth-User-ID': 'admin',
-                    'Authorization': `Bearer ${token}`,
-                },
                 body: JSON.stringify(payload),
             });
 
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                notify(`Notification sent successfully! Event ID: ${data.data?.event_id || 'N/A'}`, { type: 'success' });
+            if (json.success) {
+                notify(`Notification sent successfully! Event ID: ${json.data?.event_id || json.response?.data?.event_id || 'N/A'}`, { type: 'success' });
                 setTitle('');
                 setMessage('');
                 onClose();
             } else {
-                const errorMsg = data.message || data.error || 'Failed to send notification';
+                const errorMsg = json.message || json.error || 'Failed to send notification';
                 notify(`Error: ${errorMsg}`, { type: 'error' });
             }
         } catch (err: any) {
             console.error('Error sending notification:', err);
-            const errorMsg = err.message || 'Network error occurred';
+            const errorMsg = err.body?.message || err.message || 'Network error occurred';
             notify(`Error: ${errorMsg}`, { type: 'error' });
         } finally {
             setSending(false);

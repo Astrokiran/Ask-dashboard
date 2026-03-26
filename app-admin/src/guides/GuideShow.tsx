@@ -10,9 +10,8 @@ import {
     Identifier,
     EditButton,
 } from 'react-admin';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { UserX } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { httpClient } from '../dataProvider';
 import {
     CircularProgress,
@@ -34,7 +33,20 @@ import {
     TextField,
     Alert,
     AlertTitle,
+    Pagination,
+    Paper,
+    Grid,
+    LinearProgress,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Collapse,
+    IconButton,
 } from '@mui/material';
+import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { WebRTCCallButton } from '../components/WebRTCCallButton';
 import {
@@ -50,7 +62,7 @@ import {
     Legend,
     ResponsiveContainer,
 } from 'recharts';
-import { PhoneCall, Users, UserCheck, TrendingUp, AlertCircle } from 'lucide-react';
+import { PhoneCall, Users, UserCheck, TrendingUp, AlertCircle, MessageSquare, Loader2, ChevronDown, Filter, X } from 'lucide-react';
 
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -83,6 +95,38 @@ const maskAccountNumber = (accNum: string): string => {
     return '****';
 };
 
+// --- Follow-up Messages Types ---
+
+interface FollowUpMessage {
+    message_id: string;
+    consultation_id: number;
+    guide_id: number;
+    guide_name: string;
+    customer_id: number;
+    customer_name: string;
+    content: string;
+    sent_from: string;
+    sent_to: string;
+    timestamp: string;
+    message_type: string;
+    consultation_state: string;
+    completed_at: string;
+}
+
+interface FollowUpMessagesResponse {
+    success: boolean;
+    message: string;
+    data: {
+        data: FollowUpMessage[];
+        pagination: {
+            current_page: number;
+            page_size: number;
+            total_items: number;
+            total_pages: number;
+        };
+    };
+}
+
 const DetailItem = ({ label, children }: { label: string; children: React.ReactNode }) => (
     <Box>
         <Typography variant="body2" color="textSecondary" sx={{ mb: 0.5 }}>
@@ -93,6 +137,383 @@ const DetailItem = ({ label, children }: { label: string; children: React.ReactN
         </Typography>
     </Box>
 );
+
+// --- Follow-up Messages Section ---
+
+interface FollowUpMessage {
+    message_id: string;
+    consultation_id: number;
+    guide_id: number;
+    guide_name: string;
+    customer_id: number;
+    customer_name: string;
+    content: string;
+    sent_from: string;
+    sent_to: string;
+    timestamp: string;
+    message_type: string;
+    consultation_state: string;
+    completed_at: string;
+}
+
+interface FollowUpMessagesResponse {
+    success: boolean;
+    message: string;
+    data: {
+        data: FollowUpMessage[];
+        pagination: {
+            current_page: number;
+            page_size: number;
+            total_items: number;
+            total_pages: number;
+        };
+    };
+}
+
+const FollowUpMessagesSection = () => {
+    const record = useRecordContext();
+    const notify = useNotify();
+    const [messages, setMessages] = useState<FollowUpMessage[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalItems, setTotalItems] = useState(0);
+    const pageSize = 20;
+
+    // Filter state
+    const [filtersExpanded, setFiltersExpanded] = useState(false);
+    const [customerIdFilter, setCustomerIdFilter] = useState('');
+    const [startDateFilter, setStartDateFilter] = useState('');
+    const [endDateFilter, setEndDateFilter] = useState('');
+
+    const fetchMessages = async (page: number, resetPage: boolean = true) => {
+        if (!record?.id) return;
+
+        setLoading(true);
+        try {
+            let url = `https://devazstg.astrokiran.com/auth/api/v1/consultation/admin/followup-messages?guide_id=${record.id}&page=${page}&page_size=${pageSize}`;
+
+            // Add filters to URL
+            if (customerIdFilter.trim()) {
+                url += `&customer_id=${customerIdFilter.trim()}`;
+            }
+            if (startDateFilter) {
+                url += `&start_date=${startDateFilter}`;
+            }
+            if (endDateFilter) {
+                url += `&end_date=${endDateFilter}`;
+            }
+
+            const { json } = await httpClient(url, { method: 'GET' });
+
+            if (json.success) {
+                setMessages(json.data.data || []);
+                setTotalPages(json.data.pagination?.total_pages || 0);
+                setTotalItems(json.data.pagination?.total_items || 0);
+                if (resetPage) {
+                    setCurrentPage(json.data.pagination?.current_page || page);
+                }
+            }
+        } catch (error: any) {
+            console.error('Error fetching follow-up messages:', error);
+            notify('Failed to fetch follow-up messages', { type: 'error' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleApplyFilters = () => {
+        fetchMessages(1, true);
+    };
+
+    const handleClearFilters = () => {
+        setCustomerIdFilter('');
+        setStartDateFilter('');
+        setEndDateFilter('');
+        fetchMessages(1, true);
+    };
+
+    useEffect(() => {
+        fetchMessages(1);
+    }, [record?.id]);
+
+    const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+        fetchMessages(value);
+    };
+
+    if (!record) return null;
+
+    return (
+        <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ color: 'primary.main' }}>
+                        <MessageSquare size={20} />
+                    </Box>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                        Follow-up Messages
+                    </Typography>
+                    <Chip
+                        label={`${totalItems} total`}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                    />
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => setFiltersExpanded(!filtersExpanded)}
+                            startIcon={<Filter size={16} />}
+                        >
+                            Filters
+                        </Button>
+                        <Button
+                            size="small"
+                            onClick={() => fetchMessages(currentPage)}
+                            disabled={loading}
+                            startIcon={loading ? <Loader2 className="animate-spin" size={16} /> : <MessageSquare size={16} />}
+                        >
+                            Refresh
+                        </Button>
+                    </Box>
+                </Box>
+
+                {/* Filters Section */}
+                <Collapse in={filtersExpanded}>
+                    <Paper
+                        sx={{
+                            p: 2,
+                            mb: 2,
+                            bgcolor: 'action.hover',
+                            border: '1px solid',
+                            borderColor: 'divider',
+                        }}
+                        elevation={0}
+                    >
+                        <Typography variant="subtitle2" gutterBottom sx={{ mb: 2 }}>
+                            Filter Messages
+                        </Typography>
+                        <Grid container spacing={2} alignItems="center">
+                            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                                <TextField
+                                    label="Customer ID"
+                                    value={customerIdFilter}
+                                    onChange={(e) => setCustomerIdFilter(e.target.value)}
+                                    fullWidth
+                                    size="small"
+                                    placeholder="Enter customer ID"
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                                <TextField
+                                    label="Start Date"
+                                    type="date"
+                                    value={startDateFilter}
+                                    onChange={(e) => setStartDateFilter(e.target.value)}
+                                    fullWidth
+                                    size="small"
+                                    InputLabelProps={{ shrink: true }}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                                <TextField
+                                    label="End Date"
+                                    type="date"
+                                    value={endDateFilter}
+                                    onChange={(e) => setEndDateFilter(e.target.value)}
+                                    fullWidth
+                                    size="small"
+                                    InputLabelProps={{ shrink: true }}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                    <Button
+                                        variant="contained"
+                                        size="small"
+                                        onClick={handleApplyFilters}
+                                        startIcon={<Filter size={16} />}
+                                    >
+                                        Apply
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        onClick={handleClearFilters}
+                                        startIcon={<X size={16} />}
+                                    >
+                                        Clear
+                                    </Button>
+                                </Box>
+                            </Grid>
+                        </Grid>
+                    </Paper>
+                </Collapse>
+
+                {loading ? (
+                    <LinearProgress />
+                ) : messages.length === 0 ? (
+                    <Alert severity="info">No follow-up messages found for this guide</Alert>
+                ) : (
+                    <>
+                        <TableContainer component={Paper} variant="outlined">
+                            <Table>
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>Customer</TableCell>
+                                        <TableCell>Message Content</TableCell>
+                                        <TableCell>Consultation ID</TableCell>
+                                        <TableCell>State</TableCell>
+                                        <TableCell>Sent At</TableCell>
+                                        <TableCell>Completed At</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {messages.map((message) => (
+                                        <TableRow key={message.message_id} hover>
+                                            <TableCell>
+                                                <Box>
+                                                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                        {message.customer_name}
+                                                    </Typography>
+                                                    <Link
+                                                        to={`/customers/${message.customer_id}/show`}
+                                                        style={{ textDecoration: 'none' }}
+                                                    >
+                                                        <Typography
+                                                            variant="caption"
+                                                            sx={{
+                                                                color: 'primary.main',
+                                                                '&:hover': { textDecoration: 'underline' },
+                                                            }}
+                                                        >
+                                                            ID: {message.customer_id}
+                                                        </Typography>
+                                                    </Link>
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography variant="body2" sx={{ maxWidth: 300 }}>
+                                                    {message.content}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Link
+                                                    to={`/consultations/${message.consultation_id}/show`}
+                                                    style={{ textDecoration: 'none' }}
+                                                >
+                                                    <Typography
+                                                        variant="body2"
+                                                        sx={{
+                                                            color: 'primary.main',
+                                                            '&:hover': { textDecoration: 'underline' },
+                                                            fontWeight: 500,
+                                                        }}
+                                                    >
+                                                        #{message.consultation_id}
+                                                    </Typography>
+                                                </Link>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Chip
+                                                    label={message.consultation_state}
+                                                    size="small"
+                                                    color={
+                                                        message.consultation_state === 'completed'
+                                                            ? 'success'
+                                                            : message.consultation_state === 'pending'
+                                                                ? 'warning'
+                                                                : 'default'
+                                                    }
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography variant="caption">
+                                                    {new Date(message.timestamp).toLocaleString()}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography variant="caption">
+                                                    {message.completed_at
+                                                        ? new Date(message.completed_at).toLocaleString()
+                                                        : '-'}
+                                                </Typography>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+
+                        {totalPages > 1 && (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                                <Pagination
+                                    count={totalPages}
+                                    page={currentPage}
+                                    onChange={handlePageChange}
+                                    color="primary"
+                                    size="large"
+                                    showFirstButton
+                                    showLastButton
+                                    disabled={loading}
+                                />
+                            </Box>
+                        )}
+
+                        <Typography variant="caption" color="textSecondary" sx={{ mt: 2, display: 'block' }}>
+                            Showing {messages.length} of {totalItems} messages (Page {currentPage} of {totalPages})
+                        </Typography>
+                    </>
+                )}
+        </Box>
+    );
+};
+
+// --- Collapsible Section Component ---
+const CollapsibleSection = ({ title, icon, children, defaultOpen = false }: {
+    title: string;
+    icon: React.ReactNode;
+    children: React.ReactNode;
+    defaultOpen?: boolean;
+}) => {
+    const [isOpen, setIsOpen] = useState(defaultOpen);
+
+    return (
+        <Card sx={{ mt: 3, mb: 3 }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    p: 2,
+                    cursor: 'pointer',
+                    bgcolor: 'action.hover',
+                    '&:hover': {
+                        bgcolor: 'action.selected',
+                    },
+                }}
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {icon}
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                        {title}
+                    </Typography>
+                </Box>
+                <IconButton size="small" sx={{ color: 'text.primary' }}>
+                    {isOpen ? <ExpandLess /> : <ExpandMore />}
+                </IconButton>
+            </Box>
+            <Collapse in={isOpen}>
+                <CardContent>
+                    {children}
+                </CardContent>
+            </Collapse>
+        </Card>
+    );
+};
 
 // --- Guide Stats Section ---
 const GuideStatsSection = () => {
@@ -105,53 +526,43 @@ const GuideStatsSection = () => {
     const stats = record.guide_stats;
 
     return (
-        <Card sx={{ mb: 3 }}>
-            <Box sx={{ p: 3, pb: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                    Guide Statistics
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                    Performance metrics and consultation history
-                </Typography>
-            </Box>
-            <Divider />
-            <CardContent>
-                <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
-                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
-                        <DetailItem label="Total Consultations">
-                            <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                                {stats.total_number_of_completed_consultations || 0}
-                            </Typography>
-                        </DetailItem>
-                    </Box>
-                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
-                        <DetailItem label="Average Rating">
-                            <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#ff9800' }}>
-                                {stats.rating ? `${stats.rating} ⭐` : 'N/A'}
-                            </Typography>
-                        </DetailItem>
-                    </Box>
-                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
-                        <DetailItem label="Total Reviews">
-                            <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                                {stats.total_number_of_reviews || 0}
-                            </Typography>
-                        </DetailItem>
-                    </Box>
-                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
-                        <DetailItem label="Total Minutes">
-                            <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#2196f3' }}>
-                                {stats.total_consultation_minutes || 0}
-                            </Typography>
-                        </DetailItem>
-                    </Box>
+        <Box>
+            <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                    <DetailItem label="Total Consultations">
+                        <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                            {stats.total_number_of_completed_consultations || 0}
+                        </Typography>
+                    </DetailItem>
                 </Box>
+                <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                    <DetailItem label="Average Rating">
+                        <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#ff9800' }}>
+                            {stats.rating ? `${stats.rating} ⭐` : 'N/A'}
+                        </Typography>
+                    </DetailItem>
+                </Box>
+                <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                    <DetailItem label="Total Reviews">
+                        <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                            {stats.total_number_of_reviews || 0}
+                        </Typography>
+                    </DetailItem>
+                </Box>
+                <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                    <DetailItem label="Total Minutes">
+                        <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#2196f3' }}>
+                            {stats.total_consultation_minutes || 0}
+                        </Typography>
+                    </DetailItem>
+                </Box>
+            </Box>
 
-                <Box sx={{ mt: 4, pt: 3 }}>
-                    <Divider sx={{ mb: 3 }} />
-                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
-                        Consultation Breakdown
-                    </Typography>
+            <Box sx={{ mt: 4, pt: 3 }}>
+                <Divider sx={{ mb: 3 }} />
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
+                    Consultation Breakdown
+                </Typography>
                     <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
                         <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
                             <Typography variant="body2" color="textSecondary" sx={{ mb: 2, fontWeight: 500 }}>
@@ -205,8 +616,7 @@ const GuideStatsSection = () => {
                         </DetailItem>
                     </Box>
                 )}
-            </CardContent>
-        </Card>
+        </Box>
     );
 };
 
@@ -311,25 +721,17 @@ const GuidePerformanceSection = () => {
 
     if (loading) {
         return (
-            <Card sx={{ mb: 3 }}>
-                <CardContent>
-                    <Box display="flex" justifyContent="center" alignItems="center" py={4}>
-                        <CircularProgress />
-                    </Box>
-                </CardContent>
-            </Card>
+            <Box display="flex" justifyContent="center" alignItems="center" py={4}>
+                <CircularProgress />
+            </Box>
         );
     }
 
     if (error || !performanceData) {
         return (
-            <Card sx={{ mb: 3 }}>
-                <CardContent>
-                    <Alert severity="info">
-                        Performance data not available. {error}
-                    </Alert>
-                </CardContent>
-            </Card>
+            <Alert severity="info">
+                Performance data not available. {error}
+            </Alert>
         );
     }
 
@@ -367,7 +769,7 @@ const GuidePerformanceSection = () => {
     };
 
     return (
-        <Card sx={{ mb: 3 }}>
+        <Box>
             <Box sx={{ p: 3, pb: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
                     <Box>
@@ -661,7 +1063,7 @@ const GuidePerformanceSection = () => {
                     </Box>
                 </Box>
             </CardContent>
-        </Card>
+        </Box>
     );
 };
 
@@ -696,30 +1098,20 @@ const KycDocumentSection = ({ guideId }: { guideId: Identifier }) => {
     }
 
     return (
-        <Card sx={{ mb: 3 }}>
-            <Box sx={{ p: 3, pb: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                    KYC Documents
-                </Typography>
+        <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+            <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                <DocumentImage label="Aadhaar (Front)" src={documents.aadhaar?.front?.src} />
             </Box>
-            <Divider />
-            <CardContent>
-                <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
-                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
-                        <DocumentImage label="Aadhaar (Front)" src={documents.aadhaar?.front?.src} />
-                    </Box>
-                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
-                        <DocumentImage label="Aadhaar (Back)" src={documents.aadhaar?.back?.src} />
-                    </Box>
-                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
-                        <DocumentImage label="PAN (Front)" src={documents.pan?.front?.src} />
-                    </Box>
-                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
-                        <DocumentImage label="PAN (Back)" src={documents.pan?.back?.src} />
-                    </Box>
-                </Box>
-            </CardContent>
-        </Card>
+            <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                <DocumentImage label="Aadhaar (Back)" src={documents.aadhaar?.back?.src} />
+            </Box>
+            <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                <DocumentImage label="PAN (Front)" src={documents.pan?.front?.src} />
+            </Box>
+            <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                <DocumentImage label="PAN (Back)" src={documents.pan?.back?.src} />
+            </Box>
+        </Box>
     );
 };
 
@@ -831,66 +1223,56 @@ const StatusControlSection = () => {
     };
 
     return (
-        <Card sx={{ mb: 3 }}>
-            <Box sx={{ p: 3, pb: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                    Status & Controls
-                </Typography>
+        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+            <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={record.is_online || false}
+                            onChange={(e) => handleToggle('is_online', e.target.checked)}
+                        />
+                    }
+                    label="Online"
+                    disabled={isLoading}
+                />
             </Box>
-            <Divider />
-            <CardContent>
-                <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={record.is_online || false}
-                                    onChange={(e) => handleToggle('is_online', e.target.checked)}
-                                />
-                            }
-                            label="Online"
-                            disabled={isLoading}
+            <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={record.chat_enabled || false}
+                            onChange={(e) => handleToggle('chat_enabled', e.target.checked)}
                         />
-                    </Box>
-                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={record.chat_enabled || false}
-                                    onChange={(e) => handleToggle('chat_enabled', e.target.checked)}
-                                />
-                            }
-                            label="Chat Enabled"
-                            disabled={isLoading}
+                    }
+                    label="Chat Enabled"
+                    disabled={isLoading}
+                />
+            </Box>
+            <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={record.voice_enabled || false}
+                            onChange={(e) => handleToggle('voice_enabled', e.target.checked)}
                         />
-                    </Box>
-                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={record.voice_enabled || false}
-                                    onChange={(e) => handleToggle('voice_enabled', e.target.checked)}
-                                />
-                            }
-                            label="Call Enabled"
-                            disabled={isLoading}
+                    }
+                    label="Call Enabled"
+                    disabled={isLoading}
+                />
+            </Box>
+            <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={record.video_enabled || false}
+                            onChange={(e) => handleToggle('video_enabled', e.target.checked)}
                         />
-                    </Box>
-                    <Box sx={{ flex: "1 1 200px", minWidth: "150px" }}>
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={record.video_enabled || false}
-                                    onChange={(e) => handleToggle('video_enabled', e.target.checked)}
-                                />
-                            }
-                            label="Video Call Enabled"
-                            disabled={isLoading}
-                        />
-                    </Box>
-                </Box>
-            </CardContent>
-        </Card>
+                    }
+                    label="Video Call Enabled"
+                    disabled={isLoading}
+                />
+            </Box>
+        </Box>
     );
 }
 
@@ -1029,99 +1411,121 @@ const GuideShowView = () => {
                 </CardContent>
             </Card>
 
-            <Box sx={{ mb: 3 }}>
+            <CollapsibleSection
+                title="Status & Controls"
+                icon={<span>🎛️</span>}
+                defaultOpen={false}
+            >
                 <StatusControlSection />
-            </Box>
+            </CollapsibleSection>
 
-            <Box sx={{ mb: 3 }}>
+            <CollapsibleSection
+                title="Guide Statistics"
+                icon={<span>📊</span>}
+                defaultOpen={false}
+            >
                 <GuideStatsSection />
-            </Box>
+            </CollapsibleSection>
 
-            <Box sx={{ mb: 3 }}>
+            <CollapsibleSection
+                title="Performance Analytics"
+                icon={<span>📈</span>}
+                defaultOpen={false}
+            >
                 <GuidePerformanceSection />
-            </Box>
+            </CollapsibleSection>
 
-            <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mb: 3 }}>
-                <Box sx={{ flex: "1 1 600px", minWidth: "400px" }}>
-                    <Card>
-                        <Box sx={{ p: 3, pb: 2 }}>
-                            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                                Guide Information
-                            </Typography>
-                        </Box>
-                        <Divider />
-                        <CardContent>
-                            <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
-                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
-                                    <DetailItem label="Phone">
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            {record.phone_number}
-                                            {record.phone_number && (
-                                                <WebRTCCallButton
-                                                    phoneNumber={record.phone_number}
-                                                    customerName={record.full_name}
-                                                    label="📞 Call"
-                                                />
-                                            )}
-                                        </Box>
-                                    </DetailItem>
-                                </Box>
-                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
-                                    <DetailItem label="Email Address">{record.email || 'Not provided'}</DetailItem>
-                                </Box>
-                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
-                                    <DetailItem label="Years of Experience">{record.years_of_experience} years</DetailItem>
-                                </Box>
-                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
-                                    <DetailItem label="Languages Spoken">{(record.languages || []).join(', ')}</DetailItem>
-                                </Box>
-                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
-                                    <DetailItem label='Rating'>
-                                        <Typography sx={{ color: '#ff9800', fontWeight: 600 }}>
-                                            {record.guide_stats?.rating || record.rating || 'N/A'}
-                                        </Typography>
-                                    </DetailItem>
-                                </Box>
-                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
-                                    <DetailItem label="Total Consultations">{record.guide_stats?.total_number_of_completed_consultations || record.number_of_consultation || 0}</DetailItem>
-                                </Box>
-                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
-                                    <DetailItem label="Price per Minute">
-                                        <Typography sx={{ color: '#4caf50', fontWeight: 600 }}>
-                                            ₹{record.price_per_minute || 'N/A'}
-                                        </Typography>
-                                    </DetailItem>
-                                </Box>
-                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
-                                    <DetailItem label="Revenue Share">
-                                        <Typography sx={{ fontWeight: 600 }}>
-                                            {record.revenue_share ? `${record.revenue_share}%` : 'N/A'}
-                                        </Typography>
-                                    </DetailItem>
-                                </Box>
-                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
-                                    <DetailItem label="Tier">{record.tier || 'Standard'}</DetailItem>
-                                </Box>
-                                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
-                                    <DetailItem label="Onboarded On">
-                                        {new Date(record.created_at).toLocaleDateString()}
-                                    </DetailItem>
-                                </Box>
-                                {record.bio && (
-                                    <Box sx={{ flex: "1 1 100%" }}>
-                                        <DetailItem label="Bio">{record.bio}</DetailItem>
+            <CollapsibleSection
+                title="Follow-up Messages"
+                icon={<span>💬</span>}
+                defaultOpen={false}
+            >
+                <FollowUpMessagesSection />
+            </CollapsibleSection>
+
+            <CollapsibleSection
+                title="Guide Information"
+                icon={<span>ℹ️</span>}
+                defaultOpen={false}
+            >
+                <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                    <Box sx={{ flex: "1 1 600px", minWidth: "400px" }}>
+                        <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                            <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                <DetailItem label="Phone">
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        {record.phone_number}
+                                        {record.phone_number && (
+                                            <WebRTCCallButton
+                                                phoneNumber={record.phone_number}
+                                                customerName={record.full_name}
+                                                label="📞 Call"
+                                            />
+                                        )}
                                     </Box>
-                                )}
+                                </DetailItem>
                             </Box>
-                        </CardContent>
-                    </Card>
+                            <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                <DetailItem label="Email Address">{record.email || 'Not provided'}</DetailItem>
+                            </Box>
+                            <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                <DetailItem label="Years of Experience">{record.years_of_experience} years</DetailItem>
+                            </Box>
+                            <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                <DetailItem label="Languages Spoken">{(record.languages || []).join(', ')}</DetailItem>
+                            </Box>
+                            <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                <DetailItem label='Rating'>
+                                    <Typography sx={{ color: '#ff9800', fontWeight: 600 }}>
+                                        {record.guide_stats?.rating || record.rating || 'N/A'}
+                                    </Typography>
+                                </DetailItem>
+                            </Box>
+                            <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                <DetailItem label="Total Consultations">{record.guide_stats?.total_number_of_completed_consultations || record.number_of_consultation || 0}</DetailItem>
+                            </Box>
+                            <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                <DetailItem label="Price per Minute">
+                                    <Typography sx={{ color: '#4caf50', fontWeight: 600 }}>
+                                        ₹{record.price_per_minute || 'N/A'}
+                                    </Typography>
+                                </DetailItem>
+                            </Box>
+                            <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                <DetailItem label="Revenue Share">
+                                    <Typography sx={{ fontWeight: 600 }}>
+                                        {record.revenue_share ? `${record.revenue_share}%` : 'N/A'}
+                                    </Typography>
+                                </DetailItem>
+                            </Box>
+                            <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                <DetailItem label="Tier">{record.tier || 'Standard'}</DetailItem>
+                            </Box>
+                            <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                                <DetailItem label="Onboarded On">
+                                    {new Date(record.created_at).toLocaleDateString()}
+                                </DetailItem>
+                            </Box>
+                            {record.bio && (
+                                <Box sx={{ flex: "1 1 100%" }}>
+                                    <DetailItem label="Bio">{record.bio}</DetailItem>
+                                </Box>
+                            )}
+                        </Box>
+                    </Box>
+                    <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+                        <BankAccountSummaryCard guideId={record.id} />
+                    </Box>
                 </Box>
-                <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
-                    <BankAccountSummaryCard guideId={record.id} />
-                </Box>
-            </Box>
+            </CollapsibleSection>
 
-            <KycDocumentSection guideId={record.id} />
+            <CollapsibleSection
+                title="KYC Documents"
+                icon={<span>📄</span>}
+                defaultOpen={false}
+            >
+                <KycDocumentSection guideId={record.id} />
+            </CollapsibleSection>
         </>
     );
 };

@@ -36,9 +36,13 @@ import {
     MenuItem,
     FormControl,
     InputLabel,
+    Grid,
+    LinearProgress,
+    Pagination,
 } from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
-import { FormEvent, useState, useEffect } from 'react';
+import React, { FormEvent, useState, useEffect } from 'react';
+import { MessageSquare, Loader2, Filter, X, Bot } from 'lucide-react';
 import { httpClient } from '../dataProvider';
 import { WebRTCCallButton } from '../components/WebRTCCallButton';
 
@@ -679,6 +683,491 @@ const CustomerPaymentOrders = ({ customerId }: { customerId: number }) => {
                 </Box>
             </Paper>
         </Box>
+    );
+};
+
+// --- Assistant Chat Messages Section ---
+
+interface AssistantChatMessage {
+    message_id: number;
+    guide_id: number;
+    guide_name: string;
+    customer_id: number;
+    customer_name: string;
+    sender_type: 'guide' | 'customer';
+    content: string;
+    is_read: boolean;
+    created_at: string;
+    updated_at: string;
+    chat_assistant_id: string;
+}
+
+interface AssistantChatResponse {
+    success: boolean;
+    message: string;
+    data: {
+        data: AssistantChatMessage[];
+        pagination: {
+            current_page: number;
+            page_size: number;
+            total_items: number;
+            total_pages: number;
+        };
+    };
+}
+
+const AssistantChatMessagesSection = () => {
+    const record = useRecordContext();
+    const notify = useNotify();
+    const [allMessages, setAllMessages] = useState<AssistantChatMessage[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalItems, setTotalItems] = useState(0);
+    const pageSize = 50;
+
+    // Filter state
+    const [filtersExpanded, setFiltersExpanded] = useState(false);
+    const [guideIdFilter, setGuideIdFilter] = useState('');
+    const [senderTypeFilter, setSenderTypeFilter] = useState<'all' | 'guide' | 'customer'>('all');
+    const [isReadFilter, setIsReadFilter] = useState<'all' | 'read' | 'unread'>('all');
+    const [startDateFilter, setStartDateFilter] = useState('');
+    const [endDateFilter, setEndDateFilter] = useState('');
+
+    // Selected conversation state
+    const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+
+    // Group messages by chat_assistant_id
+    const conversations = React.useMemo(() => {
+        const groups: { [key: string]: AssistantChatMessage[] } = {};
+        allMessages.forEach((msg) => {
+            if (!groups[msg.chat_assistant_id]) {
+                groups[msg.chat_assistant_id] = [];
+            }
+            groups[msg.chat_assistant_id].push(msg);
+        });
+        // Sort messages within each conversation by created_at
+        Object.keys(groups).forEach((chatId) => {
+            groups[chatId].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        });
+        return groups;
+    }, [allMessages]);
+
+    // Get unique conversation list with guide info
+    const conversationList = React.useMemo(() => {
+        return Object.entries(conversations).map(([chatId, msgs]) => ({
+            chatId,
+            guideId: msgs[0].guide_id,
+            guideName: msgs[0].guide_name,
+            messageCount: msgs.length,
+            lastMessage: msgs[msgs.length - 1],
+            unreadCount: msgs.filter((m) => !m.is_read && m.sender_type === 'guide').length,
+        }));
+    }, [conversations]);
+
+    const fetchMessages = async (page: number, resetPage: boolean = true) => {
+        if (!record?.id) return;
+
+        setLoading(true);
+        try {
+            let url = `https://devazstg.astrokiran.com/auth/api/v1/consultation/admin/assistant-chat?customer_id=${record.id}&page=${page}&page_size=${pageSize}`;
+
+            // Add filters to URL
+            if (guideIdFilter.trim()) {
+                url += `&guide_id=${guideIdFilter.trim()}`;
+            }
+            if (senderTypeFilter !== 'all') {
+                url += `&sender_type=${senderTypeFilter}`;
+            }
+            if (isReadFilter !== 'all') {
+                url += `&is_read=${isReadFilter === 'read' ? 'true' : 'false'}`;
+            }
+            if (startDateFilter) {
+                url += `&start_date=${startDateFilter}`;
+            }
+            if (endDateFilter) {
+                url += `&end_date=${endDateFilter}`;
+            }
+
+            const { json } = await httpClient(url, { method: 'GET' });
+
+            if (json.success) {
+                setAllMessages(json.data.data || []);
+                setTotalPages(json.data.pagination?.total_pages || 0);
+                setTotalItems(json.data.pagination?.total_items || 0);
+                if (resetPage) {
+                    setCurrentPage(json.data.pagination?.current_page || page);
+                }
+                // Auto-select first conversation if none selected
+                if (!selectedChatId && json.data.data && json.data.data.length > 0) {
+                    setSelectedChatId(json.data.data[0].chat_assistant_id);
+                }
+            }
+        } catch (error: any) {
+            console.error('Error fetching assistant chat messages:', error);
+            notify('Failed to fetch assistant chat messages', { type: 'error' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleApplyFilters = () => {
+        setSelectedChatId(null);
+        fetchMessages(1, true);
+    };
+
+    const handleClearFilters = () => {
+        setGuideIdFilter('');
+        setSenderTypeFilter('all');
+        setIsReadFilter('all');
+        setStartDateFilter('');
+        setEndDateFilter('');
+        setSelectedChatId(null);
+        fetchMessages(1, true);
+    };
+
+    useEffect(() => {
+        fetchMessages(1);
+    }, [record?.id]);
+
+    const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+        fetchMessages(value);
+    };
+
+    if (!record) return null;
+
+    const selectedConversation = selectedChatId ? conversations[selectedChatId] : null;
+
+    return (
+        <CollapsibleSection
+            title="Assistant Chat Messages"
+            icon={<Box sx={{ color: 'primary.main' }}><Bot size={20} /></Box>}
+            defaultOpen={false}
+        >
+            <Box sx={{ p: 2 }}>
+                {/* Header with actions */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Chip
+                            label={`${totalItems} messages`}
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                        />
+                        <Typography variant="caption" color="textSecondary">
+                            Page {currentPage} of {totalPages} • {Object.keys(conversations).length} conversations
+                        </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => setFiltersExpanded(!filtersExpanded)}
+                            startIcon={<Filter size={16} />}
+                        >
+                            Filters
+                        </Button>
+                        <Button
+                            size="small"
+                            onClick={() => fetchMessages(currentPage)}
+                            disabled={loading}
+                            startIcon={loading ? <Loader2 className="animate-spin" size={16} /> : <MessageSquare size={16} />}
+                        >
+                            Refresh
+                        </Button>
+                    </Box>
+                </Box>
+
+                {/* Filters Section */}
+                <Collapse in={filtersExpanded}>
+                    <Paper
+                        sx={{
+                            p: 2,
+                            mb: 2,
+                            bgcolor: 'action.hover',
+                            border: '1px solid',
+                            borderColor: 'divider',
+                        }}
+                        elevation={0}
+                    >
+                        <Typography variant="subtitle2" gutterBottom sx={{ mb: 2 }}>
+                            Filter Messages
+                        </Typography>
+                        <Grid container spacing={2} alignItems="center">
+                            <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+                                <MuiTextField
+                                    label="Guide ID"
+                                    value={guideIdFilter}
+                                    onChange={(e) => setGuideIdFilter(e.target.value)}
+                                    fullWidth
+                                    size="small"
+                                    placeholder="Enter guide ID"
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel>Sender Type</InputLabel>
+                                    <Select
+                                        value={senderTypeFilter}
+                                        label="Sender Type"
+                                        onChange={(e) => setSenderTypeFilter(e.target.value as 'all' | 'guide' | 'customer')}
+                                    >
+                                        <MenuItem value="all">All</MenuItem>
+                                        <MenuItem value="customer">Customer</MenuItem>
+                                        <MenuItem value="guide">Guide</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel>Read Status</InputLabel>
+                                    <Select
+                                        value={isReadFilter}
+                                        label="Read Status"
+                                        onChange={(e) => setIsReadFilter(e.target.value as 'all' | 'read' | 'unread')}
+                                    >
+                                        <MenuItem value="all">All</MenuItem>
+                                        <MenuItem value="read">Read</MenuItem>
+                                        <MenuItem value="unread">Unread</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+                                <MuiTextField
+                                    label="Start Date"
+                                    type="date"
+                                    value={startDateFilter}
+                                    onChange={(e) => setStartDateFilter(e.target.value)}
+                                    fullWidth
+                                    size="small"
+                                    InputLabelProps={{ shrink: true }}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+                                <MuiTextField
+                                    label="End Date"
+                                    type="date"
+                                    value={endDateFilter}
+                                    onChange={(e) => setEndDateFilter(e.target.value)}
+                                    fullWidth
+                                    size="small"
+                                    InputLabelProps={{ shrink: true }}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12 }}>
+                                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                                    <Button
+                                        variant="contained"
+                                        size="small"
+                                        onClick={handleApplyFilters}
+                                        startIcon={<Filter size={16} />}
+                                    >
+                                        Apply Filters
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        onClick={handleClearFilters}
+                                        startIcon={<X size={16} />}
+                                    >
+                                        Clear All
+                                    </Button>
+                                </Box>
+                            </Grid>
+                        </Grid>
+                    </Paper>
+                </Collapse>
+
+                {/* Main Content */}
+                {loading ? (
+                    <LinearProgress />
+                ) : allMessages.length === 0 ? (
+                    <Alert severity="info">No assistant chat messages found for this customer</Alert>
+                ) : (
+                    <>
+                        <Grid container spacing={2}>
+                            {/* Left Panel - Conversation List */}
+                            <Grid size={{ xs: 12, md: 4 }}>
+                                <Paper variant="outlined" sx={{ height: 500, display: 'flex', flexDirection: 'column' }}>
+                                    <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', bgcolor: 'action.hover' }}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                            Conversations ({conversationList.length})
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ flex: 1, overflow: 'auto', p: 1 }}>
+                                        {conversationList.map((conv) => (
+                                            <Paper
+                                                key={conv.chatId}
+                                                onClick={() => setSelectedChatId(conv.chatId)}
+                                                sx={{
+                                                    p: 1.5,
+                                                    mb: 1,
+                                                    cursor: 'pointer',
+                                                    bgcolor: selectedChatId === conv.chatId ? 'primary.main' : 'background.paper',
+                                                    color: selectedChatId === conv.chatId ? 'primary.contrastText' : 'text.primary',
+                                                    border: 1,
+                                                    borderColor: selectedChatId === conv.chatId ? 'primary.main' : 'divider',
+                                                    '&:hover': {
+                                                        bgcolor: selectedChatId === conv.chatId ? 'primary.dark' : 'action.hover',
+                                                    },
+                                                }}
+                                                elevation={selectedChatId === conv.chatId ? 2 : 0}
+                                            >
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                                        {conv.guideName}
+                                                    </Typography>
+                                                    {conv.unreadCount > 0 && (
+                                                        <Chip
+                                                            label={conv.unreadCount}
+                                                            size="small"
+                                                            color="error"
+                                                            sx={{ height: 20, fontSize: '0.7rem' }}
+                                                        />
+                                                    )}
+                                                </Box>
+                                                <Typography variant="caption" sx={{ display: 'block', mb: 0.5, opacity: 0.8 }}>
+                                                    Guide ID: {conv.guideId}
+                                                </Typography>
+                                                <Typography variant="caption" sx={{ display: 'block', opacity: 0.7 }}>
+                                                    {conv.messageCount} messages
+                                                </Typography>
+                                                <Typography
+                                                    variant="caption"
+                                                    sx={{
+                                                        display: 'block',
+                                                        mt: 0.5,
+                                                        opacity: 0.6,
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        whiteSpace: 'nowrap',
+                                                    }}
+                                                >
+                                                    {conv.lastMessage.content.substring(0, 40)}
+                                                    {conv.lastMessage.content.length > 40 ? '...' : ''}
+                                                </Typography>
+                                            </Paper>
+                                        ))}
+                                    </Box>
+                                </Paper>
+                            </Grid>
+
+                            {/* Right Panel - Chat Messages */}
+                            <Grid size={{ xs: 12, md: 8 }}>
+                                <Paper variant="outlined" sx={{ height: 500, display: 'flex', flexDirection: 'column' }}>
+                                    {selectedConversation ? (
+                                        <>
+                                            {/* Chat Header */}
+                                            <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', bgcolor: 'action.hover' }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <Box>
+                                                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                                                            {selectedConversation[0].guide_name}
+                                                        </Typography>
+                                                        <Typography variant="caption" color="textSecondary">
+                                                            Guide ID: {selectedConversation[0].guide_id} • {selectedConversation.length} messages
+                                                        </Typography>
+                                                    </Box>
+                                                    <Button
+                                                        size="small"
+                                                        variant="outlined"
+                                                        component="a"
+                                                        href={`#/guides/${selectedConversation[0].guide_id}/show`}
+                                                        target="_blank"
+                                                    >
+                                                        View Guide Profile
+                                                    </Button>
+                                                </Box>
+                                            </Box>
+
+                                            {/* Chat Messages */}
+                                            <Box sx={{ flex: 1, overflow: 'auto', p: 2, bgcolor: 'background.default' }}>
+                                                {selectedConversation.map((message, index) => {
+                                                    const isGuide = message.sender_type === 'guide';
+                                                    return (
+                                                        <Box
+                                                            key={message.message_id}
+                                                            sx={{
+                                                                display: 'flex',
+                                                                justifyContent: isGuide ? 'flex-start' : 'flex-end',
+                                                                mb: 2,
+                                                            }}
+                                                        >
+                                                            <Box sx={{ maxWidth: '70%' }}>
+                                                                <Box
+                                                                    sx={{
+                                                                        display: 'flex',
+                                                                        alignItems: 'flex-end',
+                                                                        gap: 1,
+                                                                        mb: 0.5,
+                                                                    }}
+                                                                >
+                                                                    <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                                                                        {isGuide ? message.guide_name : message.customer_name}
+                                                                    </Typography>
+                                                                    <Typography variant="caption" color="textSecondary">
+                                                                        {new Date(message.created_at).toLocaleString()}
+                                                                    </Typography>
+                                                                    {!message.is_read && isGuide && (
+                                                                        <Chip label="New" size="small" color="primary" sx={{ height: 18 }} />
+                                                                    )}
+                                                                </Box>
+                                                                <Paper
+                                                                    sx={{
+                                                                        p: 1.5,
+                                                                        bgcolor: isGuide ? 'primary.main' : 'action.selected',
+                                                                        color: isGuide ? 'primary.contrastText' : 'text.primary',
+                                                                        borderRadius: 2,
+                                                                        borderBottomLeftRadius: isGuide ? 0 : 2,
+                                                                        borderBottomRightRadius: isGuide ? 2 : 0,
+                                                                    }}
+                                                                    elevation={1}
+                                                                >
+                                                                    <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+                                                                        {message.content}
+                                                                    </Typography>
+                                                                </Paper>
+                                                            </Box>
+                                                        </Box>
+                                                    );
+                                                })}
+                                            </Box>
+                                        </>
+                                    ) : (
+                                        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <Typography variant="body2" color="textSecondary">
+                                                Select a conversation to view messages
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                </Paper>
+                            </Grid>
+                        </Grid>
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                                <Pagination
+                                    count={totalPages}
+                                    page={currentPage}
+                                    onChange={handlePageChange}
+                                    color="primary"
+                                    size="large"
+                                    showFirstButton
+                                    showLastButton
+                                    disabled={loading}
+                                />
+                            </Box>
+                        )}
+
+                        {/* Page Info */}
+                        <Typography variant="caption" color="textSecondary" sx={{ mt: 2, display: 'block' }}>
+                            Showing {allMessages.length} of {totalItems} messages (Page {currentPage} of {totalPages})
+                        </Typography>
+                    </>
+                )}
+            </Box>
+        </CollapsibleSection>
     );
 };
 
@@ -1675,11 +2164,10 @@ const CustomerConsultations = ({ customerId, customerName }: { customerId: numbe
                         /* Chat Messages View */
                         <Box
                             sx={{
-                                bgcolor: '#e5ddd5',
+                                bgcolor: 'background.default',
                                 height: '100%',
                                 p: 2,
                                 overflowY: 'auto',
-                                backgroundImage: 'linear-gradient(rgba(229,221,213,0.9), rgba(229,221,213,0.9))',
                             }}
                         >
                             {selectedConsultation.chat_messages.map((message: any, index: number) => {
@@ -1715,10 +2203,11 @@ const CustomerConsultations = ({ customerId, customerName }: { customerId: numbe
                                             {/* Message Bubble */}
                                             <Box
                                                 sx={{
-                                                    bgcolor: isCustomer ? '#dcf8c6' : 'white',
+                                                    bgcolor: isCustomer ? 'action.selected' : 'background.paper',
+                                                    color: isCustomer ? 'text.primary' : 'text.primary',
                                                     borderRadius: isCustomer ? '8px 0 8px 8px' : '0 8px 8px 8px',
                                                     p: 2,
-                                                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                                                    boxShadow: 1,
                                                 }}
                                             >
                                                 {message.type === 'image' ? (
@@ -2547,6 +3036,9 @@ const CustomerShowView = () => {
             >
                 <CustomerConsultations customerId={customerIdAsNumber} customerName={record.name} />
             </CollapsibleSection>
+
+            {/* Collapsible Assistant Chat Messages Section */}
+            <AssistantChatMessagesSection />
 
             {/* Collapsible Payment Orders Section */}
             <CollapsibleSection

@@ -32,6 +32,7 @@ import offers from './offers';
 import videos from './videos';
 import stories from './stories';
 import products from './products';
+import panchangVideos from './panchang-videos';
 import reconciliation, { reconciliationOffers } from './reconciliation';
 
 import {
@@ -46,6 +47,7 @@ import {
     BookOpen,
     ShoppingBag,
     Wallet,
+    Calendar,
 } from 'lucide-react';
 import { OrderList } from './orders/Orders';
 import { PaymentOrderList } from './orders/PaymentOrders';
@@ -124,6 +126,12 @@ const App: React.FC = () => (
                 name="stories"
                 {...stories}
                 icon={BookOpen}
+            />
+            <Resource
+                name="panchang-videos"
+                options={{ label: 'Panchang Videos' }}
+                {...panchangVideos}
+                icon={Calendar}
             />
             <Resource
                 name="products"

@@ -32,6 +32,7 @@ import offers from './offers';
 import videos from './videos';
 import stories from './stories';
 import products from './products';
+import assistantChat from './assistant-chat';
 import reconciliation, { reconciliationOffers } from './reconciliation';
 
 import {
@@ -46,6 +47,7 @@ import {
     BookOpen,
     ShoppingBag,
     Wallet,
+    MessageSquare,
 } from 'lucide-react';
 import { OrderList } from './orders/Orders';
 import { PaymentOrderList } from './orders/PaymentOrders';
@@ -129,6 +131,12 @@ const App: React.FC = () => (
                 name="products"
                 {...products}
                 icon={ShoppingBag}
+            />
+            <Resource
+                name="assistant-chat"
+                options={{ label: 'Chat Assistant' }}
+                {...assistantChat}
+                icon={MessageSquare}
             />
             <Resource
                 name="pending-verifications"

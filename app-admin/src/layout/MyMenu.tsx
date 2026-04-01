@@ -89,6 +89,7 @@ export const MyMenu = () => {
     const [openContentMenu, setOpenContentMenu] = useState(false);
     const [openNotificationsMenu, setOpenNotificationsMenu] = useState(false);
     const [openGuideStatsMenu, setOpenGuideStatsMenu] = useState(false);
+    const [openCustomersMenu, setOpenCustomersMenu] = useState(false);
 
     const handleOrdersToggle = () => {
         setOpenOrdersMenu(!openOrdersMenu);
@@ -118,11 +119,26 @@ export const MyMenu = () => {
         setOpenGuideStatsMenu(!openGuideStatsMenu);
     };
 
+    const handleCustomersToggle = () => {
+        setOpenCustomersMenu(!openCustomersMenu);
+    };
+
     return (
         <Menu>
             <Menu.DashboardItem />
             <Menu.Item to="/admin-users" primaryText="Admin Users" leftIcon={<UserCircle />} />
-            <Menu.Item to="/customers" primaryText="Customers" leftIcon={<Users />} />
+
+            {/* Customers Submenu */}
+            <SubMenu
+                handleToggle={handleCustomersToggle}
+                isOpen={openCustomersMenu}
+                name="Customers"
+                icon={<Users />}
+            >
+                <Menu.Item to="/customers" primaryText="All Customers" leftIcon={<Users />} />
+                <Menu.Item to="/assistant-chat" primaryText="Chat Assistant" leftIcon={<MessageSquare />} />
+            </SubMenu>
+
             <Menu.Item to="/mvu" primaryText="MVU Customers" leftIcon={<Wallet />} />
             <Menu.Item to="/consultations" primaryText="Consultations" leftIcon={<ClipboardList />} />
             <Menu.Item to="/offers" primaryText="Offers" leftIcon={<Gift />} />

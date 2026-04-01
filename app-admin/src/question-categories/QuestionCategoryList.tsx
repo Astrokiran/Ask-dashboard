@@ -6,6 +6,7 @@ import {
     EditButton,
     DeleteButton,
     BooleanField,
+    FunctionField,
     useRecordContext,
 } from 'react-admin';
 import { Chip } from '@mui/material';
@@ -49,11 +50,11 @@ export const QuestionCategoryList = () => (
         >
             <TextField source="id" label="ID" />
             <TextField source="display_name" label="Category Name" />
-            <IconField label="Icon" />
+            <FunctionField label="Icon" render={() => <IconField />} />
             <TextField source="name" label="Internal Name" />
             <TextField source="description" label="Description" sx={{ maxWidth: 300 }} />
             <TextField source="display_order" label="Order" />
-            <ActiveField label="Status" />
+            <FunctionField label="Status" render={() => <ActiveField />} />
             <EditButton />
             <DeleteButton mutationMode="pessimistic" />
         </Datagrid>

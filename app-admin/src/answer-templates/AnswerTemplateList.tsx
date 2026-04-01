@@ -7,6 +7,7 @@ import {
     EditButton,
     DeleteButton,
     NumberField,
+    FunctionField,
     useRecordContext,
     FilterList,
     FilterListItem,
@@ -106,8 +107,14 @@ export const AnswerTemplateList = () => (
             <TextField source="question_id" label="Question ID" />
             <TextField source="template_name" label="Template Name" />
             <NumberField source="priority" label="Priority" />
-            <ActiveField label="Status" />
-            <TemplatePreview label="Template Content" />
+            <FunctionField
+                label="Status"
+                render={() => <ActiveField />}
+            />
+            <FunctionField
+                label="Template Content"
+                render={() => <TemplatePreview />}
+            />
             <DeleteButton mutationMode="pessimistic" />
         </Datagrid>
     </List>

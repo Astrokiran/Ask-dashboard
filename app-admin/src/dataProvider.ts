@@ -503,17 +503,12 @@ export const dataProvider: DataProvider = {
                 queryParams.append('customer_id', customer_id);
             }
 
-            // Add date filters with timezone awareness
-            // Convert simple date strings to ISO 8601 format with user's local timezone
+            // Add date filters - send dates in YYYY-MM-DD format to preserve local date selection
             if (date_from) {
-                // Create date at start of day (00:00:00) in user's local timezone
-                const startDateTime = new Date(`${date_from}T00:00:00`).toISOString();
-                queryParams.append('start_date', startDateTime);
+                queryParams.append('start_date', date_from);
             }
             if (date_to) {
-                // Create date at end of day (23:59:59) in user's local timezone
-                const endDateTime = new Date(`${date_to}T23:59:59`).toISOString();
-                queryParams.append('end_date', endDateTime);
+                queryParams.append('end_date', date_to);
             }
 
             // Add mode filter (map 'call' to 'voice' for API)
@@ -967,6 +962,26 @@ export const dataProvider: DataProvider = {
             return { data: transformedTemplates, total: transformedTemplates.length };
         }
 
+        if (resource === 'panchang-videos') {
+            const { json } = await httpClient(`${API_ROOT_URL}/superadmin/media`);
+
+            const mediaList = (json.data || []).filter((m: any) => m.purpose === 'panchang_video');
+            const transformedMedia = mediaList.map((m: any) => ({ ...m, id: m.id }));
+
+            // Sort by target_date descending (newest first)
+            transformedMedia.sort((a: any, b: any) => {
+                const aDate = a.target_date || a.created_at || '';
+                const bDate = b.target_date || b.created_at || '';
+                return bDate.localeCompare(aDate);
+            });
+
+            const { page = 1, perPage = 25 } = params.pagination ?? {};
+            const total = transformedMedia.length;
+            const data = transformedMedia.slice((page - 1) * perPage, page * perPage);
+
+            return { data, total };
+        }
+
         if (resource === 'products') {
             const { page = 1, perPage = 20 } = params.pagination ?? {};
             const { field = 'created_at', order = 'DESC' } = params.sort ?? {};
@@ -1266,7 +1281,7 @@ export const dataProvider: DataProvider = {
 
         // Question Categories - Update category (uses PUT method)
         if (resource === 'question-categories') {
-            const { json } = await httpClient(`${API_ROOT_URL}/auth/api/pixel-admin/api/v1/customers/questions/categories/${params.id}`, {
+            const { json } = await httpClient(`${API_URL}/api/v1/customers/questions/categories/${params.id}`, {
                 method: 'PUT',
                 body: JSON.stringify(params.data),
             });
@@ -1275,7 +1290,7 @@ export const dataProvider: DataProvider = {
 
         // Questions - Update question (uses PUT method)
         if (resource === 'questions') {
-            const { json } = await httpClient(`${API_ROOT_URL}/auth/api/pixel-admin/api/v1/customers/questions/${params.id}`, {
+            const { json } = await httpClient(`${API_URL}/api/v1/customers/questions/${params.id}`, {
                 method: 'PUT',
                 body: JSON.stringify(params.data),
             });
@@ -1697,7 +1712,7 @@ export const dataProvider: DataProvider = {
             return { data: { id } };
         }
 
-        if (resource === 'videos' || resource === 'stories') {
+        if (resource === 'videos' || resource === 'stories' || resource === 'panchang-videos') {
             const { id } = params;
             await httpClient(`${API_ROOT_URL}/superadmin/media/${id}`, {
                 method: 'DELETE',
@@ -1717,7 +1732,7 @@ export const dataProvider: DataProvider = {
 
         // Question Categories - Delete category
         if (resource === 'question-categories') {
-            await httpClient(`${API_ROOT_URL}/auth/api/pixel-admin/api/v1/customers/questions/categories/${params.id}`, {
+            await httpClient(`${API_URL}/api/v1/customers/questions/categories/${params.id}`, {
                 method: 'DELETE',
             });
             return { data: { id: params.id } };
@@ -1725,7 +1740,7 @@ export const dataProvider: DataProvider = {
 
         // Questions - Delete question
         if (resource === 'questions') {
-            await httpClient(`${API_ROOT_URL}/auth/api/pixel-admin/api/v1/customers/questions/${params.id}`, {
+            await httpClient(`${API_URL}/api/v1/customers/questions/${params.id}`, {
                 method: 'DELETE',
             });
             return { data: { id: params.id } };

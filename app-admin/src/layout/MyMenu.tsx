@@ -204,6 +204,7 @@ export const MyMenu = () => {
             >
                 <Menu.Item to="/videos" primaryText="Videos" leftIcon={<Video />} />
                 <Menu.Item to="/stories" primaryText="Stories" leftIcon={<Film />} />
+                <Menu.Item to="/panchang-videos" primaryText="Panchang Videos" leftIcon={<Calendar />} />
             </SubMenu>
 
             {/* Reconciliation Submenu */}

@@ -5,6 +5,7 @@ import {
     TextField,
     EditButton,
     DeleteButton,
+    FunctionField,
     useRecordContext,
 } from 'react-admin';
 import { Chip } from '@mui/material';
@@ -36,7 +37,7 @@ export const QuestionList = () => (
             rowClick="edit"
         >
             <TextField source="id" label="ID" />
-            <CategoryField label="Category" />
+            <FunctionField label="Category" render={() => <CategoryField />} />
             <TextField source="question_text" label="Question" sx={{ maxWidth: 400 }} />
             <TextField source="question_key" label="Key" />
             <EditButton />

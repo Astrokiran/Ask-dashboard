@@ -12,6 +12,53 @@ import {
     FunctionField,
 } from 'react-admin';
 import { Chip } from '@mui/material';
+import { Link } from 'react-router-dom';
+
+const CustomerIdLink = () => {
+    const record = useRecordContext();
+    const customerId = record?.customer_id;
+
+    if (!customerId) return <span>-</span>;
+
+    return (
+        <Link
+            to={`/customers/${customerId}/show`}
+            style={{
+                color: '#1976d2',
+                textDecoration: 'none',
+                fontWeight: 500,
+                cursor: 'pointer',
+            }}
+            onMouseEnter={(e: any) => e.target.style.textDecoration = 'underline'}
+            onMouseLeave={(e: any) => e.target.style.textDecoration = 'none'}
+        >
+            {customerId}
+        </Link>
+    );
+};
+
+const GuideIdLink = () => {
+    const record = useRecordContext();
+    const guideId = record?.guide_id;
+
+    if (!guideId) return <span>-</span>;
+
+    return (
+        <Link
+            to={`/guides/${guideId}/show`}
+            style={{
+                color: '#1976d2',
+                textDecoration: 'none',
+                fontWeight: 500,
+                cursor: 'pointer',
+            }}
+            onMouseEnter={(e: any) => e.target.style.textDecoration = 'underline'}
+            onMouseLeave={(e: any) => e.target.style.textDecoration = 'none'}
+        >
+            {guideId}
+        </Link>
+    );
+};
 
 const SenderTypeField = () => {
     const record = useRecordContext();
@@ -118,8 +165,8 @@ export const AssistantChatList = () => (
             rowClick={false}
         >
             <TextField source="message_id" label="Message ID" />
-            <TextField source="guide_name" label="Guide Name" />
-            <TextField source="customer_name" label="Customer Name" />
+            <FunctionField label="Guide ID" render={() => <GuideIdLink />} />
+            <FunctionField label="Customer ID" render={() => <CustomerIdLink />} />
             <FunctionField label="Sender" render={() => <SenderTypeField />} />
             <FunctionField label="Message" render={() => <ContentField />} />
             <BooleanField source="is_read" label="Read" />

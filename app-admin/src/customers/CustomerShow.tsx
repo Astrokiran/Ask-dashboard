@@ -1060,15 +1060,26 @@ const UpdateProfileForm = ({ profile, onSave, onCancel, saving, customerId, refr
 const WalletTransactions = ({ customerId }: { customerId: number }) => {
     const [transactions, setTransactions] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [perPage] = useState(20);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalItems, setTotalItems] = useState(0);
 
-    useEffect(() => {
+    const fetchTransactions = (pageNum: number) => {
         if (!customerId) return;
         setIsLoading(true);
-        httpClient(`${API_URL}/api/v1/customers/${customerId}/wallet/transactions`)
-            // CHANGED: Reads from the 'items' array in your API response
-            .then(({ json }) => setTransactions(json.items || []))
+        httpClient(`${API_URL}/api/v1/customers/${customerId}/wallet/transactions?page=${pageNum}&per_page=${perPage}`)
+            .then(({ json }) => {
+                setTransactions(json.items || []);
+                setTotalPages(json.pagination?.total_pages || 0);
+                setTotalItems(json.pagination?.total_items || 0);
+            })
             .finally(() => setIsLoading(false));
-    }, [customerId]);
+    };
+
+    useEffect(() => {
+        fetchTransactions(page);
+    }, [customerId, page]);
 
     // Helper function to make the transaction type look nice
     const getTransactionStyle = (type: string) => {
@@ -1132,6 +1143,35 @@ const WalletTransactions = ({ customerId }: { customerId: number }) => {
                         </TableBody>
                     </Table>
                 </TableContainer>
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, borderTop: 1, borderColor: 'divider' }}>
+                        <Typography variant="body2" color="textSecondary">
+                            Showing {((page - 1) * perPage) + 1} to {Math.min(page * perPage, totalItems)} of {totalItems} transactions
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                disabled={page === 1 || isLoading}
+                                onClick={() => setPage(p => p - 1)}
+                            >
+                                Previous
+                            </Button>
+                            <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', px: 2 }}>
+                                Page {page} of {totalPages}
+                            </Typography>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                disabled={page === totalPages || isLoading}
+                                onClick={() => setPage(p => p + 1)}
+                            >
+                                Next
+                            </Button>
+                        </Box>
+                    </Box>
+                )}
             </Paper>
         </Box>
     );

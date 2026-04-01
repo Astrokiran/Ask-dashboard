@@ -19,9 +19,11 @@ import {
     ShoppingBag,
     MessageSquare,
     TrendingUp,
+    Megaphone,
 } from 'lucide-react';
 import { Box, Collapse, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
+import { BarChart3 } from 'lucide-react';
 
 const SubMenu = ({
     handleToggle,
@@ -86,6 +88,7 @@ export const MyMenu = () => {
     const [openReconciliationMenu, setOpenReconciliationMenu] = useState(false);
     const [openContentMenu, setOpenContentMenu] = useState(false);
     const [openNotificationsMenu, setOpenNotificationsMenu] = useState(false);
+    const [openGuideStatsMenu, setOpenGuideStatsMenu] = useState(false);
 
     const handleOrdersToggle = () => {
         setOpenOrdersMenu(!openOrdersMenu);
@@ -111,6 +114,10 @@ export const MyMenu = () => {
         setOpenNotificationsMenu(!openNotificationsMenu);
     };
 
+    const handleGuideStatsToggle = () => {
+        setOpenGuideStatsMenu(!openGuideStatsMenu);
+    };
+
     return (
         <Menu>
             <Menu.DashboardItem />
@@ -129,9 +136,19 @@ export const MyMenu = () => {
                 icon={<FileText />}
             >
                 <Menu.Item to="/notifications" primaryText="Bulk Notifications" leftIcon={<FileText />} />
+                <Menu.Item to="/campaigns" primaryText="Campaigns" leftIcon={<Megaphone />} />
                 <Menu.Item to="/whatsapp-settings" primaryText="WhatsApp Settings" leftIcon={<MessageSquare />} />
             </SubMenu>
-            <Menu.Item to="/guide-conversion-rates" primaryText="Guide Conversion Rates" leftIcon={<TrendingUp />} />
+            {/* Guide Stats Submenu */}
+            <SubMenu
+                handleToggle={handleGuideStatsToggle}
+                isOpen={openGuideStatsMenu}
+                name="Guide Stats"
+                icon={<BarChart3 />}
+            >
+                <Menu.Item to="/guide-conversion-rates" primaryText="Conversion Rates" leftIcon={<TrendingUp />} />
+                <Menu.Item to="/guide-performance-stats" primaryText="Performance Stats" leftIcon={<BarChart3 />} />
+            </SubMenu>
             {/* Orders Submenu */}
             <SubMenu
                 handleToggle={handleOrdersToggle}

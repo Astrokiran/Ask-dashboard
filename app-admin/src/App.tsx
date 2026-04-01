@@ -17,7 +17,10 @@ import GuideEarnings from './guides/GuideEarnings';
 import GuideOrders from './guides/GuideOrders';
 import { BulkNotificationPage } from './notifications/BulkNotificationPage';
 import { WhatsAppSettingsPage } from './notifications/WhatsAppSettingsPage';
+import { CampaignsPage } from './notifications/CampaignsPage';
+import { CampaignDetailPage } from './notifications/CampaignDetailPage';
 import { GuideConversionRates } from './guides/GuideConversionRates';
+import { GuidePerformanceStats } from './guides/GuidePerformanceStats';
 
 
 // Import the resource objects
@@ -29,6 +32,7 @@ import offers from './offers';
 import videos from './videos';
 import stories from './stories';
 import products from './products';
+import panchangVideos from './panchang-videos';
 import reconciliation, { reconciliationOffers } from './reconciliation';
 
 import {
@@ -43,6 +47,7 @@ import {
     BookOpen,
     ShoppingBag,
     Wallet,
+    Calendar,
 } from 'lucide-react';
 import { OrderList } from './orders/Orders';
 import { PaymentOrderList } from './orders/PaymentOrders';
@@ -123,6 +128,12 @@ const App: React.FC = () => (
                 icon={BookOpen}
             />
             <Resource
+                name="panchang-videos"
+                options={{ label: 'Panchang Videos' }}
+                {...panchangVideos}
+                icon={Calendar}
+            />
+            <Resource
                 name="products"
                 {...products}
                 icon={ShoppingBag}
@@ -149,7 +160,10 @@ const App: React.FC = () => (
                 <Route path="/guide-orders" element={<GuideOrders />} />
                 <Route path="/notifications" element={<BulkNotificationPage />} />
                 <Route path="/whatsapp-settings" element={<WhatsAppSettingsPage />} />
+                <Route path="/campaigns" element={<CampaignsPage />} />
+                <Route path="/campaigns/:id" element={<CampaignDetailPage />} />
                 <Route path="/guide-conversion-rates" element={<GuideConversionRates />} />
+                <Route path="/guide-performance-stats" element={<GuidePerformanceStats />} />
             </CustomRoutes>
         </Admin>
     </ThemeSyncWrapper>

@@ -20,6 +20,7 @@ import {
     MessageSquare,
     TrendingUp,
     Megaphone,
+    Calendar,
 } from 'lucide-react';
 import { Box, Collapse, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
@@ -191,6 +192,7 @@ export const MyMenu = () => {
             >
                 <Menu.Item to="/videos" primaryText="Videos" leftIcon={<Video />} />
                 <Menu.Item to="/stories" primaryText="Stories" leftIcon={<Film />} />
+                <Menu.Item to="/panchang-videos" primaryText="Panchang Videos" leftIcon={<Calendar />} />
             </SubMenu>
 
             {/* Reconciliation Submenu */}

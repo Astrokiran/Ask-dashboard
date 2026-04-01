@@ -932,6 +932,26 @@ export const dataProvider: DataProvider = {
             return { data, total };
         }
 
+        if (resource === 'panchang-videos') {
+            const { json } = await httpClient(`${API_ROOT_URL}/superadmin/media`);
+
+            const mediaList = (json.data || []).filter((m: any) => m.purpose === 'panchang_video');
+            const transformedMedia = mediaList.map((m: any) => ({ ...m, id: m.id }));
+
+            // Sort by target_date descending (newest first)
+            transformedMedia.sort((a: any, b: any) => {
+                const aDate = a.target_date || a.created_at || '';
+                const bDate = b.target_date || b.created_at || '';
+                return bDate.localeCompare(aDate);
+            });
+
+            const { page = 1, perPage = 25 } = params.pagination ?? {};
+            const total = transformedMedia.length;
+            const data = transformedMedia.slice((page - 1) * perPage, page * perPage);
+
+            return { data, total };
+        }
+
         if (resource === 'products') {
             const { page = 1, perPage = 20 } = params.pagination ?? {};
             const { field = 'created_at', order = 'DESC' } = params.sort ?? {};
@@ -1587,7 +1607,7 @@ export const dataProvider: DataProvider = {
             return { data: { id } };
         }
 
-        if (resource === 'videos' || resource === 'stories') {
+        if (resource === 'videos' || resource === 'stories' || resource === 'panchang-videos') {
             const { id } = params;
             await httpClient(`${API_ROOT_URL}/superadmin/media/${id}`, {
                 method: 'DELETE',

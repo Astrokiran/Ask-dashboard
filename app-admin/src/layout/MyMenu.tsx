@@ -20,6 +20,9 @@ import {
     MessageSquare,
     TrendingUp,
     Megaphone,
+    Calendar,
+    HelpCircle,
+    FolderTree,
 } from 'lucide-react';
 import { Box, Collapse, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
@@ -89,6 +92,8 @@ export const MyMenu = () => {
     const [openContentMenu, setOpenContentMenu] = useState(false);
     const [openNotificationsMenu, setOpenNotificationsMenu] = useState(false);
     const [openGuideStatsMenu, setOpenGuideStatsMenu] = useState(false);
+    const [openPanchangMenu, setOpenPanchangMenu] = useState(false);
+    const [openDailyAskMenu, setOpenDailyAskMenu] = useState(false);
 
     const handleOrdersToggle = () => {
         setOpenOrdersMenu(!openOrdersMenu);
@@ -116,6 +121,14 @@ export const MyMenu = () => {
 
     const handleGuideStatsToggle = () => {
         setOpenGuideStatsMenu(!openGuideStatsMenu);
+    };
+
+    const handlePanchangToggle = () => {
+        setOpenPanchangMenu(!openPanchangMenu);
+    };
+
+    const handleDailyAskToggle = () => {
+        setOpenDailyAskMenu(!openDailyAskMenu);
     };
 
     return (
@@ -202,6 +215,28 @@ export const MyMenu = () => {
             >
                 <Menu.Item to="/refundable-consultations" primaryText="Refundable Consultations" leftIcon={<RefreshCw />} />
                 <Menu.Item to="/reconciliation-offers" primaryText="Reconciliation Offers" leftIcon={<Gift />} />
+            </SubMenu>
+
+            {/* Panchang Submenu */}
+            <SubMenu
+                handleToggle={handlePanchangToggle}
+                isOpen={openPanchangMenu}
+                name="Panchang"
+                icon={<Calendar />}
+            >
+                <Menu.Item to="/panchang-videos" primaryText="Panchang Videos" leftIcon={<Video />} />
+            </SubMenu>
+
+            {/* Daily Ask Questions Submenu */}
+            <SubMenu
+                handleToggle={handleDailyAskToggle}
+                isOpen={openDailyAskMenu}
+                name="Daily Ask Questions"
+                icon={<HelpCircle />}
+            >
+                <Menu.Item to="/question-categories" primaryText="Categories" leftIcon={<FolderTree />} />
+                <Menu.Item to="/questions" primaryText="Questions" leftIcon={<MessageSquare />} />
+                <Menu.Item to="/answer-templates" primaryText="Answer Templates" leftIcon={<FileText />} />
             </SubMenu>
         </Menu>
     );

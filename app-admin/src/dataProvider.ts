@@ -932,6 +932,41 @@ export const dataProvider: DataProvider = {
             return { data, total };
         }
 
+        // Question Categories - Get all categories
+        if (resource === 'question-categories') {
+            const { json } = await httpClient(`${API_URL}/api/v1/customers/questions/categories`);
+            const categories = json.categories || [];
+            const transformedCategories = categories.map((cat: any) => ({ ...cat, id: cat.id }));
+            return { data: transformedCategories, total: transformedCategories.length };
+        }
+
+        // Questions - Get all questions with optional category filter
+        if (resource === 'questions') {
+            const { category_id } = params.filter || {};
+            let url = `${API_URL}/api/v1/customers/questions`;
+            if (category_id) {
+                url += `?category_id=${category_id}`;
+            }
+            const { json } = await httpClient(url);
+            const questions = json.questions || [];
+            const transformedQuestions = questions.map((q: any) => ({ ...q, id: q.id }));
+            return { data: transformedQuestions, total: transformedQuestions.length };
+        }
+
+        // Answer Templates - Get templates for a specific question (question_id is required)
+        if (resource === 'answer-templates') {
+            const { question_id } = params.filter || {};
+            if (!question_id) {
+                // Return empty list if no question_id is provided
+                return { data: [], total: 0 };
+            }
+            const url = `${API_URL}/api/v1/customers/questions/${question_id}/templates`;
+            const { json } = await httpClient(url);
+            const templates = json.templates || json.data || [];
+            const transformedTemplates = templates.map((t: any) => ({ ...t, id: t.id }));
+            return { data: transformedTemplates, total: transformedTemplates.length };
+        }
+
         if (resource === 'products') {
             const { page = 1, perPage = 20 } = params.pagination ?? {};
             const { field = 'created_at', order = 'DESC' } = params.sort ?? {};
@@ -1147,6 +1182,34 @@ export const dataProvider: DataProvider = {
             return { data: { ...params.data, id: params.data.id || 0 } };
         }
 
+        // Question Categories - Create category
+        if (resource === 'question-categories') {
+            const { json } = await httpClient(`${API_URL}/api/v1/customers/questions/categories`, {
+                method: 'POST',
+                body: JSON.stringify(params.data),
+            });
+            return { data: { ...json.data, id: json.data.id } };
+        }
+
+        // Questions - Create question
+        if (resource === 'questions') {
+            const { json } = await httpClient(`${API_URL}/api/v1/customers/questions`, {
+                method: 'POST',
+                body: JSON.stringify(params.data),
+            });
+            return { data: { ...json.data, id: json.data.id } };
+        }
+
+        // Answer Templates - Create template
+        if (resource === 'answer-templates') {
+            const { json } = await httpClient(`${API_URL}/api/v1/customers/questions/templates`, {
+                method: 'POST',
+                body: JSON.stringify(params.data),
+            });
+            const template = json.data || json.template || json;
+            return { data: { ...template, id: template.id } };
+        }
+
         throw new Error(`Unsupported resource: ${resource}`);
     },
     update: async (resource, params) => {
@@ -1199,6 +1262,34 @@ export const dataProvider: DataProvider = {
             // ProductEdit handles the update flow directly via httpClient.
             // This is a no-op fallback; the actual update is done in ProductEdit.tsx.
             return { data: { ...params.data, id: params.id } };
+        }
+
+        // Question Categories - Update category (uses PUT method)
+        if (resource === 'question-categories') {
+            const { json } = await httpClient(`${API_ROOT_URL}/auth/api/pixel-admin/api/v1/customers/questions/categories/${params.id}`, {
+                method: 'PUT',
+                body: JSON.stringify(params.data),
+            });
+            return { data: { ...json.data, id: json.data.id } };
+        }
+
+        // Questions - Update question (uses PUT method)
+        if (resource === 'questions') {
+            const { json } = await httpClient(`${API_ROOT_URL}/auth/api/pixel-admin/api/v1/customers/questions/${params.id}`, {
+                method: 'PUT',
+                body: JSON.stringify(params.data),
+            });
+            return { data: { ...json.data, id: json.data.id } };
+        }
+
+        // Answer Templates - Update template (uses PUT method)
+        if (resource === 'answer-templates') {
+            const { json } = await httpClient(`${API_URL}/api/v1/customers/questions/templates/${params.id}`, {
+                method: 'PUT',
+                body: JSON.stringify(params.data),
+            });
+            const template = json.data || json.template || json;
+            return { data: { ...template, id: template.id } };
         }
 
         return Promise.resolve({ data: { ...params.data, id: params.id } }) as any;
@@ -1315,6 +1406,25 @@ export const dataProvider: DataProvider = {
             }
 
             return { data: { ...media, id: media.id } };
+        }
+
+        // Question Categories - Get single category
+        if (resource === 'question-categories') {
+            const { json } = await httpClient(`${API_URL}/api/v1/customers/questions/categories/${params.id}`);
+            return { data: { ...json.data, id: json.data.id } };
+        }
+
+        // Questions - Get single question
+        if (resource === 'questions') {
+            const { json } = await httpClient(`${API_URL}/api/v1/customers/questions/${params.id}`);
+            return { data: { ...json.data, id: json.data.id } };
+        }
+
+        // Answer Templates - Get single template
+        // NOTE: The API doesn't support GET /templates/{id}, so we return a minimal object
+        if (resource === 'answer-templates') {
+            // Return minimal data - edit functionality is disabled for this resource
+            return { data: { id: params.id } };
         }
 
         if (resource === 'consultation-orders') {
@@ -1603,6 +1713,30 @@ export const dataProvider: DataProvider = {
                 method: 'DELETE',
             });
             return { data: { id } };
+        }
+
+        // Question Categories - Delete category
+        if (resource === 'question-categories') {
+            await httpClient(`${API_ROOT_URL}/auth/api/pixel-admin/api/v1/customers/questions/categories/${params.id}`, {
+                method: 'DELETE',
+            });
+            return { data: { id: params.id } };
+        }
+
+        // Questions - Delete question
+        if (resource === 'questions') {
+            await httpClient(`${API_ROOT_URL}/auth/api/pixel-admin/api/v1/customers/questions/${params.id}`, {
+                method: 'DELETE',
+            });
+            return { data: { id: params.id } };
+        }
+
+        // Answer Templates - Delete template
+        if (resource === 'answer-templates') {
+            await httpClient(`${API_URL}/api/v1/customers/questions/templates/${params.id}`, {
+                method: 'DELETE',
+            });
+            return { data: { id: params.id } };
         }
 
         // Default fallback for other resources

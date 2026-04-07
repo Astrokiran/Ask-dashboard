@@ -109,13 +109,8 @@ export const PanchangVideoCreate = () => {
     };
 
     const handleSubmit = async (formData: any) => {
-        if (!videoFile) {
-            notify('Please select a video file', { type: 'error' });
-            return;
-        }
-
         if (!thumbnailFile) {
-            notify('Thumbnail is required for panchang videos', { type: 'error' });
+            notify('Thumbnail image is required', { type: 'error' });
             return;
         }
 
@@ -129,62 +124,80 @@ export const PanchangVideoCreate = () => {
             return;
         }
 
+        const hasVideo = !!videoFile;
+
         setUploading(true);
 
         try {
             // Step 1: Get presigned URLs
+            // With video: presign video as primary file + thumbnail separately
+            // Image only: presign thumbnail as the primary file
             setUploadStage('Getting upload URLs...');
             setUploadProgress(0);
+
+            const primaryFile = hasVideo ? videoFile! : thumbnailFile;
+            const presignBody: Record<string, string> = {
+                media_type: hasVideo ? 'video' : 'image',
+                file_name: primaryFile.name,
+                mime_type: primaryFile.type,
+            };
+            if (hasVideo) {
+                presignBody.thumbnail_file_name = thumbnailFile.name;
+                presignBody.thumbnail_mime_type = thumbnailFile.type;
+            }
 
             const { json: presignJson } = await httpClient(
                 `${API_ROOT_URL}/superadmin/media/presign`,
                 {
                     method: 'POST',
-                    body: JSON.stringify({
-                        media_type: 'video',
-                        file_name: videoFile.name,
-                        mime_type: videoFile.type,
-                        thumbnail_file_name: thumbnailFile.name,
-                        thumbnail_mime_type: thumbnailFile.type,
-                    }),
+                    body: JSON.stringify(presignBody),
                 }
             );
 
             const presignData: PresignResponse = presignJson.data;
 
-            // Step 2: Upload video to S3
-            setUploadStage('Uploading video...');
-            await uploadToS3(presignData.file_upload_url, videoFile, videoFile.type);
+            // Step 2: Upload primary file to S3
+            setUploadStage(hasVideo ? 'Uploading video...' : 'Uploading image...');
+            await uploadToS3(presignData.file_upload_url, primaryFile, primaryFile.type);
 
-            // Step 3: Upload thumbnail to S3
-            if (presignData.thumbnail_upload_url) {
+            // Step 3: Upload thumbnail to S3 (only when video is present)
+            if (hasVideo && presignData.thumbnail_upload_url) {
                 setUploadStage('Uploading thumbnail...');
                 setUploadProgress(0);
                 await uploadToS3(presignData.thumbnail_upload_url, thumbnailFile, thumbnailFile.type);
             }
 
             // Step 4: Save metadata
-            setUploadStage('Saving panchang video...');
+            setUploadStage('Saving panchang content...');
             setUploadProgress(100);
+
+            const metadata: Record<string, unknown> = {
+                title: formData.title.trim(),
+                media_type: hasVideo ? 'video' : 'image',
+                purpose: 'panchang_video',
+                target_date: targetDate,
+                file_s3_key: presignData.file_s3_key,
+                file_url: presignData.file_cdn_url,
+                mime_type: primaryFile.type,
+                file_size_bytes: primaryFile.size,
+            };
+
+            if (hasVideo) {
+                metadata.duration_seconds = videoDuration;
+                metadata.thumbnail_s3_key = presignData.thumbnail_s3_key;
+                metadata.thumbnail_url = presignData.thumbnail_cdn_url;
+            } else {
+                // Image-only: use the same image as thumbnail
+                metadata.thumbnail_s3_key = presignData.file_s3_key;
+                metadata.thumbnail_url = presignData.file_cdn_url;
+            }
 
             await httpClient(`${API_ROOT_URL}/superadmin/media`, {
                 method: 'POST',
-                body: JSON.stringify({
-                    title: formData.title.trim(),
-                    media_type: 'video',
-                    purpose: 'panchang_video',
-                    target_date: targetDate,
-                    file_s3_key: presignData.file_s3_key,
-                    file_url: presignData.file_cdn_url,
-                    mime_type: videoFile.type,
-                    file_size_bytes: videoFile.size,
-                    duration_seconds: videoDuration,
-                    thumbnail_s3_key: presignData.thumbnail_s3_key,
-                    thumbnail_url: presignData.thumbnail_cdn_url,
-                }),
+                body: JSON.stringify(metadata),
             });
 
-            notify('Panchang video uploaded successfully!', { type: 'success' });
+            notify('Panchang content uploaded successfully!', { type: 'success' });
             redirect('list', 'panchang-videos');
         } catch (error: any) {
             const errorMsg = error?.body?.error || error?.message || 'Unknown error';
@@ -231,7 +244,7 @@ export const PanchangVideoCreate = () => {
                     <Card variant="outlined" sx={{ mb: 2 }}>
                         <CardContent>
                             <Typography variant="subtitle2" gutterBottom>
-                                Video File *
+                                Video File (optional)
                             </Typography>
                             <input
                                 ref={videoInputRef}
@@ -302,7 +315,7 @@ export const PanchangVideoCreate = () => {
                                 )}
                             </Stack>
                             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                                Shown while video loads or when no video is available.
+                                Required. Shown as the panchang image, or as thumbnail when video is present.
                             </Typography>
                         </CardContent>
                     </Card>
@@ -325,7 +338,7 @@ export const PanchangVideoCreate = () => {
                         color="primary"
                         size="large"
                         fullWidth
-                        disabled={uploading || !videoFile || !thumbnailFile || !targetDate}
+                        disabled={uploading || !thumbnailFile || !targetDate}
                         startIcon={<CloudUploadIcon />}
                     >
                         {uploading ? 'Uploading...' : 'Upload Panchang Video'}

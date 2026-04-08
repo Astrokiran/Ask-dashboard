@@ -10,6 +10,7 @@ const AUTH_API_URL = process.env.REACT_APP_AUTH_URL; // Base URL for your API
 // Fix: AUTH_API_URL includes /auth at the end, but superadmin routes are at /api/v1/superadmin
 const API_ROOT_URL = AUTH_API_URL?.replace(/\/auth$/, '') || '';
 const OFFERS_BASE_URL = process.env.REACT_APP_OFFERS_BASE_URL;
+const CONSULTATION_BASE_URL = process.env.REACT_APP_CONSULTATION_BASE_URL;
 
 const refreshToken = async () => {
     const refreshToken = localStorage.getItem('refresh_token');
@@ -1046,6 +1047,37 @@ export const dataProvider: DataProvider = {
                 console.error('Error fetching products:', error);
                 throw error;
             }
+        }
+
+        // Assistant Chat - Get all chat messages
+        if (resource === 'assistant-chat') {
+            const { page, perPage } = params.pagination || { page: 1, perPage: 50 };
+            const { field, order } = params.sort || { field: 'created_at', order: 'DESC' };
+            const { guide_id, customer_id, sender_type, start_date, end_date, is_read } = params.filter || {};
+
+            // Build query parameters
+            const queryParams = new URLSearchParams();
+            queryParams.append('page', page.toString());
+            queryParams.append('page_size', perPage.toString());
+
+            if (guide_id) queryParams.append('guide_id', guide_id);
+            if (customer_id) queryParams.append('customer_id', customer_id);
+            if (sender_type) queryParams.append('sender_type', sender_type);
+            if (start_date) queryParams.append('start_date', start_date);
+            if (end_date) queryParams.append('end_date', end_date);
+            if (is_read !== undefined) queryParams.append('is_read', is_read);
+
+            const url = `${CONSULTATION_BASE_URL}/consultation/admin/assistant-chat?${queryParams.toString()}`;
+            const { json } = await httpClient(url);
+            console.log('Assistant chat response:', json);
+
+            const messages = json.data?.data || [];
+            const total = json.data?.pagination?.total_items || messages.length;
+
+            // Map to ensure id field exists
+            const transformedMessages = messages.map((msg: any) => ({ ...msg, id: msg.message_id }));
+
+            return { data: transformedMessages, total };
         }
 
         throw new Error(`Unsupported resource for getList: ${resource}`);

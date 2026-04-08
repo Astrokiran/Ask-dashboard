@@ -36,6 +36,8 @@ import panchangVideos from './panchang-videos';
 import questionCategories from './question-categories';
 import questions from './questions';
 import answerTemplates from './answer-templates';
+import assistantChat from './assistant-chat';
+
 import reconciliation, { reconciliationOffers } from './reconciliation';
 
 import {
@@ -54,6 +56,7 @@ import {
     FolderTree,
     MessageSquare,
     FileText,
+    MessageSquare,
 } from 'lucide-react';
 import { OrderList } from './orders/Orders';
 import { PaymentOrderList } from './orders/PaymentOrders';
@@ -160,6 +163,12 @@ const App: React.FC = () => (
                 name="products"
                 {...products}
                 icon={ShoppingBag}
+            />
+            <Resource
+                name="assistant-chat"
+                options={{ label: 'Chat Assistant' }}
+                {...assistantChat}
+                icon={MessageSquare}
             />
             <Resource
                 name="pending-verifications"

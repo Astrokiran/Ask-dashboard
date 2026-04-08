@@ -366,13 +366,12 @@ const ConsultationChatMessages = () => {
                         {/* Chat Container */}
                         <Box
                             sx={{
-                                bgcolor: '#e5ddd5',
+                                bgcolor: 'background.default',
                                 borderRadius: 2,
                                 p: 2,
                                 minHeight: 400,
                                 maxHeight: 600,
                                 overflowY: 'auto',
-                                backgroundImage: 'linear-gradient(rgba(229,221,213,0.9), rgba(229,221,213,0.9)), url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23d4ccc4\' fill-opacity=\'0.4\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
                             }}
                         >
                             {messages.map((message: any, index: number) => {
@@ -449,10 +448,11 @@ const ConsultationChatMessages = () => {
                                             {/* Message Bubble */}
                                             <Box
                                                 sx={{
-                                                    bgcolor: isCustomer ? '#dcf8c6' : 'white',
+                                                    bgcolor: isCustomer ? 'action.selected' : 'background.paper',
+                                                    color: 'text.primary',
                                                     borderRadius: isCustomer ? '8px 0 8px 8px' : '0 8px 8px 8px',
                                                     p: 2,
-                                                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                                                    boxShadow: 1,
                                                     position: 'relative',
                                                 }}
                                             >
@@ -528,18 +528,95 @@ const ConsultationChatMessages = () => {
                                                         )}
                                                     </Box>
                                                 ) : (
-                                                    <Typography
-                                                        variant="body2"
-                                                        sx={{
-                                                            fontSize: '0.9rem',
-                                                            color: 'text.primary',
-                                                            whiteSpace: 'pre-wrap',
-                                                            wordBreak: 'break-word',
-                                                            lineHeight: 1.5,
-                                                        }}
-                                                    >
-                                                        {message.content}
-                                                    </Typography>
+                                                    <>
+                                                        <Typography
+                                                            variant="body2"
+                                                            sx={{
+                                                                fontSize: '0.9rem',
+                                                                color: 'text.primary',
+                                                                whiteSpace: 'pre-wrap',
+                                                                wordBreak: 'break-word',
+                                                                lineHeight: 1.5,
+                                                            }}
+                                                        >
+                                                            {message.content}
+                                                        </Typography>
+
+                                                        {/* Display Recommended Remedies/Products */}
+                                                        {message.recommended_remedies && message.recommended_remedies.length > 0 && (
+                                                            <Box sx={{ mt: 2 }}>
+                                                                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block', color: 'primary.main' }}>
+                                                                    🛍️ Recommended Remedies:
+                                                                </Typography>
+                                                                {message.recommended_remedies.map((remedy: any, idx: number) => (
+                                                                    <Box
+                                                                        key={idx}
+                                                                        sx={{
+                                                                            mt: 1.5,
+                                                                            p: 1.5,
+                                                                            border: 1,
+                                                                            borderColor: 'divider',
+                                                                            borderRadius: 1,
+                                                                            bgcolor: 'background.paper',
+                                                                            display: 'flex',
+                                                                            gap: 1.5,
+                                                                            alignItems: 'flex-start',
+                                                                        }}
+                                                                    >
+                                                                        {/* Product Image */}
+                                                                        {remedy.product_image && (
+                                                                            <Box
+                                                                                component="img"
+                                                                                src={remedy.product_image}
+                                                                                alt={remedy.product_name}
+                                                                                sx={{
+                                                                                    width: 80,
+                                                                                    height: 80,
+                                                                                    objectFit: 'cover',
+                                                                                    borderRadius: 1,
+                                                                                    flexShrink: 0,
+                                                                                    cursor: 'pointer',
+                                                                                    '&:hover': {
+                                                                                        opacity: 0.9,
+                                                                                    }
+                                                                                }}
+                                                                                onClick={() => window.open(remedy.product_url, '_blank')}
+                                                                            />
+                                                                        )}
+
+                                                                        {/* Product Details */}
+                                                                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                                                                                {remedy.product_name}
+                                                                            </Typography>
+                                                                            {remedy.product_description && (
+                                                                                <Typography variant="caption" sx={{ display: 'block', mb: 1, color: 'text.secondary' }}>
+                                                                                    {remedy.product_description}
+                                                                                </Typography>
+                                                                            )}
+                                                                            {remedy.product_price && (
+                                                                                <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main', mb: 1 }}>
+                                                                                    ₹{remedy.product_price}
+                                                                                </Typography>
+                                                                            )}
+                                                                            {remedy.product_url && (
+                                                                                <Button
+                                                                                    size="small"
+                                                                                    variant="outlined"
+                                                                                    href={remedy.product_url}
+                                                                                    target="_blank"
+                                                                                    rel="noopener noreferrer"
+                                                                                    sx={{ fontSize: '0.75rem', py: 0.5 }}
+                                                                                >
+                                                                                    View Product
+                                                                                </Button>
+                                                                            )}
+                                                                        </Box>
+                                                                    </Box>
+                                                                ))}
+                                                            </Box>
+                                                        )}
+                                                    </>
                                                 )}
 
                                                 {/* Message Status */}

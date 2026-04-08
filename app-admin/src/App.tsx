@@ -56,7 +56,6 @@ import {
     FolderTree,
     MessageSquare,
     FileText,
-    MessageSquare,
 } from 'lucide-react';
 import { OrderList } from './orders/Orders';
 import { PaymentOrderList } from './orders/PaymentOrders';

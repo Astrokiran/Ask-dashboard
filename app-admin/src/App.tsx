@@ -32,7 +32,12 @@ import offers from './offers';
 import videos from './videos';
 import stories from './stories';
 import products from './products';
+import panchangVideos from './panchang-videos';
+import questionCategories from './question-categories';
+import questions from './questions';
+import answerTemplates from './answer-templates';
 import assistantChat from './assistant-chat';
+
 import reconciliation, { reconciliationOffers } from './reconciliation';
 
 import {
@@ -47,6 +52,10 @@ import {
     BookOpen,
     ShoppingBag,
     Wallet,
+    Calendar,
+    FolderTree,
+    MessageSquare,
+    FileText,
     MessageSquare,
 } from 'lucide-react';
 import { OrderList } from './orders/Orders';
@@ -126,6 +135,29 @@ const App: React.FC = () => (
                 name="stories"
                 {...stories}
                 icon={BookOpen}
+            />
+            <Resource
+                name="panchang-videos"
+                options={{ label: 'Panchang Videos' }}
+                {...panchangVideos}
+                icon={Calendar}
+            />
+            <Resource
+                name="question-categories"
+                options={{ label: 'Question Categories' }}
+                {...questionCategories}
+                icon={FolderTree}
+            />
+            <Resource
+                name="questions"
+                {...questions}
+                icon={MessageSquare}
+            />
+            <Resource
+                name="answer-templates"
+                options={{ label: 'Answer Templates' }}
+                {...answerTemplates}
+                icon={FileText}
             />
             <Resource
                 name="products"
